@@ -612,7 +612,7 @@ function renderStorageBanner(){
 function saveState(){
   if (!storageAvailable) { showSaveStatus('Не збережено — сховище недоступне', true); return; }
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey }));
     showSaveStatus('Збережено');
   }catch(e){
     console.error('Не вдалося зберегти дані:', e);
@@ -630,6 +630,7 @@ function loadState(){
       activeHabitId = parsed.activeHabitId ?? null;
       nextId = parsed.nextId || 1;
       customIcons = parsed.customIcons || {};
+      lastActiveDateKey = parsed.lastActiveDateKey || null;
     }
   }catch(e){
     console.error('Не вдалося завантажити дані:', e);
@@ -647,9 +648,30 @@ let selectedReminder = '';
 let detailOpen = false; // чи відкрито оверлей з деталями звички
 
 const MONTHS = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
-const today = new Date();
+let today = new Date();
+let lastActiveDateKey = null; // ключ дня, для якого зараз рахується прогрес (потрібно для скидання опівночі)
 
 function dayKey(y, m, d){ return `${y}-${m}-${d}`; }
+
+/* ================= СКИДАННЯ ЛІЧИЛЬНИКА ОПІВНОЧІ ================= */
+/* Якщо настав новий день (з моменту останнього збереження/перевірки),
+   прогрес усіх звичок на "сьогодні" скидається до 0, а вогники стають сірими.
+   Історія виконаних днів (h.days) при цьому не чіпається — можна продовжити стрік,
+   виконавши звичку вже в новому дні. */
+function checkDayRollover(){
+  const now = new Date();
+  const nowKey = dayKey(now.getFullYear(), now.getMonth(), now.getDate());
+  if (lastActiveDateKey !== null && lastActiveDateKey !== nowKey){
+    habits.forEach(h => { h.progress = 0; });
+    today = now;
+    lastActiveDateKey = nowKey;
+    saveState();
+    renderAll();
+  } else {
+    today = now;
+    lastActiveDateKey = nowKey;
+  }
+}
 
 /* ================= ЗВУК І ВІБРАЦІЯ ПРИ ВІДМІТЦІ ================= */
 let audioCtx = null;
@@ -753,6 +775,7 @@ function checkReminders(){
   });
 }
 setInterval(checkReminders, 20000);
+setInterval(checkDayRollover, 20000);
 function svgIcon(name, stroke){
   return `<svg viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
 }
@@ -1267,6 +1290,7 @@ function renderAll(){
 document.getElementById('mainArea').innerHTML = '<div class="loading-state">Завантаження…</div>';
 renderStorageBanner();
 loadState();
+checkDayRollover();
 renderAll();
 checkReminders();
 </script>
