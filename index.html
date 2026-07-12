@@ -97,6 +97,7 @@
   }
   .habit-chip.active .fill { box-shadow: 0 0 0 3px var(--bg), 0 6px 18px rgba(0,0,0,0.35); }
   .habit-chip .fill svg { width: 30px; height: 30px; position: relative; z-index: 1; }
+  .habit-chip .fill img { width: 30px; height: 30px; object-fit: cover; border-radius: 50%; position: relative; z-index: 1; }
 
   /* Звичку повністю виконано сьогодні — затемнюємо кружок і показуємо галочку */
   .habit-chip.complete .fill { filter: brightness(0.5) saturate(0.85); }
@@ -206,6 +207,7 @@
     box-shadow: inset 0 -6px 14px rgba(0,0,0,0.18), 0 8px 24px -6px rgba(0,0,0,0.4);
   }
   .main-ring .inner svg { width: 34px; height: 34px; }
+  .main-ring .inner img { width: 34px; height: 34px; object-fit: cover; border-radius: 50%; }
   .main-ring .count {
     font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 13px;
     color: rgba(255,255,255,0.92); letter-spacing: 0.5px;
@@ -323,6 +325,9 @@
   .icon-option svg { width: 20px; height: 20px; stroke: var(--text-secondary); }
   .icon-option.selected { border-color: #3E9BFF; }
   .icon-option.selected svg { stroke: #3E9BFF; }
+  .icon-option img { width: 20px; height: 20px; object-fit: cover; border-radius: 50%; }
+  .icon-option.add-icon-option { border-style: dashed; color: var(--text-tertiary); font-size: 18px; font-weight: 300; }
+  .icon-option.add-icon-option:hover { color: var(--text-secondary); border-color: var(--text-secondary); }
 
   .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
   .color-option {
@@ -416,6 +421,7 @@
 
     <div class="field-label">Іконка</div>
     <div class="icon-grid" id="iconGrid"></div>
+    <input type="file" id="customIconInput" accept="image/*" style="display:none">
 
     <div class="field-label">Колір</div>
     <div class="color-grid" id="colorGrid"></div>
@@ -458,7 +464,9 @@
 /* ================= ІКОНКИ ================= */
 const ICONS = {
   drop:     '<path d="M12 2c3 4.5 6 8.2 6 12a6 6 0 1 1-12 0c0-3.8 3-7.5 6-12z"/>',
-  dumbbell: '<path d="M6.5 6.5 17.5 17.5"/><path d="M4 5l3 3M17 16l3 3"/><rect x="2" y="9" width="4" height="6" rx="1"/><rect x="18" y="9" width="4" height="6" rx="1"/><rect x="6" y="7" width="3" height="10" rx="1"/><rect x="15" y="7" width="3" height="10" rx="1"/>',
+  dumbbell: '<path d="M9 12h6"/><rect x="2" y="9" width="4" height="6" rx="1"/><rect x="18" y="9" width="4" height="6" rx="1"/><rect x="5" y="7" width="4" height="10" rx="1"/><rect x="15" y="7" width="4" height="10" rx="1"/>',
+  pullup:   '<path d="M4 6h16"/><path d="M6 6v14"/><path d="M18 6v14"/><circle cx="12" cy="10" r="1.6"/><path d="M9.5 7.2L12 11.6L14.5 7.2M12 11.6v3.5l-2.5 4M12 15.1l2.5 4"/>',
+  pushup:   '<circle cx="4" cy="8" r="1.6"/><path d="M5.4 9L18 11"/><path d="M9 9.6V15"/><path d="M18 11V15"/><path d="M2 15H21"/>',
   book:     '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
   moon:     '<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>',
   sun:      '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
@@ -482,6 +490,7 @@ const COLORS = [
 let habits = [];        // { id, name, icon, colors:[a,b], goal, progress, days:{ 'y-m-d': true } }
 let activeHabitId = null;
 let nextId = 1;
+let customIcons = {};   // { 'custom_169...': 'data:image/png;base64,...' } — власні завантажені іконки
 const STORAGE_KEY = 'habits-state-v1';
 let storageAvailable = false;
 
@@ -514,7 +523,7 @@ function renderStorageBanner(){
 function saveState(){
   if (!storageAvailable) { showSaveStatus('Не збережено — сховище недоступне', true); return; }
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons }));
     showSaveStatus('Збережено');
   }catch(e){
     console.error('Не вдалося зберегти дані:', e);
@@ -531,6 +540,7 @@ function loadState(){
       habits = parsed.habits || [];
       activeHabitId = parsed.activeHabitId ?? null;
       nextId = parsed.nextId || 1;
+      customIcons = parsed.customIcons || {};
     }
   }catch(e){
     console.error('Не вдалося завантажити дані:', e);
@@ -553,6 +563,10 @@ function dayKey(y, m, d){ return `${y}-${m}-${d}`; }
 function svgIcon(name, stroke){
   return `<svg viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
 }
+function habitIconMarkup(icon, stroke){
+  if (customIcons[icon]) return `<img src="${customIcons[icon]}" alt="">`;
+  return svgIcon(ICONS[icon] ? icon : 'drop', stroke);
+}
 
 /* ================= РЕНДЕР: РЕЙКА ЗВИЧОК ================= */
 function conicRing(pct, colorStart, colorEnd){
@@ -571,7 +585,7 @@ function renderRail(){
     const chip = document.createElement('div');
     chip.className = 'habit-chip' + (h.id === activeHabitId ? ' active' : '') + (isComplete ? ' complete' : '');
     chip.style.cssText = conicRing(pct, h.colors[0], h.colors[1]);
-    chip.innerHTML = `<div class="fill" style="background:linear-gradient(160deg, ${h.colors[0]}, ${h.colors[1]})">${svgIcon(h.icon, 'white')}${isComplete ? `<div class="done-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>` : ''}</div>`;
+    chip.innerHTML = `<div class="fill" style="background:linear-gradient(160deg, ${h.colors[0]}, ${h.colors[1]})">${habitIconMarkup(h.icon, 'white')}${isComplete ? `<div class="done-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>` : ''}</div>`;
     chip.addEventListener('click', () => { activeHabitId = h.id; detailClosed = false; renderAll(); });
     wrap.appendChild(chip);
     const label = document.createElement('div');
@@ -628,7 +642,7 @@ function renderMainArea(){
           <button class="step-btn" id="minusBtn" ${h.progress <= 0 ? 'disabled' : ''}>−</button>
           <div class="main-ring" id="mainRing" style="${conicRing(pct, h.colors[0], h.colors[1])}">
             <div class="inner" style="background:linear-gradient(160deg, ${h.colors[0]}, ${h.colors[1]})">
-              ${svgIcon(h.icon, 'white')}
+              ${habitIconMarkup(h.icon, 'white')}
               <div class="count">${h.progress}/${h.goal}</div>
             </div>
           </div>
@@ -784,7 +798,59 @@ function buildIconGrid(){
     opt.addEventListener('click', () => { selectedIcon = name; buildIconGrid(); });
     grid.appendChild(opt);
   });
+  Object.keys(customIcons).forEach(id => {
+    const opt = document.createElement('div');
+    opt.className = 'icon-option' + (id === selectedIcon ? ' selected' : '');
+    opt.innerHTML = `<img src="${customIcons[id]}" alt="Своя іконка">`;
+    opt.addEventListener('click', () => { selectedIcon = id; buildIconGrid(); });
+    grid.appendChild(opt);
+  });
+  const addOpt = document.createElement('div');
+  addOpt.className = 'icon-option add-icon-option';
+  addOpt.textContent = '+';
+  addOpt.title = 'Завантажити свою іконку';
+  addOpt.addEventListener('click', () => { document.getElementById('customIconInput').click(); });
+  grid.appendChild(addOpt);
 }
+
+function readAndResizeImage(file, maxSize){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('Не вдалося прочитати зображення'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Не вдалося прочитати файл'));
+    reader.readAsDataURL(file);
+  });
+}
+
+document.getElementById('customIconInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try{
+    const dataUrl = await readAndResizeImage(file, 128);
+    const id = 'custom_' + Date.now();
+    customIcons[id] = dataUrl;
+    selectedIcon = id;
+    buildIconGrid();
+    saveState();
+  }catch(err){
+    console.error('Не вдалося завантажити іконку:', err);
+    showSaveStatus('Не вдалося завантажити іконку', true);
+  }
+});
 
 function buildColorGrid(){
   const grid = document.getElementById('colorGrid');
