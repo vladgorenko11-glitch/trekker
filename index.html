@@ -205,17 +205,6 @@
   .card-close-btn:hover { color: var(--text-primary); }
   .card-close-btn svg { width: 16px; height: 16px; }
 
-  .detail-closed-state {
-    text-align: center;
-    padding: 60px 24px;
-    color: var(--text-secondary);
-    border: 1px dashed var(--card-border);
-    border-radius: var(--radius-xl);
-    cursor: pointer;
-  }
-  .detail-closed-state .icon { font-size: 34px; margin-bottom: 12px; }
-  .detail-closed-state p { margin: 0; font-size: 14px; line-height: 1.5; }
-
   .card-top { padding: 30px 24px 20px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
 
   .ring-controls { display: flex; align-items: center; justify-content: center; gap: 22px; }
@@ -317,6 +306,13 @@
   }
   .overlay.open { display: flex; }
 
+  .detail-modal-wrap {
+    width: 100%; max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp .22s ease;
+  }
+
   .modal {
     width: 100%; max-width: 460px;
     background: var(--card);
@@ -377,6 +373,11 @@
   .goal-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
   .goal-row .goal-controls { display: flex; align-items: center; gap: 14px; }
   .goal-num { font-family:'Rubik',sans-serif; font-weight: 700; font-size: 18px; min-width: 22px; text-align: center; }
+
+  .reminder-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .reminder-row .text-input { margin-bottom: 0; color-scheme: dark; }
+  .reminder-row .step-btn { font-size: 16px; }
+  .field-hint { font-size: 11.5px; color: var(--text-tertiary); line-height: 1.4; margin: 0 0 24px; }
 
   .modal-actions { display: flex; gap: 12px; }
   .btn {
@@ -444,6 +445,11 @@
 
 </div>
 
+<!-- Оверлей з карткою деталей звички (відкривається поверх, фон затемнюється) -->
+<div class="overlay" id="detailOverlay">
+  <div class="detail-modal-wrap" id="detailModalWrap"></div>
+</div>
+
 <div class="save-status" id="saveStatus">Збережено</div>
 
 <!-- Модалка додавання / редагування звички -->
@@ -475,6 +481,13 @@
       </div>
       <div style="font-size:13px; color:var(--text-tertiary);">разів на день</div>
     </div>
+
+    <div class="field-label">Нагадування (необов'язково)</div>
+    <div class="reminder-row">
+      <input type="time" class="text-input" id="reminderTimeInput">
+      <button class="step-btn" id="reminderClearBtn" type="button" title="Прибрати нагадування">✕</button>
+    </div>
+    <div class="field-hint">Сповіщення прийде, якщо звичка ще не виконана сьогодні. Працює, поки сайт відкритий у браузері (у вкладці або як застосунок на головному екрані).</div>
 
     <div class="modal-actions">
       <button class="btn btn-secondary" id="habitCancelBtn" type="button">Скасувати</button>
@@ -524,10 +537,16 @@ const COLORS = [
   ['#FFA53D', '#FFC773'],
   ['#D24FE0', '#F08FE8'],
   ['#28C79A', '#6EE7C0'],
+  ['#FF4D6D', '#FF8FA3'],
+  ['#20C4D0', '#7FEAF2'],
+  ['#FFD93D', '#FFEC99'],
+  ['#8B5CF6', '#C4B5FD'],
+  ['#4ADE80', '#A7F3D0'],
+  ['#F472B6', '#FBCFE8'],
 ];
 
 /* ================= СТАН (зберігається у localStorage браузера на пристрої) ================= */
-let habits = [];        // { id, name, icon, colors:[a,b], goal, progress, days:{ 'y-m-d': true } }
+let habits = [];        // { id, name, icon, colors:[a,b], goal, progress, days:{ 'y-m-d': true }, reminder: 'HH:MM' | null }
 let activeHabitId = null;
 let nextId = 1;
 let customIcons = {};   // { 'custom_169...': 'data:image/png;base64,...' } — власні завантажені іконки
@@ -594,12 +613,68 @@ let editingHabitId = null; // null = створення нової
 let selectedIcon = 'drop';
 let selectedColorIdx = 0;
 let selectedGoal = 1;
-let detailClosed = true; // старт: показуємо головне меню, а не картку звички одразу
+let selectedReminder = '';
+let detailOpen = false; // чи відкрито оверлей з деталями звички
 
 const MONTHS = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
 const today = new Date();
 
 function dayKey(y, m, d){ return `${y}-${m}-${d}`; }
+
+/* ================= ЗВУК І ВІБРАЦІЯ ПРИ ВІДМІТЦІ ================= */
+let audioCtx = null;
+function playTone(freq, duration, delay, type, volume){
+  delay = delay || 0; type = type || 'sine'; volume = volume === undefined ? 0.18 : volume;
+  try{
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    const t0 = audioCtx.currentTime + delay;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(volume, t0 + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.05);
+  }catch(e){ /* Web Audio недоступний у цьому браузері */ }
+}
+function vibrate(pattern){
+  if (navigator.vibrate){ try{ navigator.vibrate(pattern); }catch(e){} }
+}
+function feedbackTick(){ playTone(880, 0.1); vibrate(20); }
+function feedbackComplete(){ playTone(660, 0.11, 0); playTone(990, 0.18, 0.09); vibrate([25, 50, 25]); }
+function feedbackUndo(){ playTone(300, 0.09, 0, 'sine', 0.12); vibrate(15); }
+
+/* ================= НАГАДУВАННЯ (локальні сповіщення в браузері) ================= */
+function requestNotificationPermission(){
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') Notification.requestPermission();
+}
+function pad2(n){ return n < 10 ? '0' + n : '' + n; }
+const remindersFired = {};
+function checkReminders(){
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const now = new Date();
+  const hhmm = pad2(now.getHours()) + ':' + pad2(now.getMinutes());
+  const todayKeyStr = dayKey(now.getFullYear(), now.getMonth(), now.getDate());
+  habits.forEach(h => {
+    if (!h.reminder || h.reminder !== hhmm) return;
+    if (h.days[todayKeyStr]) return; // вже виконано сьогодні
+    const fireKey = h.id + '_' + todayKeyStr + '_' + hhmm;
+    if (remindersFired[fireKey]) return;
+    remindersFired[fireKey] = true;
+    try{
+      new Notification('Нагадування: ' + h.name, {
+        body: 'Ще не виконано сьогодні. Час відзначити прогрес!',
+        tag: 'habit-reminder-' + h.id
+      });
+    }catch(e){ console.error('Не вдалося показати сповіщення:', e); }
+  });
+}
+setInterval(checkReminders, 20000);
 function svgIcon(name, stroke){
   return `<svg viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
 }
@@ -626,7 +701,7 @@ function renderRail(){
     chip.className = 'habit-chip' + (h.id === activeHabitId ? ' active' : '') + (isComplete ? ' complete' : '');
     chip.style.cssText = conicRing(pct, h.colors[0], h.colors[1]);
     chip.innerHTML = `<div class="fill" style="background:linear-gradient(160deg, ${h.colors[0]}, ${h.colors[1]})">${habitIconMarkup(h.icon, 'white')}${isComplete ? `<div class="done-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>` : ''}</div>`;
-    chip.addEventListener('click', () => { activeHabitId = h.id; detailClosed = false; renderAll(); });
+    chip.addEventListener('click', () => { activeHabitId = h.id; detailOpen = true; renderAll(); });
     wrap.appendChild(chip);
     const label = document.createElement('div');
     label.className = 'habit-chip-label';
@@ -642,7 +717,7 @@ function renderRail(){
   rail.appendChild(addWrap);
 }
 
-/* ================= РЕНДЕР: ГОЛОВНА ОБЛАСТЬ ================= */
+/* ================= РЕНДЕР: ГОЛОВНА ОБЛАСТЬ (порожній стан, якщо звичок ще немає) ================= */
 function renderMainArea(){
   const area = document.getElementById('mainArea');
 
@@ -655,24 +730,32 @@ function renderMainArea(){
         <button id="emptyAddBtn">Додати звичку</button>
       </div>`;
     document.getElementById('emptyAddBtn').addEventListener('click', openCreateModal);
+  } else {
+    area.innerHTML = '';
+  }
+}
+
+/* ================= РЕНДЕР: ОВЕРЛЕЙ З ДЕТАЛЯМИ ЗВИЧКИ ================= */
+function closeDetailOverlay(){
+  detailOpen = false;
+  document.getElementById('detailOverlay').classList.remove('open');
+}
+
+function renderDetailOverlay(){
+  const overlay = document.getElementById('detailOverlay');
+  const wrap = document.getElementById('detailModalWrap');
+
+  if (!detailOpen || habits.length === 0 || !habits.find(x => x.id === activeHabitId)){
+    overlay.classList.remove('open');
+    wrap.innerHTML = '';
     return;
   }
 
-  if (!habits.find(h => h.id === activeHabitId)) activeHabitId = habits[0].id;
   const h = habits.find(x => x.id === activeHabitId);
   const pct = h.goal > 0 ? Math.round((h.progress / h.goal) * 100) : 0;
 
-  if (detailClosed){
-    area.innerHTML = `
-      <div class="detail-closed-state" id="reopenDetailBtn">
-        <div class="icon">👌</div>
-        <p>Оберіть звичку зі списку вище, щоб побачити прогрес і календар.</p>
-      </div>`;
-    document.getElementById('reopenDetailBtn').addEventListener('click', () => { detailClosed = false; renderMainArea(); });
-    return;
-  }
-
-  area.innerHTML = `
+  overlay.classList.add('open');
+  wrap.innerHTML = `
     <div class="card">
       <div class="card-close-btn" id="closeDetailBtn" title="Закрити">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
@@ -731,19 +814,23 @@ function renderMainArea(){
     h.progress = Math.max(0, h.progress - 1);
     const key = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
     if (h.progress < h.goal) delete h.days[key];
+    feedbackUndo();
     renderAll(); saveState();
   });
   document.getElementById('plusBtn').addEventListener('click', () => {
+    const wasComplete = h.goal > 0 && h.progress >= h.goal;
     h.progress = Math.min(h.goal, h.progress + 1);
     const key = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
-    if (h.progress >= h.goal && h.goal > 0) h.days[key] = true;
+    const nowComplete = h.progress >= h.goal && h.goal > 0;
+    if (nowComplete) h.days[key] = true;
+    if (nowComplete && !wasComplete) feedbackComplete(); else feedbackTick();
     renderAll(); saveState();
   });
   document.getElementById('editHabitBtn').addEventListener('click', () => openEditModal(h.id));
   document.getElementById('prevMonthBtn').addEventListener('click', () => { changeMonth(-1); });
   document.getElementById('nextMonthBtn').addEventListener('click', () => { changeMonth(1); });
   document.getElementById('deleteHabitBtn').addEventListener('click', () => openDeleteModal(h.id));
-  document.getElementById('closeDetailBtn').addEventListener('click', () => { detailClosed = true; renderMainArea(); });
+  document.getElementById('closeDetailBtn').addEventListener('click', closeDetailOverlay);
 
   renderCalendar(h);
   recalcStats(h);
@@ -795,8 +882,10 @@ function renderCalendar(h){
     cell.textContent = d;
     if (isToday){
       cell.addEventListener('click', () => {
+        const turningOn = !h.days[key];
         h.days[key] = !h.days[key];
         if (!h.days[key]) delete h.days[key];
+        if (turningOn) feedbackComplete(); else feedbackUndo();
         renderMainArea();
         renderStreakBoard();
         saveState();
@@ -863,7 +952,7 @@ function renderStreakBoard(){
         <div class="streak-name">${h.name}</div>
         <div class="streak-days"><b>${streak}</b> ${pluralDays(streak)} поспіль</div>
       </div>`;
-    card.addEventListener('click', () => { activeHabitId = h.id; detailClosed = false; renderAll(); });
+    card.addEventListener('click', () => { activeHabitId = h.id; detailOpen = true; renderAll(); });
     grid.appendChild(card);
   });
 }
@@ -900,12 +989,19 @@ function readAndResizeImage(file, maxSize){
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
-        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        // Кадруємо/доповнюємо зображення до квадрата, щоб іконка виглядала
+        // пропорційно в круглому чипі незалежно від пропорцій оригіналу.
+        const side = Math.min(maxSize, Math.max(img.width, img.height));
         const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(img.width * scale));
-        canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.width = side;
+        canvas.height = side;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const scale = Math.min(side / img.width, side / img.height);
+        const drawW = img.width * scale;
+        const drawH = img.height * scale;
+        const dx = (side - drawW) / 2;
+        const dy = (side - drawH) / 2;
+        ctx.drawImage(img, dx, dy, drawW, drawH);
         resolve(canvas.toDataURL('image/png'));
       };
       img.onerror = () => reject(new Error('Не вдалося прочитати зображення'));
@@ -956,6 +1052,7 @@ function openCreateModal(){
   selectedIcon = 'drop';
   selectedColorIdx = habits.length % COLORS.length;
   selectedGoal = 1;
+  document.getElementById('reminderTimeInput').value = '';
   buildIconGrid(); buildColorGrid(); updateGoalDisplay();
   document.getElementById('habitOverlay').classList.add('open');
   document.getElementById('habitNameInput').focus();
@@ -970,6 +1067,7 @@ function openEditModal(id){
   selectedColorIdx = COLORS.findIndex(c => c[0] === h.colors[0]);
   if (selectedColorIdx < 0) selectedColorIdx = 0;
   selectedGoal = h.goal;
+  document.getElementById('reminderTimeInput').value = h.reminder || '';
   buildIconGrid(); buildColorGrid(); updateGoalDisplay();
   document.getElementById('habitOverlay').classList.add('open');
 }
@@ -978,6 +1076,7 @@ function closeHabitModal(){
   document.getElementById('habitOverlay').classList.remove('open');
 }
 
+document.getElementById('reminderClearBtn').addEventListener('click', () => { document.getElementById('reminderTimeInput').value = ''; });
 document.getElementById('goalMinus').addEventListener('click', () => { selectedGoal = Math.max(1, selectedGoal - 1); updateGoalDisplay(); });
 document.getElementById('goalPlus').addEventListener('click', () => { selectedGoal = Math.min(20, selectedGoal + 1); updateGoalDisplay(); });
 document.getElementById('habitCancelBtn').addEventListener('click', closeHabitModal);
@@ -990,12 +1089,17 @@ document.getElementById('habitOverlay').addEventListener('click', (e) => {
 document.getElementById('deleteOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'deleteOverlay') closeDeleteModal();
 });
+document.getElementById('detailOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'detailOverlay') { closeDetailOverlay(); renderDetailOverlay(); }
+});
 
 // Закриття клавішею Escape
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape'){
     closeHabitModal();
     closeDeleteModal();
+    closeDetailOverlay();
+    renderDetailOverlay();
   }
 });
 
@@ -1006,6 +1110,7 @@ document.getElementById('habitSaveBtn').addEventListener('click', () => {
     document.getElementById('habitNameInput').placeholder = 'Введіть назву звички';
     return;
   }
+  const reminder = document.getElementById('reminderTimeInput').value || null;
   if (editingHabitId === null){
     const newHabit = {
       id: nextId++,
@@ -1014,11 +1119,12 @@ document.getElementById('habitSaveBtn').addEventListener('click', () => {
       colors: COLORS[selectedColorIdx],
       goal: selectedGoal,
       progress: 0,
-      days: {}
+      days: {},
+      reminder
     };
     habits.push(newHabit);
     activeHabitId = newHabit.id;
-    detailClosed = false;
+    detailOpen = true;
   } else {
     const h = habits.find(x => x.id === editingHabitId);
     h.name = name;
@@ -1026,7 +1132,9 @@ document.getElementById('habitSaveBtn').addEventListener('click', () => {
     h.colors = COLORS[selectedColorIdx];
     h.goal = selectedGoal;
     h.progress = Math.min(h.progress, h.goal);
+    h.reminder = reminder;
   }
+  if (reminder) requestNotificationPermission();
   closeHabitModal();
   renderAll();
   saveState();
@@ -1047,6 +1155,7 @@ document.getElementById('deleteCloseX').addEventListener('click', closeDeleteMod
 document.getElementById('deleteConfirmBtn').addEventListener('click', () => {
   habits = habits.filter(h => h.id !== pendingDeleteId);
   if (activeHabitId === pendingDeleteId) activeHabitId = habits.length ? habits[0].id : null;
+  detailOpen = false;
   document.getElementById('deleteOverlay').classList.remove('open');
   pendingDeleteId = null;
   renderAll();
@@ -1058,12 +1167,14 @@ function renderAll(){
   renderRail();
   renderStreakBoard();
   renderMainArea();
+  renderDetailOverlay();
 }
 
 document.getElementById('mainArea').innerHTML = '<div class="loading-state">Завантаження…</div>';
 renderStorageBanner();
 loadState();
 renderAll();
+checkReminders();
 </script>
 </body>
 </html>
