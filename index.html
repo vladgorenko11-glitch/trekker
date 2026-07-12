@@ -692,7 +692,12 @@ function conicRing(pct, colorStart, colorEnd){
 function renderRail(){
   const rail = document.getElementById('habitRail');
   rail.innerHTML = '';
-  habits.forEach(h => {
+  const sorted = habits.slice().sort((a, b) => {
+    const aDone = a.goal > 0 && a.progress >= a.goal ? 1 : 0;
+    const bDone = b.goal > 0 && b.progress >= b.goal ? 1 : 0;
+    return aDone - bDone; // невиконані (0) — попереду, виконані (1) — праворуч
+  });
+  sorted.forEach(h => {
     const pct = h.goal > 0 ? Math.round((h.progress / h.goal) * 100) : 0;
     const isComplete = h.goal > 0 && h.progress >= h.goal;
     const wrap = document.createElement('div');
