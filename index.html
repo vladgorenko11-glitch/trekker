@@ -128,6 +128,36 @@
   .habit-chip.add { background: transparent; border: 2px dashed var(--card-border); }
   .habit-chip.add .fill { background: transparent; color: var(--text-tertiary); font-size: 30px; font-weight: 300; }
 
+  /* ---------- Streak board (вогники) ---------- */
+  .streak-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+    gap: 10px;
+  }
+  .streak-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: border-color .15s ease, transform .12s ease;
+  }
+  .streak-card:active { transform: scale(0.97); }
+  .streak-card.lit { border-color: rgba(255,138,43,0.45); }
+  .streak-flame { flex: 0 0 auto; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
+  .streak-flame svg { width: 28px; height: 28px; display: block; }
+  .streak-info { min-width: 0; }
+  .streak-name {
+    font-size: 12.5px; font-weight: 600; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
+  }
+  .streak-days { font-size: 12px; color: var(--text-tertiary); }
+  .streak-days b { font-family: 'Rubik', sans-serif; color: var(--text-secondary); }
+  .streak-card.lit .streak-days b { color: #FF8A2B; }
+
   /* ---------- Empty state ---------- */
   .empty-state {
     text-align: center;
@@ -399,6 +429,8 @@
   <div class="habit-rail" id="habitRail"></div>
 
   <div id="storageBanner"></div>
+
+  <div class="streak-grid" id="streakGrid"></div>
 
   <div id="mainArea"></div>
 
@@ -758,11 +790,23 @@ function renderCalendar(h){
         h.days[key] = !h.days[key];
         if (!h.days[key]) delete h.days[key];
         renderMainArea();
+        renderStreakBoard();
         saveState();
       });
     }
     row.appendChild(cell);
   }
+}
+
+function computeStreak(h){
+  let streak = 0;
+  let cursor = new Date(today);
+  while (true){
+    const key = dayKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+    if (h.days[key]){ streak++; cursor.setDate(cursor.getDate() - 1); }
+    else break;
+  }
+  return streak;
 }
 
 function recalcStats(h){
@@ -777,14 +821,50 @@ function recalcStats(h){
   const pct = daysInMonth ? Math.round((doneThisMonth / daysInMonth) * 1000) / 10 : 0;
   document.getElementById('statPercent').textContent = pct + '%';
 
-  let streak = 0;
-  let cursor = new Date(today);
-  while (true){
-    const key = dayKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
-    if (h.days[key]){ streak++; cursor.setDate(cursor.getDate() - 1); }
-    else break;
+  document.getElementById('statStreak').textContent = computeStreak(h);
+}
+
+function pluralDays(n){
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 14) return 'днів';
+  if (mod10 === 1) return 'день';
+  if (mod10 >= 2 && mod10 <= 4) return 'дні';
+  return 'днів';
+}
+
+function flameIcon(habitId, lit){
+  if (!lit){
+    return `<svg viewBox="0 0 24 24"><path fill="var(--track)" d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
   }
-  document.getElementById('statStreak').textContent = streak;
+  const gradId = 'flameGrad' + habitId;
+  return `<svg viewBox="0 0 24 24">
+    <defs><linearGradient id="${gradId}" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#FFD84D"/>
+      <stop offset="55%" stop-color="#FF8A2B"/>
+      <stop offset="100%" stop-color="#FF5A3C"/>
+    </linearGradient></defs>
+    <path fill="url(#${gradId})" d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+  </svg>`;
+}
+
+function renderStreakBoard(){
+  const grid = document.getElementById('streakGrid');
+  if (!habits.length){ grid.innerHTML = ''; return; }
+  grid.innerHTML = '';
+  habits.forEach(h => {
+    const isComplete = h.goal > 0 && h.progress >= h.goal;
+    const streak = computeStreak(h);
+    const card = document.createElement('div');
+    card.className = 'streak-card' + (isComplete ? ' lit' : '');
+    card.innerHTML = `
+      <div class="streak-flame">${flameIcon(h.id, isComplete)}</div>
+      <div class="streak-info">
+        <div class="streak-name">${h.name}</div>
+        <div class="streak-days"><b>${streak}</b> ${pluralDays(streak)} поспіль</div>
+      </div>`;
+    card.addEventListener('click', () => { activeHabitId = h.id; detailClosed = false; renderAll(); });
+    grid.appendChild(card);
+  });
 }
 
 /* ================= МОДАЛКА СТВОРЕННЯ / РЕДАГУВАННЯ ================= */
@@ -975,6 +1055,7 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', () => {
 /* ================= СТАРТ (підвантажуємо збережене, якщо є) ================= */
 function renderAll(){
   renderRail();
+  renderStreakBoard();
   renderMainArea();
 }
 
