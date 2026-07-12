@@ -411,57 +411,62 @@ const COLORS = [
   ['#28C79A', '#6EE7C0'],
 ];
 
-/* ================= СТАН (завантажується зі сховища, інакше з нуля) ================= */
+/* ================= СТАН (зберігається у localStorage браузера на пристрої) ================= */
 let habits = [];        // { id, name, icon, colors:[a,b], goal, progress, days:{ 'y-m-d': true } }
 let activeHabitId = null;
 let nextId = 1;
 const STORAGE_KEY = 'habits-state-v1';
-let storageAvailable = (typeof window.storage !== 'undefined' && window.storage !== null);
+let storageAvailable = false;
+
+try{
+  const testKey = '__storage_test__';
+  localStorage.setItem(testKey, '1');
+  localStorage.removeItem(testKey);
+  storageAvailable = true;
+}catch(e){
+  storageAvailable = false;
+}
 
 function showSaveStatus(text, isError){
   const el = document.getElementById('saveStatus');
   el.textContent = text;
   el.className = 'save-status show' + (isError ? ' error' : '');
   clearTimeout(showSaveStatus._t);
-  showSaveStatus._t = setTimeout(() => { el.classList.remove('show'); }, 1800);
+  showSaveStatus._t = setTimeout(() => { el.classList.remove('show'); }, 1500);
 }
 
 function renderStorageBanner(){
   const banner = document.getElementById('storageBanner');
   if (!storageAvailable){
-    banner.innerHTML = `<div class="no-storage-banner">⚠ Збереження недоступне у цьому режимі перегляду. Щоб дані запам'ятовувались, відкривай і користуйся застосунком прямо тут, у вікні артефакту в чаті Claude (не як завантажений окремий файл).</div>`;
+    banner.innerHTML = `<div class="no-storage-banner">⚠ Збереження недоступне в цьому браузері (можливо, увімкнено приватний/інкогніто режим або заблоковано сховище). Дані не будуть запам'ятовуватись.</div>`;
   } else {
     banner.innerHTML = '';
   }
 }
 
-async function saveState(){
+function saveState(){
   if (!storageAvailable) { showSaveStatus('Не збережено — сховище недоступне', true); return; }
   try{
-    const res = await window.storage.set(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId }), false);
-    if (res){
-      showSaveStatus('Збережено');
-    } else {
-      showSaveStatus('Помилка збереження', true);
-    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId }));
+    showSaveStatus('Збережено');
   }catch(e){
     console.error('Не вдалося зберегти дані:', e);
     showSaveStatus('Помилка збереження', true);
   }
 }
 
-async function loadState(){
+function loadState(){
   if (!storageAvailable) return;
   try{
-    const result = await window.storage.get(STORAGE_KEY, false);
-    if (result && result.value){
-      const parsed = JSON.parse(result.value);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw){
+      const parsed = JSON.parse(raw);
       habits = parsed.habits || [];
       activeHabitId = parsed.activeHabitId ?? null;
       nextId = parsed.nextId || 1;
     }
   }catch(e){
-    // ключа ще немає — це нормально для першого запуску
+    console.error('Не вдалося завантажити дані:', e);
   }
 }
 
@@ -794,10 +799,8 @@ function renderAll(){
 
 document.getElementById('mainArea').innerHTML = '<div class="loading-state">Завантаження…</div>';
 renderStorageBanner();
-
-loadState().then(() => {
-  renderAll();
-});
+loadState();
+renderAll();
 </script>
 </body>
 </html>
