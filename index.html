@@ -132,7 +132,31 @@
     border-radius: var(--radius-xl);
     overflow: hidden;
     box-shadow: 0 20px 50px -20px rgba(0,0,0,0.6);
+    position: relative;
   }
+
+  .card-close-btn {
+    position: absolute; top: 16px; right: 16px; z-index: 5;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .card-close-btn:hover { color: var(--text-primary); }
+  .card-close-btn svg { width: 16px; height: 16px; }
+
+  .detail-closed-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--text-secondary);
+    border: 1px dashed var(--card-border);
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+  }
+  .detail-closed-state .icon { font-size: 34px; margin-bottom: 12px; }
+  .detail-closed-state p { margin: 0; font-size: 14px; line-height: 1.5; }
 
   .card-top { padding: 30px 24px 20px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
 
@@ -500,6 +524,7 @@ let editingHabitId = null; // null = створення нової
 let selectedIcon = 'drop';
 let selectedColorIdx = 0;
 let selectedGoal = 1;
+let detailClosed = false; // true = картку звички закрито хрестиком
 
 const MONTHS = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
 const today = new Date();
@@ -526,7 +551,7 @@ function renderRail(){
     chip.className = 'habit-chip' + (h.id === activeHabitId ? ' active' : '');
     chip.style.cssText = conicRing(pct, h.colors[0], h.colors[1]);
     chip.innerHTML = `<div class="fill" style="background:linear-gradient(160deg, ${h.colors[0]}, ${h.colors[1]})">${svgIcon(h.icon, 'white')}</div>`;
-    chip.addEventListener('click', () => { activeHabitId = h.id; renderAll(); });
+    chip.addEventListener('click', () => { activeHabitId = h.id; detailClosed = false; renderAll(); });
     wrap.appendChild(chip);
     const label = document.createElement('div');
     label.className = 'habit-chip-label';
@@ -562,8 +587,21 @@ function renderMainArea(){
   const h = habits.find(x => x.id === activeHabitId);
   const pct = h.goal > 0 ? Math.round((h.progress / h.goal) * 100) : 0;
 
+  if (detailClosed){
+    area.innerHTML = `
+      <div class="detail-closed-state" id="reopenDetailBtn">
+        <div class="icon">👌</div>
+        <p>Картку звички закрито.<br>Натисніть тут або оберіть звичку зі списку вище, щоб відкрити знову.</p>
+      </div>`;
+    document.getElementById('reopenDetailBtn').addEventListener('click', () => { detailClosed = false; renderMainArea(); });
+    return;
+  }
+
   area.innerHTML = `
     <div class="card">
+      <div class="card-close-btn" id="closeDetailBtn" title="Закрити">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </div>
       <div class="card-top">
         <div class="ring-controls">
           <button class="step-btn" id="minusBtn" ${h.progress <= 0 ? 'disabled' : ''}>−</button>
@@ -620,6 +658,7 @@ function renderMainArea(){
   document.getElementById('prevMonthBtn').addEventListener('click', () => { changeMonth(-1); });
   document.getElementById('nextMonthBtn').addEventListener('click', () => { changeMonth(1); });
   document.getElementById('deleteHabitBtn').addEventListener('click', () => openDeleteModal(h.id));
+  document.getElementById('closeDetailBtn').addEventListener('click', () => { detailClosed = true; renderMainArea(); });
 
   renderCalendar(h);
   recalcStats(h);
@@ -799,6 +838,7 @@ document.getElementById('habitSaveBtn').addEventListener('click', () => {
     };
     habits.push(newHabit);
     activeHabitId = newHabit.id;
+    detailClosed = false;
   } else {
     const h = habits.find(x => x.id === editingHabitId);
     h.name = name;
