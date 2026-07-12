@@ -661,7 +661,15 @@ function dayKey(y, m, d){ return `${y}-${m}-${d}`; }
 function checkDayRollover(){
   const now = new Date();
   const nowKey = dayKey(now.getFullYear(), now.getMonth(), now.getDate());
-  if (lastActiveDateKey !== null && lastActiveDateKey !== nowKey){
+  if (lastActiveDateKey === null){
+    // Перший запуск (або перший запуск після оновлення) — просто фіксуємо
+    // поточний день і зберігаємо його, нічого не скидаючи.
+    today = now;
+    lastActiveDateKey = nowKey;
+    saveState();
+    return;
+  }
+  if (lastActiveDateKey !== nowKey){
     habits.forEach(h => { h.progress = 0; });
     today = now;
     lastActiveDateKey = nowKey;
@@ -669,7 +677,6 @@ function checkDayRollover(){
     renderAll();
   } else {
     today = now;
-    lastActiveDateKey = nowKey;
   }
 }
 
@@ -1015,6 +1022,12 @@ function renderCalendar(h){
 function computeStreak(h){
   let streak = 0;
   let cursor = new Date(today);
+  const todayKeyStr = dayKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+  if (!h.days[todayKeyStr]){
+    // Сьогодні ще не відмічено — рахуємо стрік від учора,
+    // щоб число не обнулялося одразу після півночі, а тільки якщо реально пропущено день.
+    cursor.setDate(cursor.getDate() - 1);
+  }
   while (true){
     const key = dayKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
     if (h.days[key]){ streak++; cursor.setDate(cursor.getDate() - 1); }
