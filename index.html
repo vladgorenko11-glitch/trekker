@@ -661,16 +661,17 @@ function dayKey(y, m, d){ return `${y}-${m}-${d}`; }
 function checkDayRollover(){
   const now = new Date();
   const nowKey = dayKey(now.getFullYear(), now.getMonth(), now.getDate());
-  if (lastActiveDateKey === null){
-    // Перший запуск (або перший запуск після оновлення) — просто фіксуємо
-    // поточний день і зберігаємо його, нічого не скидаючи.
-    today = now;
-    lastActiveDateKey = nowKey;
-    saveState();
-    return;
-  }
   if (lastActiveDateKey !== nowKey){
-    habits.forEach(h => { h.progress = 0; });
+    habits.forEach(h => {
+      if (h.days[nowKey]){
+        // Ціль на сьогодні вже реально позначена виконаною — не чіпаємо.
+        h.progress = h.goal;
+      } else {
+        // Немає позначки за сьогодні — будь-яке старе значення прогресу
+        // залишилось з минулого дня (або й раніше) і має бути скинуте.
+        h.progress = 0;
+      }
+    });
     today = now;
     lastActiveDateKey = nowKey;
     saveState();
