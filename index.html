@@ -249,6 +249,7 @@
     transition: border-color .15s ease, color .15s ease, background .15s ease;
   }
   .day-cell.disabled { cursor: default; opacity: 0.3; border-color: transparent; }
+  .day-cell.locked { cursor: default; }
   .day-cell.done { color: var(--text-primary); }
   .day-cell.today:not(.disabled) { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--habit-accent, #3E9BFF); }
 
@@ -543,7 +544,7 @@ let editingHabitId = null; // null = створення нової
 let selectedIcon = 'drop';
 let selectedColorIdx = 0;
 let selectedGoal = 1;
-let detailClosed = false; // true = картку звички закрито хрестиком
+let detailClosed = true; // старт: показуємо головне меню, а не картку звички одразу
 
 const MONTHS = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
 const today = new Date();
@@ -611,7 +612,7 @@ function renderMainArea(){
     area.innerHTML = `
       <div class="detail-closed-state" id="reopenDetailBtn">
         <div class="icon">👌</div>
-        <p>Картку звички закрито.<br>Натисніть тут або оберіть звичку зі списку вище, щоб відкрити знову.</p>
+        <p>Оберіть звичку зі списку вище, щоб побачити прогрес і календар.</p>
       </div>`;
     document.getElementById('reopenDetailBtn').addEventListener('click', () => { detailClosed = false; renderMainArea(); });
     return;
@@ -672,8 +673,18 @@ function renderMainArea(){
       </div>
     </div>`;
 
-  document.getElementById('minusBtn').addEventListener('click', () => { h.progress = Math.max(0, h.progress - 1); renderAll(); saveState(); });
-  document.getElementById('plusBtn').addEventListener('click', () => { h.progress = Math.min(h.goal, h.progress + 1); renderAll(); saveState(); });
+  document.getElementById('minusBtn').addEventListener('click', () => {
+    h.progress = Math.max(0, h.progress - 1);
+    const key = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
+    if (h.progress < h.goal) delete h.days[key];
+    renderAll(); saveState();
+  });
+  document.getElementById('plusBtn').addEventListener('click', () => {
+    h.progress = Math.min(h.goal, h.progress + 1);
+    const key = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
+    if (h.progress >= h.goal && h.goal > 0) h.days[key] = true;
+    renderAll(); saveState();
+  });
   document.getElementById('editHabitBtn').addEventListener('click', () => openEditModal(h.id));
   document.getElementById('prevMonthBtn').addEventListener('click', () => { changeMonth(-1); });
   document.getElementById('nextMonthBtn').addEventListener('click', () => { changeMonth(1); });
@@ -715,18 +726,20 @@ function renderCalendar(h){
     const cell = document.createElement('div');
     const key = dayKey(viewYear, viewMonth, d);
     const isFutureDay = isFutureMonth || (viewYear === today.getFullYear() && viewMonth === today.getMonth() && d > today.getDate());
-    cell.className = 'day-cell' + (isFutureDay ? ' disabled' : '');
+    const isToday = viewYear === today.getFullYear() && viewMonth === today.getMonth() && d === today.getDate();
+    const isPastDay = !isFutureDay && !isToday;
+    cell.className = 'day-cell' + (isFutureDay ? ' disabled' : '') + (isPastDay ? ' locked' : '');
     if (h.days[key]) {
       cell.classList.add('done');
       cell.style.borderColor = h.colors[0];
       cell.style.background = `linear-gradient(160deg, ${h.colors[0]}22, transparent)`;
     }
-    if (viewYear === today.getFullYear() && viewMonth === today.getMonth() && d === today.getDate()){
+    if (isToday){
       cell.classList.add('today');
       cell.style.setProperty('--habit-accent', h.colors[0]);
     }
     cell.textContent = d;
-    if (!isFutureDay){
+    if (isToday){
       cell.addEventListener('click', () => {
         h.days[key] = !h.days[key];
         if (!h.days[key]) delete h.days[key];
