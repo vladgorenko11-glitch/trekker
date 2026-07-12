@@ -416,6 +416,36 @@
   .save-status.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .save-status.error { color: var(--danger); border-color: var(--danger); }
 
+  /* ---------- Святкування стріків ---------- */
+  .milestone-toast {
+    position: fixed; left: 50%; top: 16%;
+    transform: translate(-50%, -14px) scale(0.92);
+    background: linear-gradient(135deg, #FFC24D, #FF6B3C);
+    color: #2A0F02;
+    font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 15px;
+    padding: 14px 24px;
+    border-radius: 18px;
+    box-shadow: 0 16px 34px -10px rgba(255,106,50,0.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .28s ease, transform .28s ease;
+    z-index: 110;
+    text-align: center;
+    max-width: 300px;
+  }
+  .milestone-toast.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+
+  .confetti-layer { position: fixed; inset: 0; pointer-events: none; z-index: 105; overflow: hidden; }
+  .confetti-piece {
+    position: absolute; top: -12px;
+    border-radius: 2px;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(112vh) rotate(640deg); opacity: 0; }
+  }
+
   .no-storage-banner {
     background: rgba(255,107,91,0.12);
     border: 1px solid rgba(255,107,91,0.35);
@@ -648,6 +678,54 @@ function feedbackTick(){ playTone(880, 0.1); vibrate(20); }
 function feedbackComplete(){ playTone(660, 0.11, 0); playTone(990, 0.18, 0.09); vibrate([25, 50, 25]); }
 function feedbackUndo(){ playTone(300, 0.09, 0, 'sine', 0.12); vibrate(15); }
 
+/* ================= СВЯТКУВАННЯ КРУГЛИХ СТРІКІВ ================= */
+const STREAK_MILESTONES = [3, 7, 14, 21, 30, 50, 100, 200, 365];
+
+function showMilestoneToast(text){
+  let toast = document.getElementById('milestoneToast');
+  if (!toast){
+    toast = document.createElement('div');
+    toast.id = 'milestoneToast';
+    toast.className = 'milestone-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = text;
+  toast.classList.add('show');
+  clearTimeout(showMilestoneToast._t);
+  showMilestoneToast._t = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+function launchConfetti(colors){
+  const layer = document.createElement('div');
+  layer.className = 'confetti-layer';
+  document.body.appendChild(layer);
+  const palette = (colors && colors.length ? colors : ['#FFD84D', '#FF8A2B']).concat(['#3E9BFF', '#FF5A3C', '#F2F3F7']);
+  const count = 70;
+  for (let i = 0; i < count; i++){
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const w = 6 + Math.random() * 6;
+    piece.style.width = w + 'px';
+    piece.style.height = (w * (0.4 + Math.random() * 0.6)) + 'px';
+    piece.style.left = (Math.random() * 100) + 'vw';
+    piece.style.background = palette[Math.floor(Math.random() * palette.length)];
+    const duration = 1.7 + Math.random() * 1.3;
+    const delay = Math.random() * 0.35;
+    piece.style.animationDuration = duration + 's';
+    piece.style.animationDelay = delay + 's';
+    piece.style.transform = `rotate(${Math.round(Math.random() * 360)}deg)`;
+    layer.appendChild(piece);
+  }
+  setTimeout(() => layer.remove(), 3300);
+}
+
+function celebrateIfMilestone(h, streak){
+  if (!STREAK_MILESTONES.includes(streak)) return;
+  launchConfetti(h.colors);
+  showMilestoneToast(`🔥 ${streak} ${pluralDays(streak)} поспіль — ${h.name}!`);
+  vibrate([30, 40, 30, 40, 70]);
+}
+
 /* ================= НАГАДУВАННЯ (локальні сповіщення в браузері) ================= */
 function requestNotificationPermission(){
   if (!('Notification' in window)) return;
@@ -828,7 +906,12 @@ function renderDetailOverlay(){
     const key = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
     const nowComplete = h.progress >= h.goal && h.goal > 0;
     if (nowComplete) h.days[key] = true;
-    if (nowComplete && !wasComplete) feedbackComplete(); else feedbackTick();
+    if (nowComplete && !wasComplete){
+      feedbackComplete();
+      celebrateIfMilestone(h, computeStreak(h));
+    } else {
+      feedbackTick();
+    }
     renderAll(); saveState();
   });
   document.getElementById('editHabitBtn').addEventListener('click', () => openEditModal(h.id));
@@ -890,8 +973,14 @@ function renderCalendar(h){
         const turningOn = !h.days[key];
         h.days[key] = !h.days[key];
         if (!h.days[key]) delete h.days[key];
-        if (turningOn) feedbackComplete(); else feedbackUndo();
-        renderMainArea();
+        if (turningOn){
+          feedbackComplete();
+          celebrateIfMilestone(h, computeStreak(h));
+        } else {
+          feedbackUndo();
+        }
+        renderDetailOverlay();
+        renderRail();
         renderStreakBoard();
         saveState();
       });
