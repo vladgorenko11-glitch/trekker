@@ -464,7 +464,7 @@
   .icon-option.add-icon-option { border-style: dashed; color: var(--text-tertiary); font-size: 18px; font-weight: 300; }
   .icon-option.add-icon-option:hover { color: var(--text-secondary); border-color: var(--text-secondary); }
 
-  .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
+  .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; max-width: 266px; }
   .color-option {
     aspect-ratio: 1; border-radius: 50%; cursor: pointer; border: 2px solid transparent;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
@@ -760,17 +760,17 @@ const ICONS = {
 
 const COLORS = [
   ['#3E9BFF', '#7FC4FF'],
-  ['#FF7A5C', '#FF9A80'],
   ['#5B6EF5', '#8B97FF'],
-  ['#FFA53D', '#FFC773'],
-  ['#D24FE0', '#F08FE8'],
-  ['#28C79A', '#6EE7C0'],
-  ['#FF4D6D', '#FF8FA3'],
-  ['#20C4D0', '#7FEAF2'],
-  ['#FFD93D', '#FFEC99'],
   ['#8B5CF6', '#C4B5FD'],
-  ['#4ADE80', '#A7F3D0'],
+  ['#D24FE0', '#F08FE8'],
   ['#F472B6', '#FBCFE8'],
+  ['#FF4D6D', '#FF8FA3'],
+  ['#FF5A3C', '#FF9478'],
+  ['#FFA53D', '#FFC773'],
+  ['#FFD93D', '#FFEC99'],
+  ['#28C79A', '#6EE7C0'],
+  ['#20C4D0', '#7FEAF2'],
+  ['#6B7280', '#9CA3AF'],
 ];
 
 /* ================= СТАН (зберігається у localStorage браузера на пристрої) ================= */
