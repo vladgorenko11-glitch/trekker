@@ -1499,7 +1499,7 @@ function renderStreakBoard(){
   if (!habits.length){ grid.innerHTML = ''; return; }
   grid.innerHTML = '';
   const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
-  habits.forEach(h => {
+  habits.filter(h => isDueToday(h)).forEach(h => {
     const isComplete = h.goal > 0 && h.progress >= h.goal;
     const isFrozen = !isComplete && h.days[todayKeyStr] === 'frozen';
     const streak = computeStreak(h);
