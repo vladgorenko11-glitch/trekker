@@ -503,6 +503,26 @@
     margin-top: 4px;
   }
 
+  /* ---------- Картка тижневої звички "на сьогодні" (показується над рейкою вогників) ---------- */
+  .weekly-today-cards { display: flex; flex-direction: column; gap: 10px; }
+  .weekly-today-cards:not(:empty) { margin-bottom: 10px; }
+  .weekly-today-card {
+    background: var(--card);
+    border: 1.5px solid rgba(210,79,224,0.4);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color .15s ease, transform .12s ease;
+  }
+  .weekly-today-card:active { transform: scale(0.98); }
+  .weekly-today-card.lit { border-color: rgba(255,138,43,0.45); }
+  .weekly-today-card.frozen { border-color: rgba(62,155,255,0.5); }
+  .weekly-today-card .wtc-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .weekly-today-card .wtc-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .weekly-today-card .wtc-edit { flex: 0 0 auto; width: 20px; height: 20px; color: var(--text-tertiary); cursor: pointer; }
+  .weekly-today-card .weekly-tag { margin-top: 10px; }
+  .weekly-today-card .wtc-sub { font-size: 13.5px; color: var(--text-tertiary); margin-top: 12px; }
+
   .day-cell.not-scheduled { opacity: 0.28; }
 
   .weekly-preview-banner {
@@ -627,6 +647,8 @@
   <div id="weeklyPreviewBanner"></div>
 
   <div id="storageBanner"></div>
+
+  <div class="weekly-today-cards" id="weeklyTodayCards"></div>
 
   <div class="streak-grid" id="streakGrid"></div>
 
@@ -839,10 +861,69 @@ let celebratedAllDoneKey = null; // ключ дня, за який вже пок
 function dayKey(y, m, d){ return `${y}-${m}-${d}`; }
 
 /* ================= ЧАСТОТА ЗВИЧКИ (щодня / раз на тиждень у вибрані дні) ================= */
+/* Порядок днів тижня, що починається з понеділка — використовується, щоб визначити
+   короткий інтервал між двома вибраними днями (напр. Сб+Нд). Значення — це те, що
+   повертає JS Date.getDay() (0=нд..6=сб). */
+const MON_FIRST_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
+/* Якщо у тижневій звичці обрано РІВНО два дні тижня, вважаємо це однією ціллю
+   на весь короткий проміжок між цими днями (напр. Сб+Нд — одна ціль "на вихідні"),
+   а не двома окремими появами звички. Повертає масив днів тижня (getDay()),
+   що належать цьому проміжку, у хронологічному порядку починаючи з першого дня.
+   Для 1 або 3+ вибраних днів кожен день лишається окремою, незалежною появою. */
+function weeklyWindowWeekdays(h){
+  if (!Array.isArray(h.weekdays)) return [];
+  if (h.weekdays.length !== 2) return h.weekdays.slice();
+  const [dA, dB] = h.weekdays;
+  const posA = MON_FIRST_ORDER.indexOf(dA);
+  const posB = MON_FIRST_ORDER.indexOf(dB);
+  const fwd = (posB - posA + 7) % 7;
+  const bwd = 7 - fwd;
+  const startPos = fwd <= bwd ? posA : posB;
+  const len = Math.min(fwd, bwd) + 1;
+  const days = [];
+  for (let i = 0; i < len; i++) days.push(MON_FIRST_ORDER[(startPos + i) % 7]);
+  return days;
+}
+
+function isWindowHabit(h){
+  return h.frequency === 'weekly' && Array.isArray(h.weekdays) && h.weekdays.length === 2;
+}
+
+/* Дата початку "вікна" (проміжку між двома вибраними днями), якому належить date. */
+function windowInstanceStartDate(h, date){
+  if (!isWindowHabit(h)) return new Date(date);
+  const startWeekday = weeklyWindowWeekdays(h)[0];
+  const d = new Date(date);
+  const stepsBack = (d.getDay() - startWeekday + 7) % 7;
+  d.setDate(d.getDate() - stepsBack);
+  return d;
+}
+
+/* Усі календарні дати конкретного "вікна", якому належить date. */
+function windowInstanceDates(h, date){
+  if (!isWindowHabit(h)) return [new Date(date)];
+  const winWeekdays = weeklyWindowWeekdays(h);
+  const start = windowInstanceStartDate(h, date);
+  return winWeekdays.map((_, i) => { const dd = new Date(start); dd.setDate(dd.getDate() + i); return dd; });
+}
+
+/* Позначити/зняти позначку для ВСІХ днів поточного вікна одразу (щоб не треба
+   було виконувати звичку і в один, і в інший день — досить одного разу). */
+function applyToWindowDays(h, date, fn){
+  windowInstanceDates(h, date).forEach(d => fn(dayKey(d.getFullYear(), d.getMonth(), d.getDate())));
+}
+
+/* Чи вже виконано цю появу звички (позначка стоїть хоч на одному дні вікна)? */
+function isWindowInstanceDone(h, date){
+  return windowInstanceDates(h, date).some(d => h.days[dayKey(d.getFullYear(), d.getMonth(), d.getDate())]);
+}
+
 function isDueOnDate(h, date){
   if (!h.frequency || h.frequency === 'daily') return true;
   if (h.frequency === 'weekly'){
-    return Array.isArray(h.weekdays) && h.weekdays.includes(date.getDay());
+    if (!Array.isArray(h.weekdays) || h.weekdays.length === 0) return false;
+    return weeklyWindowWeekdays(h).includes(date.getDay());
   }
   return true;
 }
@@ -1227,17 +1308,17 @@ function renderDetailOverlay(){
 
   document.getElementById('minusBtn').addEventListener('click', () => {
     h.progress = Math.max(0, h.progress - 1);
-    const key = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
-    if (h.progress < h.goal && h.days[key] === true) delete h.days[key];
+    if (h.progress < h.goal){
+      applyToWindowDays(h, today, k => { if (h.days[k] === true) delete h.days[k]; });
+    }
     feedbackUndo();
     renderAll(); saveState();
   });
   document.getElementById('plusBtn').addEventListener('click', () => {
     const wasComplete = h.goal > 0 && h.progress >= h.goal;
     h.progress = Math.min(h.goal, h.progress + 1);
-    const key = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
     const nowComplete = h.progress >= h.goal && h.goal > 0;
-    if (nowComplete) h.days[key] = true;
+    if (nowComplete) applyToWindowDays(h, today, k => { h.days[k] = true; });
     if (nowComplete && !wasComplete){
       feedbackComplete();
       celebrateIfMilestone(h, computeStreak(h));
@@ -1256,10 +1337,10 @@ function renderDetailOverlay(){
     freezeBtn.addEventListener('click', () => {
       const key = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
       if (h.days[key] === 'frozen'){
-        delete h.days[key];
+        applyToWindowDays(h, today, k => { if (h.days[k] === 'frozen') delete h.days[k]; });
         feedbackUndo();
       } else {
-        h.days[key] = 'frozen';
+        applyToWindowDays(h, today, k => { h.days[k] = 'frozen'; });
         feedbackComplete();
       }
       renderAll(); saveState();
@@ -1358,7 +1439,11 @@ function renderCalendar(h){
     if (isToday && isDueOnDate(h, cellDate)){
       cell.addEventListener('click', () => {
         const turningOn = h.days[key] !== true;
-        if (turningOn){ h.days[key] = true; } else { delete h.days[key]; }
+        if (turningOn){
+          applyToWindowDays(h, cellDate, k => { h.days[k] = true; });
+        } else {
+          applyToWindowDays(h, cellDate, k => { if (h.days[k] === true) delete h.days[k]; });
+        }
         if (turningOn){
           feedbackComplete();
           celebrateIfMilestone(h, computeStreak(h));
@@ -1388,6 +1473,28 @@ function computeStreak(h){
       while (!isDueOnDate(h, cursor) && steps < 400){ cursor.setDate(cursor.getDate() - 1); steps++; }
     };
     stepBackToDue();
+
+    if (isWindowHabit(h)){
+      // Ціль на 2 дні — це ОДНА поява на все вікно (напр. Сб+Нд), тому крок стріку
+      // рахуємо по цілих вікнах, а не по окремих днях, інакше одне виконання
+      // задвоїлося б у стріку (Сб і Нд порахувались би як два дні поспіль).
+      if (!isWindowInstanceDone(h, cursor)){
+        cursor = windowInstanceStartDate(h, cursor);
+        cursor.setDate(cursor.getDate() - 1);
+        stepBackToDue();
+      }
+      while (guard < 400){
+        guard++;
+        if (isWindowInstanceDone(h, cursor)){
+          streak++;
+          cursor = windowInstanceStartDate(h, cursor);
+          cursor.setDate(cursor.getDate() - 1);
+          stepBackToDue();
+        } else break;
+      }
+      return streak;
+    }
+
     const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
     const cursorIsToday = dayKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()) === todayKeyStr;
     if (cursorIsToday && !h.days[todayKeyStr]){
@@ -1422,16 +1529,40 @@ function computeStreak(h){
 }
 
 function recalcStats(h){
-  const allKeys = Object.keys(h.days).filter(k => h.days[k]);
-  document.getElementById('statTotal').textContent = allKeys.length;
+  if (isWindowHabit(h)){
+    // Ціль на 2 дні = одна поява на вікно, тому рахуємо унікальні вікна,
+    // а не окремі позначені дні (інакше одне виконання рахувалось би двічі).
+    const doneStartKeys = new Set();
+    Object.keys(h.days).filter(k => h.days[k]).forEach(k => {
+      const [y, m, d] = k.split('-').map(Number);
+      const start = windowInstanceStartDate(h, new Date(y, m, d));
+      doneStartKeys.add(dayKey(start.getFullYear(), start.getMonth(), start.getDate()));
+    });
+    document.getElementById('statTotal').textContent = doneStartKeys.size;
 
-  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-  let doneThisMonth = 0;
-  for (let d = 1; d <= daysInMonth; d++){
-    if (h.days[dayKey(viewYear, viewMonth, d)]) doneThisMonth++;
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const startWeekday = weeklyWindowWeekdays(h)[0];
+    let doneThisMonth = 0, possibleThisMonth = 0;
+    for (let d = 1; d <= daysInMonth; d++){
+      const date = new Date(viewYear, viewMonth, d);
+      if (date.getDay() !== startWeekday) continue;
+      possibleThisMonth++;
+      if (doneStartKeys.has(dayKey(date.getFullYear(), date.getMonth(), date.getDate()))) doneThisMonth++;
+    }
+    const pct = possibleThisMonth ? Math.round((doneThisMonth / possibleThisMonth) * 1000) / 10 : 0;
+    document.getElementById('statPercent').textContent = pct + '%';
+  } else {
+    const allKeys = Object.keys(h.days).filter(k => h.days[k]);
+    document.getElementById('statTotal').textContent = allKeys.length;
+
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    let doneThisMonth = 0;
+    for (let d = 1; d <= daysInMonth; d++){
+      if (h.days[dayKey(viewYear, viewMonth, d)]) doneThisMonth++;
+    }
+    const pct = daysInMonth ? Math.round((doneThisMonth / daysInMonth) * 1000) / 10 : 0;
+    document.getElementById('statPercent').textContent = pct + '%';
   }
-  const pct = daysInMonth ? Math.round((doneThisMonth / daysInMonth) * 1000) / 10 : 0;
-  document.getElementById('statPercent').textContent = pct + '%';
 
   document.getElementById('statStreak').textContent = computeStreak(h);
 }
@@ -1494,12 +1625,42 @@ function freezeIconMarkup(){
   return `<img src="${FREEZE_ICON_SRC}" alt="" style="width:100%;height:100%;object-fit:contain;">`;
 }
 
+/* ---------- Картка тижневої звички "на сьогодні" ----------
+   Тижневі звички у свій день показуються не як звичайний прямокутник
+   з вогником (як щоденні звички), а як окрема виділена картка над рейкою
+   вогників — з назвою, тегом днів тижня та статусом. */
+function renderWeeklyTodayCards(){
+  const container = document.getElementById('weeklyTodayCards');
+  if (!container) return;
+  const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const weeklyToday = habits.filter(h => h.frequency === 'weekly' && isDueToday(h));
+  container.innerHTML = '';
+  weeklyToday.forEach(h => {
+    const isComplete = h.goal > 0 && h.progress >= h.goal;
+    const isFrozen = !isComplete && h.days[todayKeyStr] === 'frozen';
+    const card = document.createElement('div');
+    card.className = 'weekly-today-card' + (isComplete ? ' lit' : '') + (isFrozen ? ' frozen' : '');
+    card.innerHTML = `
+      <div class="wtc-top">
+        <div class="wtc-name">${escapeHtml(h.name)}</div>
+        <svg class="wtc-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+      </div>
+      <div class="weekly-tag">📅 ${weekdaysLabel(h.weekdays)}</div>
+      <div class="wtc-sub">${subText(h)}</div>`;
+    card.querySelector('.wtc-edit').addEventListener('click', (e) => { e.stopPropagation(); openEditModal(h.id); });
+    card.addEventListener('click', () => { activeHabitId = h.id; detailOpen = true; renderAll(); });
+    container.appendChild(card);
+  });
+}
+
 function renderStreakBoard(){
   const grid = document.getElementById('streakGrid');
   if (!habits.length){ grid.innerHTML = ''; return; }
   grid.innerHTML = '';
   const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
-  habits.filter(h => isDueToday(h)).forEach(h => {
+  // Тижневі звички у свій день рендеряться окремо через renderWeeklyTodayCards() —
+  // тут показуємо лише щоденні (і тижневі не у свій день узагалі не показуються).
+  habits.filter(h => isDueToday(h) && h.frequency !== 'weekly').forEach(h => {
     const isComplete = h.goal > 0 && h.progress >= h.goal;
     const isFrozen = !isComplete && h.days[todayKeyStr] === 'frozen';
     const streak = computeStreak(h);
@@ -1668,6 +1829,11 @@ function updateFrequencyUI(){
   weeklyBtn.classList.toggle('active', isWeekly);
   picker.style.display = isWeekly ? 'flex' : 'none';
   hint.style.display = isWeekly ? 'block' : 'none';
+  if (isWeekly){
+    hint.textContent = selectedWeekdays.length === 2
+      ? 'Обрано 2 дні — це одна ціль на весь проміжок між ними (напр. Сб+Нд = одна ціль "на вихідні"). Досить виконати один раз у будь-який з цих днів.'
+      : 'Звичка з\u2019являтиметься лише у вибрані дні тижня. Якщо встановити нагадування нижче — за день до появи прийде сповіщення, що завтра з\u2019явиться нова звичка.';
+  }
   picker.querySelectorAll('.weekday-chip').forEach(chip => {
     const d = Number(chip.dataset.day);
     chip.classList.toggle('selected', selectedWeekdays.includes(d));
@@ -1787,6 +1953,7 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', () => {
 /* ================= СТАРТ (підвантажуємо збережене, якщо є) ================= */
 function renderAll(){
   renderRail();
+  renderWeeklyTodayCards();
   renderStreakBoard();
   renderMainArea();
   renderWeeklyPreviewBanner();
