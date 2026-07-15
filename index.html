@@ -206,6 +206,7 @@
     filter: brightness(0.75) saturate(0.7);
   }
   .archive-habit-ico svg { width: 18px; height: 18px; }
+  .archive-habit-ico img { width: 20px; height: 20px; object-fit: cover; border-radius: 50%; }
   .archive-habit-info { flex: 1; min-width: 0; }
   .archive-habit-name {
     font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 14.5px;
@@ -619,6 +620,9 @@
   @keyframes slideUp { from { transform: translateY(30px); opacity:0; } to { transform: translateY(0); opacity:1; } }
 
   .modal h2 { font-family:'Rubik',sans-serif; font-size: 19px; margin: 0 0 20px; text-align: center; }
+
+  .archive-modal { min-height: 65vh; display: flex; flex-direction: column; }
+  .archive-modal .archive-body { flex: 1 1 auto; overflow-y: auto; }
 
   .modal-header { display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 20px; }
   .modal-header h2 { margin: 0; }
