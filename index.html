@@ -60,6 +60,18 @@
     flex-direction: column;
     gap: 24px;
   }
+  .app > * { flex: 0 0 auto; }
+
+  /* Порожні службові банери (тижневий прев'ю, попередження про сховище, тижневі картки)
+     не повинні з'їдати gap контейнера, коли в них немає вмісту — інакше після
+     швидких завдань лишається порожня "дірка" перед списком вогників. */
+  #weeklyPreviewBanner:empty,
+  #storageBanner:empty,
+  .weekly-today-cards:empty {
+    display: none;
+  }
+
+
 
   .header { text-align: center; padding: 0 6px; }
   .header h1 {
@@ -78,7 +90,7 @@
   /* ---------- Швидкі завдання на день (без вогника, окремо від звичок) ---------- */
   .quick-tasks { margin: 0 2px 4px; }
   .quick-tasks-done { margin: 4px 2px 8px; }
-  .quick-tasks-list { display: flex; flex-direction: column; gap: 10px; }
+  .quick-tasks-list { display: flex; flex-direction: column; }
   .quick-tasks-bar-spacer { height: 2px; }
   .quick-tasks-done-label {
     font-size: 11px; font-weight: 600; color: var(--text-tertiary);
@@ -86,45 +98,133 @@
   }
   .quick-task-row {
     display: flex; align-items: center; gap: 12px;
-    background: rgba(255,176,32,0.16);
-    border-radius: 20px; padding: 12px 14px;
+    padding: 11px 2px;
+    border-bottom: 1px solid var(--divider);
   }
-  .quick-task-row.done { background: rgba(255,176,32,0.62); }
-  .quick-task-icon {
-    width: 38px; height: 38px; flex: 0 0 auto; border-radius: 12px;
-    background: rgba(255,255,255,0.55);
-    display: flex; align-items: center; justify-content: center;
-  }
-  .quick-task-icon svg { width: 18px; height: 18px; stroke: #1B1F2A; }
+  .quick-tasks-list .quick-task-row:last-child,
+  .quick-task-add-row:last-child { border-bottom: none; }
   .quick-task-text {
-    flex: 1; font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 15px;
-    color: #1B1F2A; word-break: break-word;
+    flex: 1; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 15px;
+    color: var(--text-primary); word-break: break-word;
   }
-  .quick-task-row.done .quick-task-text { text-decoration: line-through; opacity: 0.75; }
-  .quick-task-text.placeholder { font-weight: 600; color: rgba(27,31,42,0.55); }
+  .quick-task-row.done .quick-task-text { text-decoration: line-through; color: var(--text-tertiary); }
+  .quick-task-text.placeholder { font-weight: 500; color: var(--text-tertiary); }
   .quick-task-check {
-    width: 30px; height: 30px; flex: 0 0 auto; border-radius: 50%;
-    border: none; background: rgba(255,255,255,0.55); color: #1B1F2A;
+    width: 24px; height: 24px; flex: 0 0 auto; border-radius: 50%;
+    border: 1.5px solid var(--card-border); background: transparent; color: transparent;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: background .12s ease, border-color .12s ease;
   }
-  .quick-task-check.checked { background: #34C759; color: #fff; }
-  .quick-task-check.checked svg { width: 15px; height: 15px; }
-  .quick-task-check.add-ico { font-size: 18px; font-weight: 700; line-height: 1; }
+  .quick-task-check.checked { background: #34C759; border-color: #34C759; color: #fff; }
+  .quick-task-check.checked svg { width: 13px; height: 13px; }
+  .quick-task-check.add-ico { font-size: 16px; font-weight: 600; line-height: 1; color: var(--text-tertiary); border-style: dashed; }
   .quick-task-del {
     width: 20px; height: 20px; flex: 0 0 auto; display: flex; align-items: center;
-    justify-content: center; color: rgba(27,31,42,0.45); cursor: pointer;
+    justify-content: center; color: var(--text-tertiary); cursor: pointer;
   }
   .quick-task-del svg { width: 14px; height: 14px; }
+
+  /* ---------- Кнопка архіву завдань ---------- */
+  .task-archive-btn {
+    display: flex; align-items: center; gap: 10px;
+    margin: 8px 2px 4px; padding: 12px 14px;
+    border-radius: var(--radius-md);
+    background: var(--card-bg, rgba(255,255,255,0.04));
+    border: 1px solid var(--card-border);
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease;
+  }
+  .task-archive-btn:hover { border-color: var(--text-tertiary); }
+  .task-archive-btn-icon {
+    width: 22px; height: 22px; flex: 0 0 auto; color: var(--text-tertiary);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .task-archive-btn-icon svg { width: 20px; height: 20px; }
+  .task-archive-btn-text {
+    flex: 1; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 14.5px;
+    color: var(--text-secondary, var(--text-primary));
+  }
+  .task-archive-btn-count {
+    font-size: 12px; font-weight: 700; color: var(--text-tertiary);
+    background: var(--divider); border-radius: 20px; padding: 3px 9px;
+    min-width: 20px; text-align: center;
+  }
+  .task-archive-btn-count:empty { display: none; }
+
+  /* ---------- Модалка архіву ---------- */
+  .archive-empty {
+    text-align: center; color: var(--text-tertiary); font-size: 14px;
+    padding: 32px 8px;
+  }
+  .archive-day-group { margin-bottom: 6px; }
+  .archive-day-label {
+    font-size: 11px; font-weight: 700; color: var(--text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.4px; margin: 14px 2px 6px;
+  }
+  .archive-day-group:first-child .archive-day-label { margin-top: 2px; }
+  .archive-task-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 2px;
+    border-bottom: 1px solid var(--divider);
+  }
+  .archive-task-row:last-child { border-bottom: none; }
+  .archive-task-check {
+    width: 22px; height: 22px; flex: 0 0 auto; border-radius: 50%;
+    background: #34C759; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .archive-task-check svg { width: 12px; height: 12px; }
+  .archive-task-text {
+    flex: 1; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 14.5px;
+    color: var(--text-tertiary); text-decoration: line-through; word-break: break-word;
+  }
+  .archive-task-del {
+    width: 20px; height: 20px; flex: 0 0 auto; display: flex; align-items: center;
+    justify-content: center; color: var(--text-tertiary); cursor: pointer;
+  }
+  .archive-task-del svg { width: 14px; height: 14px; }
+  .archive-clear-row { display: flex; justify-content: center; margin-top: 16px; }
+
+  .archive-tabs { display: flex; gap: 8px; margin: -6px 0 14px; }
+  .archive-tab {
+    flex: 1; text-align: center; padding: 9px 10px; border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 600; color: var(--text-tertiary);
+    background: var(--track); cursor: pointer; transition: background .12s ease, color .12s ease;
+  }
+  .archive-tab.active { background: var(--card-border); color: var(--text-primary); }
+
+  .archive-habit-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 2px;
+    border-bottom: 1px solid var(--divider);
+    cursor: pointer;
+  }
+  .archive-habit-row:last-child { border-bottom: none; }
+  .archive-habit-ico {
+    width: 38px; height: 38px; flex: 0 0 auto; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    filter: brightness(0.75) saturate(0.7);
+  }
+  .archive-habit-ico svg { width: 18px; height: 18px; }
+  .archive-habit-info { flex: 1; min-width: 0; }
+  .archive-habit-name {
+    font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 14.5px;
+    color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .archive-habit-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+  .archive-habit-restore {
+    width: 30px; height: 30px; flex: 0 0 auto; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-tertiary); cursor: pointer; border: 1px solid var(--card-border);
+  }
+  .archive-habit-restore:hover { color: var(--text-primary); border-color: var(--text-tertiary); }
+  .archive-habit-restore svg { width: 15px; height: 15px; }
   .quick-task-add-row {
     display: flex; align-items: center; gap: 12px; cursor: pointer;
-    background: transparent; border: 1.5px dashed rgba(255,176,32,0.55);
-    border-radius: 20px; padding: 12px 14px; margin-top: 10px;
+    padding: 11px 2px;
+    border-bottom: 1px solid var(--divider);
   }
-  .quick-tasks-list + .quick-task-add-row { margin-top: 10px; }
-  .quick-task-add-row.active { cursor: default; border-color: #FFB020; }
-  .quick-task-icon .add-ico { font-size: 18px; font-weight: 700; line-height: 1; color: #1B1F2A; }
-  .quick-task-add-row .quick-task-icon { background: transparent; border: 1.5px dashed #FFB020; }
-  .quick-task-add-row .quick-task-icon .add-ico { color: #FFB020; }
+  .quick-task-add-row.active { cursor: default; }
   .quick-task-input {
     flex: 1; background: transparent; border: none; outline: none;
     font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 15px;
@@ -135,8 +235,11 @@
   /* ---------- Habit rail ---------- */
   .habit-rail {
     display: flex;
+    flex: 0 0 auto;
     gap: 16px;
     overflow-x: auto;
+    overflow-y: hidden;
+    min-height: 112px;
     padding: 6px 2px 10px;
     scrollbar-width: none;
   }
@@ -219,6 +322,19 @@
     text-overflow: ellipsis;
   }
 
+  /* Тижнева звичка, яка ще не з'явилась сьогодні — притлумлена, з підписом "через N днів" */
+  .habit-chip.upcoming .fill { filter: brightness(0.55) saturate(0.55); }
+  .habit-chip.upcoming .fill::after {
+    content: '';
+    position: absolute; inset: 0; border-radius: 50%;
+    background: rgba(0,0,0,0.22);
+  }
+  .habit-chip-countdown {
+    font-size: 9.5px; font-weight: 600; color: var(--text-tertiary);
+    max-width: 76px; text-align: center; white-space: nowrap;
+    margin-top: -4px;
+  }
+
   .habit-chip.add { background: transparent; border: 2px dashed var(--card-border); }
   .habit-chip.add .fill { background: transparent; color: var(--text-tertiary); font-size: 30px; font-weight: 300; }
 
@@ -227,7 +343,10 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 10px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255,255,255,0.08);
   }
+  .streak-grid:empty { display: none; }
   .streak-card {
     background: var(--card);
     border: 1px solid var(--card-border);
@@ -414,12 +533,17 @@
   .stat span { font-size: 11.5px; color: var(--text-tertiary); }
   .stat + .stat { border-left: 1px solid var(--divider); }
 
-  .card-actions { display: flex; justify-content: center; padding: 0 20px 22px; }
+  .card-actions { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; padding: 0 20px 22px; }
   .delete-link {
     font-size: 13px; color: var(--text-tertiary); cursor: pointer; display: flex; align-items: center; gap: 6px;
   }
   .delete-link:hover { color: var(--danger); }
   .delete-link svg { width: 14px; height: 14px; }
+  .archive-link {
+    font-size: 13px; color: var(--text-tertiary); cursor: pointer; display: flex; align-items: center; gap: 6px;
+  }
+  .archive-link:hover { color: var(--text-secondary, var(--text-primary)); }
+  .archive-link svg { width: 14px; height: 14px; }
 
   /* ---------- Заморозка дня ---------- */
   .freeze-row { padding: 0 20px 4px; }
@@ -585,6 +709,7 @@
   .weekly-today-card:active { transform: scale(0.98); }
   .weekly-today-card.lit { border-color: rgba(255,138,43,0.45); }
   .weekly-today-card.frozen { border-color: rgba(62,155,255,0.5); }
+  .weekly-today-card.upcoming { opacity: 0.6; }
   .weekly-today-card .wtc-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .weekly-today-card .wtc-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
   .weekly-today-card .wtc-edit { flex: 0 0 auto; width: 20px; height: 20px; color: var(--text-tertiary); cursor: pointer; }
@@ -726,6 +851,18 @@
 
   <div class="quick-tasks-done" id="quickTasksDoneBar"></div>
 
+  <div class="task-archive-btn" id="taskArchiveBtn">
+    <div class="task-archive-btn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="5" rx="1.3"/>
+        <path d="M5 8v11a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19V8"/>
+        <path d="M10 12h4"/>
+      </svg>
+    </div>
+    <div class="task-archive-btn-text">Архів</div>
+    <div class="task-archive-btn-count" id="taskArchiveCount"></div>
+  </div>
+
 </div>
 
 <!-- Оверлей з карткою деталей звички (відкривається поверх, фон затемнюється) -->
@@ -812,6 +949,19 @@
   </div>
 </div>
 
+<!-- Оверлей архіву: виконані завдання та архівовані звички -->
+<div class="overlay" id="archiveOverlay">
+  <div class="modal archive-modal">
+    <div class="modal-header">
+      <h2>Архів</h2>
+      <div class="modal-close-btn" id="archiveCloseX">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="archive-body" id="archiveBody"></div>
+  </div>
+</div>
+
 <script>
 /* ================= ІКОНКИ ================= */
 const ICONS = {
@@ -853,6 +1003,7 @@ let customIcons = {};   // { 'custom_169...': 'data:image/png;base64,...' } — 
 let quickTasks = [];    // { id, text, done } — завдання чисто на сьогодні, без вогника, зникають опівночі
 let quickTasksDateKey = null; // ключ дня, для якого існує поточний список quickTasks
 let quickTaskAdding = false;  // чи зараз показано поле вводу нового завдання
+let taskArchive = [];   // { id, text, dateKey } — виконані завдання, перенесені сюди після опівночі
 const STORAGE_KEY = 'habits-state-v1';
 let storageAvailable = false;
 
@@ -885,7 +1036,7 @@ function renderStorageBanner(){
 function saveState(){
   if (!storageAvailable) { showSaveStatus('Не збережено — сховище недоступне', true); return; }
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, quickTasks, quickTasksDateKey }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, quickTasks, quickTasksDateKey, taskArchive }));
     showSaveStatus('Збережено');
   }catch(e){
     console.error('Не вдалося зберегти дані:', e);
@@ -904,6 +1055,7 @@ function loadState(){
         if (typeof h.notes !== 'string') h.notes = '';
         if (h.frequency !== 'weekly') h.frequency = 'daily';
         if (!Array.isArray(h.weekdays)) h.weekdays = [];
+        if (typeof h.archived !== 'boolean') h.archived = false;
       });
       activeHabitId = parsed.activeHabitId ?? null;
       nextId = parsed.nextId || 1;
@@ -912,6 +1064,7 @@ function loadState(){
       celebratedAllDoneKey = parsed.celebratedAllDoneKey || null;
       quickTasks = Array.isArray(parsed.quickTasks) ? parsed.quickTasks : [];
       quickTasksDateKey = parsed.quickTasksDateKey || null;
+      taskArchive = Array.isArray(parsed.taskArchive) ? parsed.taskArchive : [];
     }
   }catch(e){
     console.error('Не вдалося завантажити дані:', e);
@@ -1015,6 +1168,29 @@ function isDueOnDate(h, date){
 }
 function isDueToday(h){ return isDueOnDate(h, today); }
 
+/* Скільки днів лишилось до наступної появи тижневої звички (0, якщо вона активна сьогодні). */
+function daysUntilDue(h){
+  if (isDueToday(h)) return 0;
+  const d = new Date(today);
+  for (let i = 1; i <= 14; i++){
+    d.setDate(d.getDate() + 1);
+    if (isDueOnDate(h, d)) return i;
+  }
+  return null; // дні тижня ще не обрано
+}
+
+function daysUntilLabel(n){
+  if (n === null || n === undefined) return 'Дні тижня ще не обрано';
+  if (n === 1) return "З'явиться завтра";
+  const mod10 = n % 10, mod100 = n % 100;
+  let word = 'днів';
+  if (mod100 < 11 || mod100 > 14){
+    if (mod10 === 1) word = 'день';
+    else if (mod10 >= 2 && mod10 <= 4) word = 'дні';
+  }
+  return `З'явиться через ${n} ${word}`;
+}
+
 function escapeHtml(str){
   return String(str || '')
     .replace(/&/g, '&amp;')
@@ -1042,6 +1218,14 @@ function checkDayRollover(){
       h.progress = h.days[nowKey] ? h.goal : 0;
     });
     if (quickTasksStale){
+      // Виконані завдання попереднього дня переносимо в архів (не втрачаємо їх),
+      // а невиконані просто зникають, як і раніше.
+      const finishedPrevDay = quickTasks.filter(t => t.done);
+      if (finishedPrevDay.length > 0 && quickTasksDateKey){
+        finishedPrevDay.forEach(t => {
+          taskArchive.push({ id: t.id, text: t.text, dateKey: quickTasksDateKey });
+        });
+      }
       quickTasks = [];
       quickTasksDateKey = nowKey;
       quickTaskAdding = false;
@@ -1164,7 +1348,7 @@ function launchFireworks(){
 }
 
 function checkAllDoneCelebration(){
-  const dueHabits = habits.filter(h => isDueToday(h));
+  const dueHabits = habits.filter(h => !h.archived && isDueToday(h));
   if (!dueHabits.length) return;
   const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
   const allContinued = dueHabits.every(h => {
@@ -1194,6 +1378,7 @@ function checkReminders(){
   const hhmm = pad2(now.getHours()) + ':' + pad2(now.getMinutes());
   const todayKeyStr = dayKey(now.getFullYear(), now.getMonth(), now.getDate());
   habits.forEach(h => {
+    if (h.archived) return;
     if (!h.reminder || h.reminder !== hhmm) return;
     const dueToday = isDueOnDate(h, now);
     if (dueToday){
@@ -1278,14 +1463,12 @@ function renderQuickTasks(){
   const done = quickTasks.filter(t => t.done);
 
   // Верхній блок — над рейкою вогників: незавершені завдання дня + кнопка додавання.
-  const taskIcon = `<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 12h8M8 16h5"/></svg>`;
   let topHtml = '';
   if (pending.length > 0){
     topHtml += '<div class="quick-tasks-list">' + pending.map(t => `
       <div class="quick-task-row" data-id="${t.id}">
-        <div class="quick-task-icon">${taskIcon}</div>
-        <div class="quick-task-text">${escapeHtml(t.text)}</div>
         <div class="quick-task-check" data-action="toggle" data-id="${t.id}"></div>
+        <div class="quick-task-text">${escapeHtml(t.text)}</div>
         <div class="quick-task-del" data-action="delete" data-id="${t.id}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
         </div>
@@ -1294,13 +1477,13 @@ function renderQuickTasks(){
   if (quickTaskAdding){
     topHtml += `
       <div class="quick-task-add-row active">
-        <div class="quick-task-icon"><span class="add-ico">+</span></div>
+        <div class="quick-task-check add-ico">+</div>
         <input class="quick-task-input" id="quickTaskInput" maxlength="60" placeholder="Завдання на сьогодні…">
       </div>`;
   } else {
     topHtml += `
       <div class="quick-task-add-row" id="quickTaskAddBtn">
-        <div class="quick-task-icon"><span class="add-ico">+</span></div>
+        <div class="quick-task-check add-ico">+</div>
         <div class="quick-task-text placeholder">Завдання на сьогодні</div>
       </div>`;
   }
@@ -1337,11 +1520,10 @@ function renderQuickTasks(){
     doneBar.innerHTML = `<div class="quick-tasks-done-label">Виконано сьогодні</div><div class="quick-tasks-list">` +
       done.map(t => `
         <div class="quick-task-row done" data-id="${t.id}">
-          <div class="quick-task-icon">${taskIcon}</div>
-          <div class="quick-task-text">${escapeHtml(t.text)}</div>
           <div class="quick-task-check checked" data-action="toggle" data-id="${t.id}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
+          <div class="quick-task-text">${escapeHtml(t.text)}</div>
           <div class="quick-task-del" data-action="delete" data-id="${t.id}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
           </div>
@@ -1355,14 +1537,147 @@ function renderQuickTasks(){
   }
 }
 
+/* ================= АРХІВ (завдання + звички) ================= */
+/* "Завдання": сюди опівночі переносяться виконані завдання дня — щоб не губити
+   історію того, що зроблено. Невиконані завдання, як і раніше, просто зникають.
+   "Звички": сюди вручну можна перенести будь-яку звичку, яка тимчасово не
+   актуальна — вона зникає з головної, її вогник перестає рахуватись, але дані
+   не втрачаються і звичку завжди можна повернути назад. */
+
+function archiveDateLabel(dateKey){
+  const parts = String(dateKey).split('-');
+  const y = parseInt(parts[0], 10), m = parseInt(parts[1], 10), d = parseInt(parts[2], 10);
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return dateKey;
+  return `${d} ${MONTHS[m]?.toLowerCase() || ''} ${y}`;
+}
+
+function renderArchiveButton(){
+  const countEl = document.getElementById('taskArchiveCount');
+  if (!countEl) return;
+  const archivedHabitsCount = habits.filter(h => h.archived).length;
+  const upcomingWeeklyCount = habits.filter(h => !h.archived && h.frequency === 'weekly' && !isDueToday(h)).length;
+  const total = taskArchive.length + archivedHabitsCount + upcomingWeeklyCount;
+  countEl.textContent = total > 0 ? String(total) : '';
+}
+
+function openArchiveModal(){
+  renderArchiveBody();
+  document.getElementById('archiveOverlay').classList.add('open');
+}
+
+function closeArchiveModal(){
+  document.getElementById('archiveOverlay').classList.remove('open');
+}
+
+function deleteArchivedTask(id){
+  taskArchive = taskArchive.filter(t => t.id !== id);
+  saveState();
+  renderArchiveBody();
+  renderArchiveButton();
+}
+
+function restoreHabitFromArchive(id){
+  const h = habits.find(x => x.id === id);
+  if (!h) return;
+  h.archived = false;
+  feedbackComplete();
+  showMilestoneToast('✅ Звичку повернено з архіву');
+  saveState();
+  renderArchiveBody();
+  renderArchiveButton();
+  renderAll();
+}
+
+function archiveHabitRowHtml(h, opts){
+  const sub = opts && opts.upcoming
+    ? daysUntilLabel(daysUntilDue(h))
+    : (h.frequency === 'weekly' ? weekdaysLabel(h.weekdays) : 'Щодня');
+  const restoreIco = opts && opts.upcoming
+    ? '' // тижневі звички, що ще не з\'явились, не архівовані — їх нема звідки "повертати"
+    : `<div class="archive-habit-restore" data-action="restore-habit" data-id="${h.id}" title="Повернути з архіву">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      </div>`;
+  return `
+    <div class="archive-habit-row" data-id="${h.id}">
+      <div class="archive-habit-ico" style="background:linear-gradient(160deg, ${h.colors[0]}, ${h.colors[1]})">${habitIconMarkup(h.icon, 'white')}</div>
+      <div class="archive-habit-info">
+        <div class="archive-habit-name">${escapeHtml(h.name)}</div>
+        <div class="archive-habit-sub">${sub}</div>
+      </div>
+      ${restoreIco}
+    </div>`;
+}
+
+/* Спільний архів: тижневі звички, що ще не настали сьогодні, архівовані звички
+   та виконані завдання — все в одному загальному списку, без перемикання вкладок. */
+function renderArchiveBody(){
+  const body = document.getElementById('archiveBody');
+  if (!body) return;
+
+  const upcomingWeekly = habits.filter(h => !h.archived && h.frequency === 'weekly' && !isDueToday(h));
+  const archivedHabits = habits.filter(h => h.archived);
+
+  let html = '';
+
+  if (upcomingWeekly.length){
+    html += `<div class="archive-day-label">Тижневі звички</div>${upcomingWeekly.map(h => archiveHabitRowHtml(h, { upcoming: true })).join('')}`;
+  }
+  if (archivedHabits.length){
+    html += `<div class="archive-day-label">Архівовані звички</div>${archivedHabits.map(h => archiveHabitRowHtml(h)).join('')}`;
+  }
+
+  if (taskArchive.length){
+    const byDate = {};
+    taskArchive.forEach(t => {
+      if (!byDate[t.dateKey]) byDate[t.dateKey] = [];
+      byDate[t.dateKey].push(t);
+    });
+    const dateKeys = Object.keys(byDate).sort().reverse();
+    html += dateKeys.map(dk => `
+      <div class="archive-day-group">
+        <div class="archive-day-label">${escapeHtml(archiveDateLabel(dk))}</div>
+        ${byDate[dk].map(t => `
+          <div class="archive-task-row" data-id="${t.id}">
+            <div class="archive-task-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <div class="archive-task-text">${escapeHtml(t.text)}</div>
+            <div class="archive-task-del" data-action="archive-delete" data-id="${t.id}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+  }
+
+  if (!html){
+    body.innerHTML = '<div class="archive-empty">Тут з\'являться тижневі звички до свого дня, архівовані звички та виконані завдання.</div>';
+    return;
+  }
+  body.innerHTML = html;
+
+  body.querySelectorAll('[data-action="archive-delete"]').forEach(el => {
+    el.addEventListener('click', (e) => { e.stopPropagation(); deleteArchivedTask(el.dataset.id); });
+  });
+  body.querySelectorAll('[data-action="restore-habit"]').forEach(el => {
+    el.addEventListener('click', (e) => { e.stopPropagation(); restoreHabitFromArchive(Number(el.dataset.id)); });
+  });
+  body.querySelectorAll('.archive-habit-row').forEach(row => {
+    row.addEventListener('click', () => {
+      activeHabitId = Number(row.dataset.id);
+      detailOpen = true;
+      closeArchiveModal();
+      renderAll();
+    });
+  });
+}
+
 function renderRail(){
   const rail = document.getElementById('habitRail');
   rail.innerHTML = '';
   const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
-  const sorted = habits.filter(h => isDueToday(h)).sort((a, b) => {
-    const aWeekly = a.frequency === 'weekly' ? 0 : 1;
-    const bWeekly = b.frequency === 'weekly' ? 0 : 1;
-    if (aWeekly !== bWeekly) return aWeekly - bWeekly; // тижневі звички у свій день — завжди попереду
+  // Тижневі звички, що не активні сьогодні, тут не показуються — вони живуть в архіві
+  // до свого дня, щоб не захаращувати рейку. Щойно настає їхній день, вони з'являються тут.
+  const sorted = habits.filter(h => !h.archived && (h.frequency !== 'weekly' || isDueToday(h))).sort((a, b) => {
     const aDone = a.goal > 0 && a.progress >= a.goal ? 1 : 0;
     const bDone = b.goal > 0 && b.progress >= b.goal ? 1 : 0;
     return aDone - bDone; // невиконані (0) — попереду, виконані (1) — праворуч
@@ -1453,14 +1768,14 @@ function renderDetailOverlay(){
       </div>
       <div class="card-top">
         <div class="ring-controls">
-          <button class="step-btn" id="minusBtn" ${(h.progress <= 0 || !isDueToday(h)) ? 'disabled' : ''}>−</button>
+          <button class="step-btn" id="minusBtn" ${(h.progress <= 0 || !isDueToday(h) || h.archived) ? 'disabled' : ''}>−</button>
           <div class="main-ring" id="mainRing" style="${conicRing(pct, h.colors[0], h.colors[1])}">
             <div class="inner" style="background:linear-gradient(160deg, ${h.colors[0]}, ${h.colors[1]})">
               ${habitIconMarkup(h.icon, 'white')}
               <div class="count">${h.progress}/${h.goal}</div>
             </div>
           </div>
-          <button class="step-btn" id="plusBtn" ${(h.progress >= h.goal || !isDueToday(h)) ? 'disabled' : ''}>+</button>
+          <button class="step-btn" id="plusBtn" ${(h.progress >= h.goal || !isDueToday(h) || h.archived) ? 'disabled' : ''}>+</button>
         </div>
 
         <div class="habit-name-row">
@@ -1471,7 +1786,7 @@ function renderDetailOverlay(){
         <div class="habit-sub" id="habitSub">${subText(h)}</div>
       </div>
 
-      ${(h.days[todayKeyStr] === true || !isDueToday(h)) ? '' : `
+      ${(h.archived || h.days[todayKeyStr] === true || !isDueToday(h)) ? '' : `
       <div class="freeze-row">
         <button class="freeze-btn${isFrozenToday ? ' active' : ''}" id="freezeBtn" type="button">
           <span class="ico freeze-ico">${freezeIconMarkup()}</span>${isFrozenToday ? 'День заморожено — торкніться, щоб скасувати' : 'Не встигаю сьогодні — заморозити день'}
@@ -1509,6 +1824,14 @@ function renderDetailOverlay(){
       <div class="divider"></div>
 
       <div class="card-actions">
+        <div class="archive-link" id="archiveHabitBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="5" rx="1.3"/>
+            <path d="M5 8v11a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19V8"/>
+            <path d="M10 12h4"/>
+          </svg>
+          ${h.archived ? 'Повернути з архіву' : 'Перенести в архів'}
+        </div>
         <div class="delete-link" id="deleteHabitBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
           Видалити звичку
@@ -1538,6 +1861,19 @@ function renderDetailOverlay(){
     renderAll(); saveState();
   });
   document.getElementById('editHabitBtn').addEventListener('click', () => openEditModal(h.id));
+  document.getElementById('archiveHabitBtn').addEventListener('click', () => {
+    h.archived = !h.archived;
+    if (h.archived){
+      feedbackUndo();
+      showMilestoneToast('📦 Звичку перенесено в архів');
+      detailOpen = false; // картка більше не серед активних — закриваємо
+    } else {
+      feedbackComplete();
+      showMilestoneToast('✅ Звичку повернено з архіву');
+    }
+    saveState();
+    renderAll();
+  });
   document.getElementById('prevMonthBtn').addEventListener('click', () => { changeMonth(-1); });
   document.getElementById('nextMonthBtn').addEventListener('click', () => { changeMonth(1); });
   document.getElementById('deleteHabitBtn').addEventListener('click', () => openDeleteModal(h.id));
@@ -1579,7 +1915,7 @@ function renderWeeklyPreviewBanner(){
   const el = document.getElementById('weeklyPreviewBanner');
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const upcoming = habits.filter(h => h.frequency === 'weekly' && !isDueOnDate(h, today) && isDueOnDate(h, tomorrow));
+  const upcoming = habits.filter(h => !h.archived && h.frequency === 'weekly' && !isDueOnDate(h, today) && isDueOnDate(h, tomorrow));
   if (!upcoming.length){ el.innerHTML = ''; return; }
   const names = upcoming.map(h => escapeHtml(h.name)).join(', ');
   const word = upcoming.length === 1 ? 'звичка' : 'звички';
@@ -1594,10 +1930,11 @@ function renderWeeklyPreviewBanner(){
 }
 
 function subText(h){
+  if (h.archived) return 'В архіві — не бере участі у трекері';
   if (h.goal > 0 && h.progress >= h.goal) return 'Мету на сьогодні досягнуто 🔥';
   const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
   if (h.days[todayKeyStr] === 'frozen') return 'День заморожено ❄️ — вогник збережено';
-  if (!isDueToday(h)) return 'Сьогодні ця звичка не запланована';
+  if (!isDueToday(h)) return daysUntilLabel(daysUntilDue(h));
   if (h.progress > 0) return 'В процесі — продовжуйте';
   return 'Ще не розпочато сьогодні';
 }
@@ -1646,7 +1983,7 @@ function renderCalendar(h){
       cell.style.setProperty('--habit-accent', h.colors[0]);
     }
     cell.textContent = d;
-    if (isToday && isDueOnDate(h, cellDate)){
+    if (isToday && isDueOnDate(h, cellDate) && !h.archived){
       cell.addEventListener('click', () => {
         const turningOn = h.days[key] !== true;
         if (turningOn){
@@ -1856,9 +2193,9 @@ function renderWeeklyTodayCards(){
   const container = document.getElementById('weeklyTodayCards');
   if (!container) return;
   const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
-  const weeklyToday = habits.filter(h => h.frequency === 'weekly' && isDueToday(h));
+  const weeklyHabits = habits.filter(h => h.frequency === 'weekly' && !h.archived && isDueToday(h));
   container.innerHTML = '';
-  weeklyToday.forEach(h => {
+  weeklyHabits.forEach(h => {
     const isComplete = h.goal > 0 && h.progress >= h.goal;
     const isFrozen = !isComplete && h.days[todayKeyStr] === 'frozen';
     const card = document.createElement('div');
@@ -1883,7 +2220,7 @@ function renderStreakBoard(){
   const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
   // Тижневі звички у свій день рендеряться окремо через renderWeeklyTodayCards() —
   // тут показуємо лише щоденні (і тижневі не у свій день узагалі не показуються).
-  habits.filter(h => isDueToday(h) && h.frequency !== 'weekly').forEach(h => {
+  habits.filter(h => !h.archived && isDueToday(h) && h.frequency !== 'weekly').forEach(h => {
     const isComplete = h.goal > 0 && h.progress >= h.goal;
     const isFrozen = !isComplete && h.days[todayKeyStr] === 'frozen';
     const streak = computeStreak(h);
@@ -2129,7 +2466,8 @@ document.getElementById('habitSaveBtn').addEventListener('click', () => {
       notes: '',
       reminder,
       frequency: selectedFrequency,
-      weekdays: selectedFrequency === 'weekly' ? selectedWeekdays.slice() : []
+      weekdays: selectedFrequency === 'weekly' ? selectedWeekdays.slice() : [],
+      archived: false
     };
     habits.push(newHabit);
     activeHabitId = newHabit.id;
@@ -2176,6 +2514,7 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', () => {
 /* ================= СТАРТ (підвантажуємо збережене, якщо є) ================= */
 function renderAll(){
   renderQuickTasks();
+  renderArchiveButton();
   renderRail();
   renderWeeklyTodayCards();
   renderStreakBoard();
@@ -2184,6 +2523,12 @@ function renderAll(){
   renderDetailOverlay();
   checkAllDoneCelebration();
 }
+
+document.getElementById('taskArchiveBtn').addEventListener('click', () => openArchiveModal());
+document.getElementById('archiveCloseX').addEventListener('click', closeArchiveModal);
+document.getElementById('archiveOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'archiveOverlay') closeArchiveModal();
+});
 
 document.getElementById('mainArea').innerHTML = '<div class="loading-state">Завантаження…</div>';
 renderStorageBanner();
