@@ -129,12 +129,16 @@
   /* ---------- Кнопка архіву завдань ---------- */
   .task-archive-btn {
     display: flex; align-items: center; gap: 10px;
-    margin: 8px 2px 4px; padding: 12px 14px;
+    margin: 0 2px 4px; padding: 12px 14px;
     border-radius: var(--radius-md);
     background: var(--card-bg, rgba(255,255,255,0.04));
     border: 1px solid var(--card-border);
     cursor: pointer;
     transition: background .12s ease, border-color .12s ease;
+  }
+  .task-archive-btn-wrap {
+    padding-top: 18px;
+    border-top: 1px solid rgba(255,255,255,0.08);
   }
   .task-archive-btn:hover { border-color: var(--text-tertiary); }
   .task-archive-btn-icon {
@@ -857,6 +861,7 @@
 
   <div class="quick-tasks-done" id="quickTasksDoneBar"></div>
 
+  <div class="task-archive-btn-wrap">
   <div class="task-archive-btn" id="taskArchiveBtn">
     <div class="task-archive-btn-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -867,6 +872,7 @@
     </div>
     <div class="task-archive-btn-text">Архів</div>
     <div class="task-archive-btn-count" id="taskArchiveCount"></div>
+  </div>
   </div>
 
 </div>
