@@ -75,6 +75,63 @@
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
 
+  /* ---------- Швидкі завдання на день (без вогника, окремо від звичок) ---------- */
+  .quick-tasks { margin: 0 2px 4px; }
+  .quick-tasks-done { margin: 4px 2px 8px; }
+  .quick-tasks-list { display: flex; flex-direction: column; gap: 10px; }
+  .quick-tasks-bar-spacer { height: 2px; }
+  .quick-tasks-done-label {
+    font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.4px; margin: 2px 0 8px;
+  }
+  .quick-task-row {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,176,32,0.16);
+    border-radius: 20px; padding: 12px 14px;
+  }
+  .quick-task-row.done { background: rgba(255,176,32,0.62); }
+  .quick-task-icon {
+    width: 38px; height: 38px; flex: 0 0 auto; border-radius: 12px;
+    background: rgba(255,255,255,0.55);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .quick-task-icon svg { width: 18px; height: 18px; stroke: #1B1F2A; }
+  .quick-task-text {
+    flex: 1; font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 15px;
+    color: #1B1F2A; word-break: break-word;
+  }
+  .quick-task-row.done .quick-task-text { text-decoration: line-through; opacity: 0.75; }
+  .quick-task-text.placeholder { font-weight: 600; color: rgba(27,31,42,0.55); }
+  .quick-task-check {
+    width: 30px; height: 30px; flex: 0 0 auto; border-radius: 50%;
+    border: none; background: rgba(255,255,255,0.55); color: #1B1F2A;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .quick-task-check.checked { background: #34C759; color: #fff; }
+  .quick-task-check.checked svg { width: 15px; height: 15px; }
+  .quick-task-check.add-ico { font-size: 18px; font-weight: 700; line-height: 1; }
+  .quick-task-del {
+    width: 20px; height: 20px; flex: 0 0 auto; display: flex; align-items: center;
+    justify-content: center; color: rgba(27,31,42,0.45); cursor: pointer;
+  }
+  .quick-task-del svg { width: 14px; height: 14px; }
+  .quick-task-add-row {
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+    background: transparent; border: 1.5px dashed rgba(255,176,32,0.55);
+    border-radius: 20px; padding: 12px 14px; margin-top: 10px;
+  }
+  .quick-tasks-list + .quick-task-add-row { margin-top: 10px; }
+  .quick-task-add-row.active { cursor: default; border-color: #FFB020; }
+  .quick-task-icon .add-ico { font-size: 18px; font-weight: 700; line-height: 1; color: #1B1F2A; }
+  .quick-task-add-row .quick-task-icon { background: transparent; border: 1.5px dashed #FFB020; }
+  .quick-task-add-row .quick-task-icon .add-ico { color: #FFB020; }
+  .quick-task-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 15px;
+    color: var(--text-primary); font-family: inherit;
+  }
+
+
   /* ---------- Habit rail ---------- */
   .habit-rail {
     display: flex;
@@ -230,6 +287,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 9px; line-height: 1;
   }
+
 
   /* ---------- Empty state ---------- */
   .empty-state {
@@ -654,6 +712,8 @@
 
   <div class="habit-rail" id="habitRail"></div>
 
+  <div class="quick-tasks" id="quickTasksBar"></div>
+
   <div id="weeklyPreviewBanner"></div>
 
   <div id="storageBanner"></div>
@@ -663,6 +723,8 @@
   <div class="streak-grid" id="streakGrid"></div>
 
   <div id="mainArea"></div>
+
+  <div class="quick-tasks-done" id="quickTasksDoneBar"></div>
 
 </div>
 
@@ -788,6 +850,9 @@ let habits = [];        // { id, name, icon, colors:[a,b], goal, progress, days:
 let activeHabitId = null;
 let nextId = 1;
 let customIcons = {};   // { 'custom_169...': 'data:image/png;base64,...' } — власні завантажені іконки
+let quickTasks = [];    // { id, text, done } — завдання чисто на сьогодні, без вогника, зникають опівночі
+let quickTasksDateKey = null; // ключ дня, для якого існує поточний список quickTasks
+let quickTaskAdding = false;  // чи зараз показано поле вводу нового завдання
 const STORAGE_KEY = 'habits-state-v1';
 let storageAvailable = false;
 
@@ -820,7 +885,7 @@ function renderStorageBanner(){
 function saveState(){
   if (!storageAvailable) { showSaveStatus('Не збережено — сховище недоступне', true); return; }
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, quickTasks, quickTasksDateKey }));
     showSaveStatus('Збережено');
   }catch(e){
     console.error('Не вдалося зберегти дані:', e);
@@ -845,6 +910,8 @@ function loadState(){
       customIcons = parsed.customIcons || {};
       lastActiveDateKey = parsed.lastActiveDateKey || null;
       celebratedAllDoneKey = parsed.celebratedAllDoneKey || null;
+      quickTasks = Array.isArray(parsed.quickTasks) ? parsed.quickTasks : [];
+      quickTasksDateKey = parsed.quickTasksDateKey || null;
     }
   }catch(e){
     console.error('Не вдалося завантажити дані:', e);
@@ -968,10 +1035,17 @@ function checkDayRollover(){
   // але позначки саме за СЬОГОДНІ насправді немає — це залишок з минулого дня,
   // навіть якщо lastActiveDateKey чомусь вже "сьогоднішній" (наприклад, з попередньої версії).
   const hasStaleProgress = habits.some(h => h.goal > 0 && h.progress >= h.goal && !h.days[nowKey]);
-  if (dateChanged || hasStaleProgress){
+  // Завдання "на день" належать конкретній даті — якщо дата змінилась, вони зникають.
+  const quickTasksStale = quickTasksDateKey !== nowKey;
+  if (dateChanged || hasStaleProgress || quickTasksStale){
     habits.forEach(h => {
       h.progress = h.days[nowKey] ? h.goal : 0;
     });
+    if (quickTasksStale){
+      quickTasks = [];
+      quickTasksDateKey = nowKey;
+      quickTaskAdding = false;
+    }
     today = now;
     lastActiveDateKey = nowKey;
     saveState();
@@ -1165,6 +1239,120 @@ function habitIconMarkup(icon, stroke){
 function conicRing(pct, colorStart, colorEnd){
   const deg = Math.max(0, Math.min(360, pct * 3.6));
   return `background: conic-gradient(${colorStart} 0deg, ${colorEnd} ${deg}deg, var(--track) ${deg}deg 360deg);`;
+}
+
+/* ================= ШВИДКІ ЗАВДАННЯ НА ДЕНЬ (без вогника, зникають опівночі) ================= */
+function uidQuickTask(){ return 'qt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
+
+function commitQuickTask(rawText){
+  const val = (rawText || '').trim();
+  quickTaskAdding = false;
+  if (val){
+    quickTasks.push({ id: uidQuickTask(), text: val, done: false });
+    saveState();
+  }
+  renderQuickTasks();
+}
+
+function toggleQuickTask(id){
+  const t = quickTasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  if (t.done) feedbackComplete(); else feedbackUndo();
+  saveState();
+  renderQuickTasks();
+}
+
+function deleteQuickTask(id){
+  quickTasks = quickTasks.filter(x => x.id !== id);
+  saveState();
+  renderQuickTasks();
+}
+
+function renderQuickTasks(){
+  const bar = document.getElementById('quickTasksBar');
+  const doneBar = document.getElementById('quickTasksDoneBar');
+  if (!bar || !doneBar) return;
+
+  const pending = quickTasks.filter(t => !t.done);
+  const done = quickTasks.filter(t => t.done);
+
+  // Верхній блок — над рейкою вогників: незавершені завдання дня + кнопка додавання.
+  const taskIcon = `<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 12h8M8 16h5"/></svg>`;
+  let topHtml = '';
+  if (pending.length > 0){
+    topHtml += '<div class="quick-tasks-list">' + pending.map(t => `
+      <div class="quick-task-row" data-id="${t.id}">
+        <div class="quick-task-icon">${taskIcon}</div>
+        <div class="quick-task-text">${escapeHtml(t.text)}</div>
+        <div class="quick-task-check" data-action="toggle" data-id="${t.id}"></div>
+        <div class="quick-task-del" data-action="delete" data-id="${t.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+        </div>
+      </div>`).join('') + '</div>';
+  }
+  if (quickTaskAdding){
+    topHtml += `
+      <div class="quick-task-add-row active">
+        <div class="quick-task-icon"><span class="add-ico">+</span></div>
+        <input class="quick-task-input" id="quickTaskInput" maxlength="60" placeholder="Завдання на сьогодні…">
+      </div>`;
+  } else {
+    topHtml += `
+      <div class="quick-task-add-row" id="quickTaskAddBtn">
+        <div class="quick-task-icon"><span class="add-ico">+</span></div>
+        <div class="quick-task-text placeholder">Завдання на сьогодні</div>
+      </div>`;
+  }
+  bar.innerHTML = topHtml;
+
+  bar.querySelectorAll('[data-action="toggle"]').forEach(el => {
+    el.addEventListener('click', () => toggleQuickTask(el.dataset.id));
+  });
+  bar.querySelectorAll('[data-action="delete"]').forEach(el => {
+    el.addEventListener('click', (e) => { e.stopPropagation(); deleteQuickTask(el.dataset.id); });
+  });
+  if (quickTaskAdding){
+    const input = document.getElementById('quickTaskInput');
+    input.focus();
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter'){ e.preventDefault(); input.blur(); }
+      if (e.key === 'Escape'){ input.dataset.cancel = '1'; input.blur(); }
+    });
+    input.addEventListener('blur', () => {
+      if (input.dataset.cancel === '1'){ quickTaskAdding = false; renderQuickTasks(); return; }
+      commitQuickTask(input.value);
+    });
+  } else {
+    document.getElementById('quickTaskAddBtn').addEventListener('click', () => {
+      quickTaskAdding = true;
+      renderQuickTasks();
+    });
+  }
+
+  // Нижній блок — під усіма вогниками: виконані сьогодні завдання, зникнуть опівночі.
+  if (done.length === 0){
+    doneBar.innerHTML = '';
+  } else {
+    doneBar.innerHTML = `<div class="quick-tasks-done-label">Виконано сьогодні</div><div class="quick-tasks-list">` +
+      done.map(t => `
+        <div class="quick-task-row done" data-id="${t.id}">
+          <div class="quick-task-icon">${taskIcon}</div>
+          <div class="quick-task-text">${escapeHtml(t.text)}</div>
+          <div class="quick-task-check checked" data-action="toggle" data-id="${t.id}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="quick-task-del" data-action="delete" data-id="${t.id}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+          </div>
+        </div>`).join('') + '</div>';
+    doneBar.querySelectorAll('[data-action="toggle"]').forEach(el => {
+      el.addEventListener('click', () => toggleQuickTask(el.dataset.id));
+    });
+    doneBar.querySelectorAll('[data-action="delete"]').forEach(el => {
+      el.addEventListener('click', (e) => { e.stopPropagation(); deleteQuickTask(el.dataset.id); });
+    });
+  }
 }
 
 function renderRail(){
@@ -1987,6 +2175,7 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', () => {
 
 /* ================= СТАРТ (підвантажуємо збережене, якщо є) ================= */
 function renderAll(){
+  renderQuickTasks();
   renderRail();
   renderWeeklyTodayCards();
   renderStreakBoard();
