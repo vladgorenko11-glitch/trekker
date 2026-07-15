@@ -584,7 +584,8 @@
   .notes-input {
     width: 100%;
     min-height: 64px;
-    resize: vertical;
+    resize: none;
+    overflow: hidden;
     background: var(--track);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-md, 12px);
@@ -1925,10 +1926,16 @@ function renderDetailOverlay(){
     });
   }
   const notesInput = document.getElementById('habitNotesInput');
+  const autoGrowNotes = () => {
+    notesInput.style.height = 'auto';
+    notesInput.style.height = notesInput.scrollHeight + 'px';
+  };
+  autoGrowNotes();
   notesInput.addEventListener('input', () => {
     h.notes = notesInput.value;
     clearTimeout(notesInput._saveTimer);
     notesInput._saveTimer = setTimeout(() => { saveState(); }, 500);
+    autoGrowNotes();
   });
 
   renderCalendar(h);
