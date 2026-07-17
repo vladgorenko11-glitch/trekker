@@ -1807,6 +1807,28 @@ function deleteArchivedTask(id){
 function restoreHabitFromArchive(id){
   const h = habits.find(x => x.id === id);
   if (!h) return;
+
+  // Поки звичка була в архіві, дні між останньою відміткою і сьогодні лишились
+  // порожніми — якщо просто зняти archived, стрік одразу впреться в порожній день
+  // і обнулиться. Тому заповнюємо цю прогалину позначками "заморожено": серія
+  // не зростає, але й не переривається, і продовжується з того самого числа,
+  // з яким звичку заносили в архів. Сьогоднішній день лишаємо чистим.
+  const lastActive = habitReferenceDate(h); // рахується, поки h.archived ще true
+  if (lastActive){
+    const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
+    let cursor = new Date(lastActive);
+    cursor.setDate(cursor.getDate() + 1);
+    let guard = 0;
+    while (cursor <= today && guard < 2000){
+      guard++;
+      const key = dayKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+      if (key !== todayKeyStr && isDueOnDate(h, cursor) && !h.days[key]){
+        h.days[key] = 'frozen';
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+
   h.archived = false;
   feedbackComplete();
   showMilestoneToast('✅ Звичку повернено з архіву');
