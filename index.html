@@ -138,11 +138,24 @@
     display: flex; align-items: center; justify-content: center;
     padding: 6px 0 10px;
     -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+  .sprout-hero::before {
+    content: '';
+    position: absolute;
+    width: 120px; height: 120px;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(90,230,150,0.5) 0%, rgba(90,230,150,0.22) 45%, transparent 72%);
+    filter: blur(14px);
+    pointer-events: none;
+    z-index: 0;
   }
   .sprout-hero-emoji {
     width: 160px; height: 160px;
     object-fit: contain;
-    filter: drop-shadow(0 0 26px rgba(90,230,150,0.45));
+    position: relative;
+    z-index: 1;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -337,6 +350,13 @@
     color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .archive-habit-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+  .archive-habit-streak {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 3px;
+    font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
+    font-family: 'Rubik', sans-serif;
+  }
+  .archive-habit-streak .flame { width: 18px; height: 18px; flex: 0 0 auto; filter: brightness(0.85) saturate(0.75); }
+  .archive-habit-streak .flame img { width: 100%; height: 100%; object-fit: contain; }
   .archive-habit-restore {
     width: 30px; height: 30px; flex: 0 0 auto; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
@@ -1121,6 +1141,7 @@ const COLORS = [
   ['#FF2801', '#FF8464'],
   ['#FF8A03', '#FFBF5E'],
   ['#FFCE03', '#FFE98A'],
+  ['#0ADB4E', '#7CF29C'],
   ['#00D498', '#61F4C4'],
   ['#00CEDD', '#74F5FF'],
   ['#6F798D', '#A4ADBC'],
@@ -1796,6 +1817,7 @@ function restoreHabitFromArchive(id){
 }
 
 function archiveHabitRowHtml(h){
+  const streak = computeStreak(h);
   return `
     <div class="archive-habit-row" data-id="${h.id}">
       <div class="archive-habit-ico" style="background:linear-gradient(160deg, ${h.colors[0]}, ${h.colors[1]})">${habitIconMarkup(h.icon, 'white')}</div>
@@ -1803,6 +1825,7 @@ function archiveHabitRowHtml(h){
         <div class="archive-habit-name">${escapeHtml(h.name)}</div>
         <div class="archive-habit-sub">${h.frequency === 'weekly' ? weekdaysLabel(h.weekdays) : 'Щодня'}</div>
       </div>
+      ${streak > 0 ? `<div class="archive-habit-streak"><div class="flame">${freezeIconMarkup()}</div><span>${streak}</span></div>` : ''}
       <div class="archive-habit-restore" data-action="restore-habit" data-id="${h.id}" title="Повернути з архіву">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
       </div>
@@ -2242,13 +2265,31 @@ function renderCalendar(h){
   }
 }
 
+/* Для активних звичок серія рахується від "сьогодні". Але для архівованих звичок
+   "сьогодні" вже давно проїхало повз останню відмітку, тому рахунок від сьогодні
+   одразу впирався б у порожній день і серія б виглядала нульовою/зниклою.
+   Тому для архівованих звичок точка відліку — останній день, коли звичку
+   реально було відмічено (виконано або заморожено). */
+function habitReferenceDate(h){
+  if (!h.archived) return new Date(today);
+  let bestDate = null;
+  Object.keys(h.days).forEach(k => {
+    if (h.days[k] !== true && h.days[k] !== 'frozen') return;
+    const parts = k.split('-').map(Number);
+    const dt = new Date(parts[0], parts[1], parts[2]);
+    if (!bestDate || dt > bestDate) bestDate = dt;
+  });
+  return bestDate;
+}
+
 function computeStreak(h){
   if (h.frequency === 'weekly'){
     // Для тижневих звичок стрік рахується не по календарних днях, а по послідовних
     // "днях появи" (напр. послідовні суботи/неділі), пропускаючи дні, коли звички ще не було.
     if (!Array.isArray(h.weekdays) || h.weekdays.length === 0) return 0;
     let streak = 0;
-    let cursor = new Date(today);
+    let cursor = habitReferenceDate(h);
+    if (!cursor) return 0;
     let guard = 0;
     const stepBackToDue = () => {
       let steps = 0;
@@ -2284,7 +2325,7 @@ function computeStreak(h){
     }
 
     const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
-    const cursorIsToday = dayKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()) === todayKeyStr;
+    const cursorIsToday = !h.archived && dayKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()) === todayKeyStr;
     if (cursorIsToday && !h.days[todayKeyStr]){
       cursor.setDate(cursor.getDate() - 1);
       stepBackToDue();
@@ -2306,12 +2347,15 @@ function computeStreak(h){
     return streak;
   }
   let streak = 0;
-  let cursor = new Date(today);
-  const todayKeyStr = dayKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
-  if (!h.days[todayKeyStr]){
-    // Сьогодні ще не відмічено — рахуємо стрік від учора,
-    // щоб число не обнулялося одразу після півночі, а тільки якщо реально пропущено день.
-    cursor.setDate(cursor.getDate() - 1);
+  let cursor = habitReferenceDate(h);
+  if (!cursor) return 0;
+  if (!h.archived){
+    const todayKeyStr = dayKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+    if (!h.days[todayKeyStr]){
+      // Сьогодні ще не відмічено — рахуємо стрік від учора,
+      // щоб число не обнулялося одразу після півночі, а тільки якщо реально пропущено день.
+      cursor.setDate(cursor.getDate() - 1);
+    }
   }
   while (true){
     const key = dayKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
