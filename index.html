@@ -473,18 +473,17 @@
   }
   .streak-grid:empty { display: none; }
   .streak-card {
-    background: var(--card);
-    border: 1px solid var(--card-border);
+    background: var(--habit-bg, var(--card));
+    border: 1px solid var(--habit-border, var(--card-border));
     border-radius: var(--radius-lg);
     padding: 12px 14px;
     display: flex;
     align-items: center;
     gap: 10px;
     cursor: pointer;
-    transition: border-color .15s ease, transform .12s ease;
+    transition: background .15s ease, border-color .15s ease, transform .12s ease;
   }
   .streak-card:active { transform: scale(0.97); }
-  .streak-card.lit { border-color: rgba(255,138,43,0.45); }
   .streak-flame { flex: 0 0 auto; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
   .streak-flame svg, .streak-flame img { width: 28px; height: 28px; display: block; }
   .streak-info { min-width: 0; }
@@ -494,15 +493,10 @@
   }
   .streak-days { font-size: 12px; color: var(--text-tertiary); }
   .streak-days b { font-family: 'Rubik', sans-serif; color: var(--text-secondary); }
-  .streak-card.lit .streak-days b { color: #FF8A2B; }
-  .streak-card.frozen { border-color: rgba(62,155,255,0.5); }
-  .streak-card.frozen .streak-days b { color: #3E9BFF; }
-  .streak-card.lit-red { border-color: rgba(255,69,58,0.55); }
-  .streak-card.lit-red .streak-days b { color: #FF453A; }
-  .streak-card.lit-purple { border-color: rgba(191,90,242,0.55); }
-  .streak-card.lit-purple .streak-days b { color: #BF5AF2; }
-  .streak-card.lit-blue { border-color: rgba(10,132,255,0.55); }
-  .streak-card.lit-blue .streak-days b { color: #0A84FF; }
+  .streak-card.lit { border-color: transparent; }
+  .streak-card.lit .streak-name { color: #fff; }
+  .streak-card.lit .streak-days { color: rgba(255,255,255,0.85); }
+  .streak-card.lit .streak-days b { color: #fff; }
 
   /* ---------- Анімація заміни вогника при переході на новий рівень ---------- */
   @keyframes flameSwapPop {
@@ -1118,18 +1112,18 @@ const ICONS = {
 };
 
 const COLORS = [
-  ['#3E9BFF', '#7FC4FF'],
-  ['#5B6EF5', '#8B97FF'],
-  ['#8B5CF6', '#C4B5FD'],
-  ['#D24FE0', '#F08FE8'],
-  ['#F472B6', '#FBCFE8'],
-  ['#FF4D6D', '#FF8FA3'],
-  ['#FF5A3C', '#FF9478'],
-  ['#FFA53D', '#FFC773'],
-  ['#FFD93D', '#FFEC99'],
-  ['#28C79A', '#6EE7C0'],
-  ['#20C4D0', '#7FEAF2'],
-  ['#6B7280', '#9CA3AF'],
+  ['#047DFF', '#6CBBFF'],
+  ['#2F48FF', '#7A87FF'],
+  ['#6F2FFF', '#BDACFF'],
+  ['#DA26ED', '#FD87F3'],
+  ['#FF4EAB', '#FFCCE9'],
+  ['#FF1841', '#FF7E95'],
+  ['#FF2801', '#FF8464'],
+  ['#FF8A03', '#FFBF5E'],
+  ['#FFCE03', '#FFE98A'],
+  ['#00D498', '#61F4C4'],
+  ['#00CEDD', '#74F5FF'],
+  ['#6F798D', '#A4ADBC'],
 ];
 
 /* ================= СТАН (зберігається у localStorage браузера на пристрої) ================= */
@@ -1400,6 +1394,14 @@ function escapeHtml(str){
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+}
+
+function hexToRgba(hex, alpha){
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 /* ================= СКИДАННЯ ЛІЧИЛЬНИКА ОПІВНОЧІ ================= */
@@ -2480,6 +2482,13 @@ function renderStreakBoard(){
         blue: 'rgba(10,132,255,0.6)'
       };
       card.style.setProperty('--flame-glow-color', glowColors[level] || glowColors.standard);
+    }
+    const [c0, c1] = h.colors || ['#3E9BFF', '#7FC4FF'];
+    if (isComplete && !isFrozen){
+      card.style.setProperty('--habit-bg', `linear-gradient(135deg, ${c0}, ${c1})`);
+    } else {
+      card.style.setProperty('--habit-bg', hexToRgba(c0, 0.16));
+      card.style.setProperty('--habit-border', hexToRgba(c0, 0.3));
     }
     card.innerHTML = `
       <div class="streak-flame">${isFrozen ? freezeIconMarkup() : flameIcon(h.id, isComplete, streak)}${isFrozen ? `<div class="frozen-badge">❄️</div>` : ''}</div>
