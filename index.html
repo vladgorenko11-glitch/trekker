@@ -1586,6 +1586,17 @@ function loadState(){
 let viewYear = new Date().getFullYear();
 let viewMonth = new Date().getMonth();
 
+// Список "Фільми" створюється автоматично для кожного користувача і завжди присутній —
+// не залежить від localStorage і не потребує ручного створення кнопкою "+".
+const DEFAULT_MOVIES_LIST_ID = 'default-movies-list';
+function ensureDefaultLists(){
+  const exists = lists.some(l => l.id === DEFAULT_MOVIES_LIST_ID);
+  if (!exists){
+    lists.unshift({ id: DEFAULT_MOVIES_LIST_ID, name: 'Фільми', items: [] });
+    saveState();
+  }
+}
+
 let editingHabitId = null; // null = створення нової
 let selectedIcon = 'drop';
 let selectedColorIdx = 0;
@@ -3725,6 +3736,7 @@ document.getElementById('sproutOverlay').addEventListener('click', (e) => {
 document.getElementById('mainArea').innerHTML = '<div class="loading-state">Завантаження…</div>';
 renderStorageBanner();
 loadState();
+ensureDefaultLists();
 checkDayRollover();
 renderAll();
 checkReminders();
