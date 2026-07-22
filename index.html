@@ -849,6 +849,7 @@
   .list-watched-folder .list-card-ico span { font-size: 28px; }
   .list-watched-folder .list-card-name { font-size: 15.5px; }
   .list-watched-folder .list-card-sub { font-size: 12.5px; }
+  .list-watched-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 14px 4px 12px; }
 
   .lists-empty {
     text-align: center; padding: 40px 20px; color: var(--text-tertiary); font-size: 13px;
@@ -2248,14 +2249,15 @@ function renderArchiveBody(){
 
   let html = '';
 
+  if (upcomingWeekly.length){
+    html += `<div class="archive-day-label">Тижневі звички</div><div class="weekly-today-cards" style="margin-bottom:14px;">${upcomingWeekly.map(archiveWeeklyCardHtml).join('')}</div>`;
+  }
+
   if (listsWithWatched.length){
     html += `<div class="archive-day-label">Переглянуті фільми</div>` +
       listsWithWatched.map(x => watchedFolderCardHtml(x.list, x.count)).join('');
   }
 
-  if (upcomingWeekly.length){
-    html += `<div class="archive-day-label">Тижневі звички</div><div class="weekly-today-cards" style="margin-bottom:14px;">${upcomingWeekly.map(archiveWeeklyCardHtml).join('')}</div>`;
-  }
   if (archivedHabits.length){
     html += `<div class="archive-day-label">Архівовані звички</div>${archivedHabits.map(archiveHabitRowHtml).join('')}`;
   }
@@ -2714,7 +2716,7 @@ function renderListDetail(list){
     html += pending.map(listItemRowHtml).join('');
   }
   if (done.length){
-    html += watchedFolderCardHtml(list, done.length);
+    html += `<div class="list-watched-divider"></div>` + watchedFolderCardHtml(list, done.length);
   }
 
   if (listItemAdding){
