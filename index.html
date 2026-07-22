@@ -844,6 +844,12 @@
   .list-card-chevron { flex: 0 0 auto; color: var(--text-tertiary); }
   .list-card-chevron svg { width: 20px; height: 20px; }
 
+  .list-watched-folder { margin-top: 6px; padding: 14px 16px; }
+  .list-watched-folder .list-card-ico { width: 52px; height: 52px; }
+  .list-watched-folder .list-card-ico span { font-size: 28px; }
+  .list-watched-folder .list-card-name { font-size: 15.5px; }
+  .list-watched-folder .list-card-sub { font-size: 12.5px; }
+
   .lists-empty {
     text-align: center; padding: 40px 20px; color: var(--text-tertiary); font-size: 13px;
   }
@@ -2138,6 +2144,15 @@ function renderArchiveButton(){
   countEl.textContent = total > 0 ? String(total) : '';
 }
 
+/* Відкрити папку «Переглянуто» просто з архіву: закриваємо архів і одразу
+   показуємо потрібний список у модалці Списків на екрані watched. */
+function openWatchedFromArchive(listId){
+  closeArchiveModal();
+  listsView = { screen: 'watched', listId };
+  renderListsBody();
+  document.getElementById('listsOverlay').classList.add('open');
+}
+
 function openArchiveModal(){
   renderArchiveBody();
   document.getElementById('archiveOverlay').classList.add('open');
@@ -2227,8 +2242,16 @@ function renderArchiveBody(){
 
   const upcomingWeekly = habits.filter(h => !h.archived && h.frequency === 'weekly' && !isDueToday(h));
   const archivedHabits = habits.filter(h => h.archived);
+  const listsWithWatched = lists
+    .map(l => ({ list: l, count: l.items.filter(i => i.done).length }))
+    .filter(x => x.count > 0);
 
   let html = '';
+
+  if (listsWithWatched.length){
+    html += `<div class="archive-day-label">Переглянуті фільми</div>` +
+      listsWithWatched.map(x => watchedFolderCardHtml(x.list, x.count)).join('');
+  }
 
   if (upcomingWeekly.length){
     html += `<div class="archive-day-label">Тижневі звички</div><div class="weekly-today-cards" style="margin-bottom:14px;">${upcomingWeekly.map(archiveWeeklyCardHtml).join('')}</div>`;
@@ -2271,6 +2294,9 @@ function renderArchiveBody(){
   });
   body.querySelectorAll('[data-action="restore-habit"]').forEach(el => {
     el.addEventListener('click', (e) => { e.stopPropagation(); restoreHabitFromArchive(Number(el.dataset.id)); });
+  });
+  body.querySelectorAll('[data-action="open-watched"]').forEach(el => {
+    el.addEventListener('click', (e) => { e.stopPropagation(); openWatchedFromArchive(el.dataset.id); });
   });
   body.querySelectorAll('.archive-habit-row').forEach(row => {
     row.addEventListener('click', () => {
@@ -2581,6 +2607,79 @@ function renderListsOverview(){
   });
 }
 
+const LIST_POSTER_EMOJIS = ['🎬', '🍿', '🎞️', '📽️', '🎥'];
+function listPosterFor(id){
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return LIST_POSTER_EMOJIS[h % LIST_POSTER_EMOJIS.length];
+}
+function listPosterHtml(i){
+  if (i.poster){
+    return `<img src="${i.poster}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px;position:relative;z-index:1;">`;
+  }
+  return `<span>${listPosterFor(i.id)}</span>`;
+}
+function listImdbBadgeHtml(i){
+  if (!i.imdbRating) return '';
+  return `<div class="imdb-badge"><span class="imdb-tag">IMDb</span> ${escapeHtml(i.imdbRating)}${i.year ? ` · ${escapeHtml(i.year)}` : ''}</div>`;
+}
+function listRatingBadgeHtml(i){
+  if (!i.done) return '';
+  if (i.rating > 0){
+    let stars = '';
+    for (let s = 1; s <= 5; s++){
+      stars += `<span class="${s <= i.rating ? 'star-filled' : 'star-empty'}">${starIconHtml(s <= i.rating)}</span>`;
+    }
+    return `<div class="list-item-rating" data-action="rate-item" data-id="${i.id}">${stars}</div>`;
+  }
+  return `<div class="list-item-rating" data-action="rate-item" data-id="${i.id}"><span class="rate-hint">Оцінити ★</span></div>`;
+}
+function listItemRowHtml(i){
+  return `
+    <div class="list-item-row${i.done ? ' done' : ''}" data-id="${i.id}">
+      <div class="list-item-poster">${listPosterHtml(i)}</div>
+      <div class="list-item-body">
+        <div class="list-item-text">${escapeHtml(i.text)}</div>
+        ${listImdbBadgeHtml(i)}
+        ${listRatingBadgeHtml(i)}
+      </div>
+      <div class="list-item-check${i.done ? ' checked' : ''}" data-action="toggle-item" data-id="${i.id}">
+        ${i.done ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' : ''}
+      </div>
+      <div class="list-item-del" data-action="delete-item" data-id="${i.id}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </div>
+    </div>`;
+}
+function wireListItemRowActions(body, list){
+  body.querySelectorAll('[data-action="toggle-item"]').forEach(el => {
+    el.addEventListener('click', () => toggleListItem(list.id, el.dataset.id));
+  });
+  body.querySelectorAll('[data-action="delete-item"]').forEach(el => {
+    el.addEventListener('click', (e) => { e.stopPropagation(); deleteListItem(list.id, el.dataset.id); });
+  });
+  body.querySelectorAll('[data-action="rate-item"]').forEach(el => {
+    el.addEventListener('click', (e) => { e.stopPropagation(); openRatingModal(list.id, el.dataset.id); });
+  });
+}
+
+/* Картка-«папка» з переглянутими пунктами — щоб довгий список переглянутого не
+   захаращував основний список, він ховається за одну картку з лічильником. */
+function watchedFolderCardHtml(list, count){
+  const word = count === 1 ? 'фільм переглянуто' : 'фільмів переглянуто';
+  return `
+    <div class="list-card list-watched-folder" data-action="open-watched" data-id="${list.id}">
+      <div class="list-card-ico"><span>📁</span></div>
+      <div class="list-card-info">
+        <div class="list-card-name">Переглянуто</div>
+        <div class="list-card-sub">${count} ${word}</div>
+      </div>
+      <div class="list-card-chevron">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </div>
+    </div>`;
+}
+
 function renderListDetail(list){
   const body = document.getElementById('listsBody');
   document.getElementById('listsModalTitle').textContent = list.name;
@@ -2610,58 +2709,12 @@ function renderListDetail(list){
 
   const pending = list.items.filter(i => !i.done);
   const done = list.items.filter(i => i.done);
-  const posterEmojis = ['🎬', '🍿', '🎞️', '📽️', '🎥'];
-  const posterFor = (id) => {
-    let h = 0;
-    for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-    return posterEmojis[h % posterEmojis.length];
-  };
-
-  const posterHtml = (i) => {
-    if (i.poster){
-      return `<img src="${i.poster}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px;position:relative;z-index:1;">`;
-    }
-    return `<span>${posterFor(i.id)}</span>`;
-  };
-
-  const imdbBadgeHtml = (i) => {
-    if (!i.imdbRating) return '';
-    return `<div class="imdb-badge"><span class="imdb-tag">IMDb</span> ${escapeHtml(i.imdbRating)}${i.year ? ` · ${escapeHtml(i.year)}` : ''}</div>`;
-  };
-
-  const ratingBadgeHtml = (i) => {
-    if (!i.done) return '';
-    if (i.rating > 0){
-      let stars = '';
-      for (let s = 1; s <= 5; s++){
-        stars += `<span class="${s <= i.rating ? 'star-filled' : 'star-empty'}">${starIconHtml(s <= i.rating)}</span>`;
-      }
-      return `<div class="list-item-rating" data-action="rate-item" data-id="${i.id}">${stars}</div>`;
-    }
-    return `<div class="list-item-rating" data-action="rate-item" data-id="${i.id}"><span class="rate-hint">Оцінити ★</span></div>`;
-  };
-
-  const itemRow = (i) => `
-    <div class="list-item-row${i.done ? ' done' : ''}" data-id="${i.id}">
-      <div class="list-item-poster">${posterHtml(i)}</div>
-      <div class="list-item-body">
-        <div class="list-item-text">${escapeHtml(i.text)}</div>
-        ${imdbBadgeHtml(i)}
-        ${ratingBadgeHtml(i)}
-      </div>
-      <div class="list-item-check${i.done ? ' checked' : ''}" data-action="toggle-item" data-id="${i.id}">
-        ${i.done ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' : ''}
-      </div>
-      <div class="list-item-del" data-action="delete-item" data-id="${i.id}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
-      </div>
-    </div>`;
 
   if (pending.length){
-    html += (done.length ? `<div class="list-items-section-label">Ще подивитись</div>` : '') + pending.map(itemRow).join('');
+    html += pending.map(listItemRowHtml).join('');
   }
   if (done.length){
-    html += `<div class="list-items-section-label">Переглянуто</div>` + done.map(itemRow).join('');
+    html += watchedFolderCardHtml(list, done.length);
   }
 
   if (listItemAdding){
@@ -2694,15 +2747,11 @@ function renderListDetail(list){
     }
   });
 
-  body.querySelectorAll('[data-action="toggle-item"]').forEach(el => {
-    el.addEventListener('click', () => toggleListItem(list.id, el.dataset.id));
-  });
-  body.querySelectorAll('[data-action="delete-item"]').forEach(el => {
-    el.addEventListener('click', (e) => { e.stopPropagation(); deleteListItem(list.id, el.dataset.id); });
-  });
-  body.querySelectorAll('[data-action="rate-item"]').forEach(el => {
-    el.addEventListener('click', (e) => { e.stopPropagation(); openRatingModal(list.id, el.dataset.id); });
-  });
+  wireListItemRowActions(body, list);
+  const watchedFolderEl = document.getElementById('listsBody').querySelector('[data-action="open-watched"]');
+  if (watchedFolderEl){
+    watchedFolderEl.addEventListener('click', () => openWatchedFolder(watchedFolderEl.dataset.id));
+  }
 
   if (listItemAdding){
     const input = document.getElementById('listItemInput');
@@ -2737,10 +2786,55 @@ function renderListDetail(list){
   }
 }
 
+/* ===== Папка «Переглянуто» — окремий екран лише з переглянутими пунктами,
+   щоб довгий перелік не захаращував основний список. ===== */
+function openWatchedFolder(listId){
+  listsView = { screen: 'watched', listId };
+  renderListsBody();
+}
+
+function renderWatchedDetail(list){
+  const body = document.getElementById('listsBody');
+  document.getElementById('listsModalTitle').textContent = 'Переглянуто';
+  document.getElementById('listsFab').style.display = 'none';
+
+  const done = list.items.filter(i => i.done);
+
+  let html = `
+    <div class="list-detail-header">
+      <div class="list-detail-back" id="listBackBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div class="list-detail-titlewrap">
+        <div class="list-detail-title">Переглянуто</div>
+        <div class="list-detail-progress-text">${list.name} · ${done.length} ${done.length === 1 ? 'фільм' : 'фільмів'}</div>
+      </div>
+    </div>`;
+
+  if (done.length){
+    html += done.map(listItemRowHtml).join('');
+  } else {
+    html += `<div class="lists-empty">Тут з'являться переглянуті фільми.</div>`;
+  }
+
+  body.innerHTML = html;
+
+  document.getElementById('listBackBtn').addEventListener('click', () => {
+    listsView = { screen: 'detail', listId: list.id };
+    renderListsBody();
+  });
+
+  wireListItemRowActions(body, list);
+}
+
 function renderListsBody(){
   const body = document.getElementById('listsBody');
   if (!body) return;
-  if (listsView.screen === 'detail'){
+  if (listsView.screen === 'watched'){
+    const list = lists.find(l => l.id === listsView.listId);
+    if (!list){ listsView = { screen: 'overview', listId: null }; renderListsOverview(); return; }
+    renderWatchedDetail(list);
+  } else if (listsView.screen === 'detail'){
     const list = lists.find(l => l.id === listsView.listId);
     if (!list){ listsView = { screen: 'overview', listId: null }; renderListsOverview(); return; }
     renderListDetail(list);
