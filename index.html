@@ -103,6 +103,18 @@
   }
   .sprout-btn:active { transform: scale(0.9); background: rgba(60,180,110,0.24); }
 
+  /* ---------- Індикатор нового рівня ростка (до перегляду) ---------- */
+  @keyframes sproutNewLevelPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255,196,0,0.55); }
+    70%  { box-shadow: 0 0 0 9px rgba(255,196,0,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,196,0,0); }
+  }
+  .sprout-btn.sprout-btn-newlevel {
+    background: rgba(255,196,0,0.16);
+    border-color: rgba(255,196,0,0.55);
+    animation: sproutNewLevelPulse 1.6s ease-out infinite;
+  }
+
   .lists-btn {
     position: absolute; right: 0; top: 2px;
     width: 38px; height: 38px;
@@ -1667,6 +1679,7 @@ let sprout = {
   name: 'РОСТОК',
   goal: 500,
   points: 0, // накопичені бали ростка (зростають лише автоматично)
+  lastSeenStage: 0, // останній рівень ростка, який користувач вже бачив (для індикатора нового рівня)
   awarded: {
     flame: {},  // { habitId: 'y-m-d' } — за який день вже нараховано +1 за "продовжив вогник"
     weekly: {}, // { habitId: 'y-m-d' } — за який день вже нараховано +10 за тижневе завдання
@@ -1778,6 +1791,9 @@ function loadState(){
         sprout.name = typeof parsed.sprout.name === 'string' ? parsed.sprout.name : sprout.name;
         sprout.goal = typeof parsed.sprout.goal === 'number' ? parsed.sprout.goal : sprout.goal;
         sprout.points = typeof parsed.sprout.points === 'number' ? parsed.sprout.points : (sprout.points || 0);
+        sprout.lastSeenStage = typeof parsed.sprout.lastSeenStage === 'number'
+          ? parsed.sprout.lastSeenStage
+          : sproutStageIndex(sprout.points); // старі збереження: вважаємо поточний рівень уже переглянутим
         if (parsed.sprout.awarded && typeof parsed.sprout.awarded === 'object'){
           sprout.awarded = {
             flame: parsed.sprout.awarded.flame || {},
@@ -4208,6 +4224,7 @@ function renderAll(){
   renderWeeklyPreviewBanner();
   renderDetailOverlay();
   checkAllDoneCelebration();
+  renderSproutBtn();
 }
 
 document.getElementById('taskArchiveBtn').addEventListener('click', () => openArchiveModal());
@@ -4337,6 +4354,26 @@ function restartSproutAnim(){
   img.src = makeFreshSproutUrl(stage);
 }
 
+// Чи є новий, ще не переглянутий рівень ростка
+function sproutHasNewLevel(){
+  const stage = sproutStageIndex(sproutProgress());
+  const seen = typeof sprout.lastSeenStage === 'number' ? sprout.lastSeenStage : stage;
+  return stage > seen;
+}
+
+// Оновлює вигляд кнопки-ростка в шапці: підсвічує та замінює на 🎁, якщо відкрито новий рівень
+function renderSproutBtn(){
+  const btn = document.getElementById('sproutBtn');
+  if (!btn) return;
+  if (sproutHasNewLevel()){
+    btn.classList.add('sprout-btn-newlevel');
+    btn.textContent = '🎁';
+  } else {
+    btn.classList.remove('sprout-btn-newlevel');
+    btn.textContent = '🌱';
+  }
+}
+
 function openSproutOverlay(){
   renderSproutOverlay();
   document.getElementById('sproutOverlay').classList.add('open');
@@ -4344,6 +4381,12 @@ function openSproutOverlay(){
 
 function closeSproutOverlay(){
   document.getElementById('sproutOverlay').classList.remove('open');
+  // Після перегляду нового ростка й закриття меню — індикатор зникає і більше не з'являється для цього рівня
+  if (sproutHasNewLevel()){
+    sprout.lastSeenStage = sproutStageIndex(sproutProgress());
+    saveState();
+  }
+  renderSproutBtn();
 }
 
 document.getElementById('sproutBtn').addEventListener('click', openSproutOverlay);
