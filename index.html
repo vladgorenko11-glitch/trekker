@@ -4126,7 +4126,7 @@ function renderStreakBoard(){
     // Бліда пастельна підкладка — статичний фон картки; яскравий шар .streak-fill
     // накладається зверху і плавно змінює ширину (transition: width), а не перестрибує миттєво.
     const isBlue = c0 === '#047DFF' || c0 === '#2F48FF';
-    const paleColor = blendWithWhite(c0, isBlue ? 0.74 : 0.63);
+    const paleColor = blendWithWhite(c0, isBlue ? 0.55 : 0.5);
     card.style.setProperty('--habit-pale-bg', paleColor);
     card.style.setProperty('--habit-shadow', hexToRgba(c0, 0.45));
 
