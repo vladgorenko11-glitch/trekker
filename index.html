@@ -575,10 +575,10 @@
   .streak-name {
     font-size: 14px; font-weight: 700; color: #fff;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.32), 0 1px 1px rgba(0,0,0,0.2);
     transition: color .3s ease;
   }
-  .streak-days { font-size: 12px; color: rgba(255,255,255,0.88); transition: color .3s ease; }
+  .streak-days { font-size: 12px; color: rgba(255,255,255,0.92); text-shadow: 0 1px 3px rgba(0,0,0,0.28); transition: color .3s ease;}
   .streak-days b { font-family: 'Rubik', sans-serif; color: #fff; }
   .streak-ring-wrap {
     flex: 0 0 auto;
@@ -4126,7 +4126,7 @@ function renderStreakBoard(){
     // Бліда пастельна підкладка — статичний фон картки; яскравий шар .streak-fill
     // накладається зверху і плавно змінює ширину (transition: width), а не перестрибує миттєво.
     const isBlue = c0 === '#047DFF' || c0 === '#2F48FF';
-    const paleColor = blendWithWhite(c0, isBlue ? 0.6 : 0.45);
+    const paleColor = blendWithWhite(c0, isBlue ? 0.74 : 0.63);
     card.style.setProperty('--habit-pale-bg', paleColor);
     card.style.setProperty('--habit-shadow', hexToRgba(c0, 0.45));
 
