@@ -454,11 +454,11 @@
   .habit-chip.complete .done-badge svg { width: 12px; height: 12px; stroke: #06131F; stroke-width: 3; }
 
   /* Звичку заморожено на сьогодні — показуємо сніжинку замість галочки */
-  .habit-chip.frozen .fill { filter: brightness(0.7) saturate(0.7); }
+  .habit-chip.frozen .fill { filter: brightness(0.88) saturate(0.9); }
   .habit-chip.frozen .fill::after {
     content: '';
     position: absolute; inset: 0; border-radius: 50%;
-    background: rgba(62,155,255,0.16);
+    background: rgba(62,155,255,0.3);
   }
   .habit-chip.frozen .done-badge {
     position: absolute; bottom: -2px; right: -2px; z-index: 2;
@@ -530,13 +530,35 @@
     transition: transform .12s ease, box-shadow .15s ease, background .3s ease;
   }
   .streak-card:active { transform: scale(0.97); }
-  .streak-card.frozen { filter: saturate(0.5) brightness(0.94); }
+  .streak-card.frozen {
+    filter: saturate(0.65) brightness(0.95);
+    box-shadow: 0 0 0 1.5px rgba(200,232,255,0.9), 0 0 22px 3px rgba(120,190,255,0.5), 0 6px 16px -8px rgba(0,0,0,0.35);
+  }
   .streak-card.frozen::after {
     content: '';
     position: absolute; inset: 0;
-    background: linear-gradient(155deg, rgba(180,224,255,0.42), rgba(255,255,255,0.16) 55%, rgba(180,224,255,0.3));
-    box-shadow: inset 0 0 0 2px rgba(200,232,255,0.65);
-    z-index: 2;
+    background:
+      radial-gradient(120% 90% at 8% -15%, rgba(180,222,255,0.55), transparent 50%),
+      radial-gradient(90% 120% at 105% 130%, rgba(140,195,255,0.45), transparent 55%),
+      linear-gradient(160deg, rgba(160,210,255,0.5) 0%, rgba(190,225,255,0.22) 45%, rgba(110,175,255,0.5) 100%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cg fill='none' stroke='%23d6ecff' stroke-width='1.1' stroke-linecap='round' opacity='0.38'%3E%3Cpath d='M0 46 L64 76 L44 142 M64 76 L128 54 L170 96 M128 54 L108 8 M170 96 L220 64 M44 142 L22 206 M44 142 L96 182 L74 220'/%3E%3Cpath d='M190 4 L214 40 M4 160 L36 190 L18 220'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+    background-size: cover, cover, cover, 240px 240px;
+    box-shadow: inset 0 0 0 2px rgba(215,238,255,0.9), inset 0 0 26px rgba(150,205,255,0.4);
+    z-index: 0;
+    pointer-events: none;
+  }
+  @keyframes iceShimmerSweep {
+    0%   { transform: translate(-25%, -12%) rotate(10deg); opacity: 0.3; }
+    50%  { transform: translate(0%, 0%) rotate(10deg); opacity: 0.55; }
+    100% { transform: translate(25%, 12%) rotate(10deg); opacity: 0.3; }
+  }
+  .streak-card.frozen::before {
+    content: '';
+    position: absolute; inset: -20%;
+    background: linear-gradient(100deg, transparent 42%, rgba(160,210,255,0.5) 50%, transparent 58%);
+    animation: iceShimmerSweep 5s ease-in-out infinite;
+    z-index: 0;
     pointer-events: none;
   }
   .streak-fill {
@@ -580,6 +602,8 @@
   }
   .streak-days { font-size: 12px; color: rgba(255,255,255,0.88); transition: color .3s ease; }
   .streak-days b { font-family: 'Rubik', sans-serif; color: #fff; }
+  .streak-card.frozen .streak-name,
+  .streak-card.frozen .streak-days { text-shadow: 0 1px 4px rgba(10,25,45,0.55), 0 1px 1px rgba(10,25,45,0.35); }
   .streak-ring-wrap {
     flex: 0 0 auto;
     position: relative;
@@ -1720,22 +1744,22 @@ const ICON_IMAGES = {
 };
 
 const COLORS = [
-  ['#047DFF', '#6CBBFF'],
-  ['#2F48FF', '#7A87FF'],
-  ['#6F2FFF', '#BDACFF'],
-  ['#DA26ED', '#FD87F3'],
-  ['#FF4EAB', '#FFCCE9'],
-  ['#E8002D', '#FF8A9B'],
-  ['#FF0000', '#FF8A8A'],
-  ['#FF2801', '#FF8464'],
-  ['#FF8A03', '#FFBF5E'],
-  ['#FFD500', '#FFF199'],
-  ['#FFA000', '#FFD54F'],
-  ['#12C93B', '#7CFFB2'],
-  ['#127F2D', '#5CC97D'],
-  ['#00D498', '#61F4C4'],
-  ['#00CEDD', '#74F5FF'],
-  ['#6F798D', '#A4ADBC'],
+  ['#3295FF', '#9AD0FF'],
+  ['#5D70FF', '#A8B0FF'],
+  ['#8F5DFF', '#E1DAFF'],
+  ['#E44EF3', '#FFB3F8'],
+  ['#FF7CC1', '#FFE5F4'],
+  ['#FF1744', '#FFB8C2'],
+  ['#FF2E2E', '#FFB8B8'],
+  ['#FF4F2F', '#FFA892'],
+  ['#FF9F31', '#FFD18C'],
+  ['#FFDD2E', '#FFF7C7'],
+  ['#FFB12E', '#FFE07D'],
+  ['#1AEF4A', '#AAFFCD'],
+  ['#15AA3A', '#7CD797'],
+  ['#03FFB8', '#8AF9D5'],
+  ['#0CEEFF', '#A2F8FF'],
+  ['#8590A5', '#BDC4D1'],
 ];
 
 /* ================= СТАН (зберігається у localStorage браузера на пристрої) ================= */
