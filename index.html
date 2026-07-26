@@ -546,6 +546,13 @@
     transition: width 1s cubic-bezier(.4, 0, .2, 1);
     will-change: width;
   }
+  .streak-fill::before {
+    content: '';
+    position: absolute; top: 0; bottom: 0; right: 0;
+    width: 3px;
+    background: rgba(0,0,0,0.32);
+    pointer-events: none;
+  }
   .streak-fill::after {
     content: '';
     position: absolute; top: 0; bottom: 0; left: 0;
@@ -1813,6 +1820,44 @@ function awardSproutForHabitCompletion(h){
       sprout.points = (sprout.points || 0) + 5;
     }
   });
+}
+
+// Скасовує бали ростка, нараховані за звичку h, коли виконання скасовують
+// (мінус, зняття галочки на календарі тощо). Дзеркальна дія до
+// awardSproutForHabitCompletion — викликається одразу після того, як
+// прогрес/позначку дня вже відкотили назад.
+function revertSproutForHabitCompletion(h){
+  const tk = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
+  if (!sprout.awarded) sprout.awarded = { flame: {}, weekly: {}, tier: {} };
+
+  // −1 — скасували продовження вогника за сьогодні
+  if (sprout.awarded.flame[h.id] === tk){
+    delete sprout.awarded.flame[h.id];
+    sprout.points = Math.max(0, (sprout.points || 0) - 1);
+  }
+
+  // −10 — скасували виконання тижневого завдання за сьогодні
+  if (h.frequency === 'weekly' && sprout.awarded.weekly[h.id] === tk){
+    delete sprout.awarded.weekly[h.id];
+    sprout.points = Math.max(0, (sprout.points || 0) - 10);
+  }
+
+  // −5 — серія знову опустилась нижче форми (7 / 30 / 90 днів), яку щойно відкрили
+  const streak = computeStreak(h);
+  if (sprout.awarded.tier[h.id] && sprout.awarded.tier[h.id].length){
+    [[7, 'red'], [30, 'purple'], [90, 'blue']].forEach(([threshold, name]) => {
+      if (streak < threshold && sprout.awarded.tier[h.id].includes(name)){
+        sprout.awarded.tier[h.id] = sprout.awarded.tier[h.id].filter(x => x !== name);
+        sprout.points = Math.max(0, (sprout.points || 0) - 5);
+      }
+    });
+  }
+
+  // −5 — бонус "усі вогники продовжено сьогодні" більше не діє, якщо цю звичку скасували
+  if (celebratedAllDoneKey === tk){
+    celebratedAllDoneKey = null;
+    sprout.points = Math.max(0, (sprout.points || 0) - 5);
+  }
 }
 const STORAGE_KEY = 'habits-state-v1';
 let storageAvailable = false;
@@ -3623,6 +3668,7 @@ function renderDetailOverlay(){
     if (h.progress < h.goal){
       applyToWindowDays(h, today, k => { if (h.days[k] === true) delete h.days[k]; });
     }
+    revertSproutForHabitCompletion(h);
     feedbackUndo();
     renderAll(); saveState();
   });
@@ -3772,6 +3818,7 @@ function renderCalendar(h){
           awardSproutForHabitCompletion(h);
           celebrateIfMilestone(h, computeStreak(h));
         } else {
+          revertSproutForHabitCompletion(h);
           feedbackUndo();
         }
         renderDetailOverlay();
@@ -4047,6 +4094,16 @@ function renderStreakBoard(){
 
   if (!visible.length){ grid.innerHTML = ''; return; }
 
+  // Заморожені звички відсуваємо в кінець списку — так активні звички,
+  // якими ще треба зайнятися сьогодні, лишаються на видному місці зверху.
+  // Array.prototype.sort стабільний, тож відносний порядок серед
+  // незаморожених і серед заморожених зберігається.
+  const isFrozenNow = (h) => {
+    const isComplete = h.goal > 0 && h.progress >= h.goal;
+    return !isComplete && h.days[todayKeyStr] === 'frozen';
+  };
+  visible.sort((a, b) => (isFrozenNow(a) ? 1 : 0) - (isFrozenNow(b) ? 1 : 0));
+
   // Перевикористовуємо вже наявні картки за id звички замість повного перестворення —
   // інакше CSS-переходи (заповнення, кільце) не мають "попереднього" стану, з якого анімувати,
   // і зміна виглядає стоп-кадром, а не плавно.
@@ -4126,7 +4183,7 @@ function renderStreakBoard(){
     // Бліда пастельна підкладка — статичний фон картки; яскравий шар .streak-fill
     // накладається зверху і плавно змінює ширину (transition: width), а не перестрибує миттєво.
     const isBlue = c0 === '#047DFF' || c0 === '#2F48FF';
-    const paleColor = blendWithWhite(c0, isBlue ? 0.55 : 0.5);
+    const paleColor = blendWithWhite(c0, isBlue ? 0.6 : 0.55);
     card.style.setProperty('--habit-pale-bg', paleColor);
     card.style.setProperty('--habit-shadow', hexToRgba(c0, 0.45));
 
