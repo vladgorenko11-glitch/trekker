@@ -546,13 +546,6 @@
     transition: width 1s cubic-bezier(.4, 0, .2, 1);
     will-change: width;
   }
-  .streak-fill::before {
-    content: '';
-    position: absolute; top: 0; bottom: 0; right: 0;
-    width: 3px;
-    background: rgba(0,0,0,0.32);
-    pointer-events: none;
-  }
   .streak-fill::after {
     content: '';
     position: absolute; top: 0; bottom: 0; left: 0;
@@ -582,10 +575,10 @@
   .streak-name {
     font-size: 14px; font-weight: 700; color: #fff;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.32), 0 1px 1px rgba(0,0,0,0.2);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.15);
     transition: color .3s ease;
   }
-  .streak-days { font-size: 12px; color: rgba(255,255,255,0.92); text-shadow: 0 1px 3px rgba(0,0,0,0.28); transition: color .3s ease;}
+  .streak-days { font-size: 12px; color: rgba(255,255,255,0.88); transition: color .3s ease; }
   .streak-days b { font-family: 'Rubik', sans-serif; color: #fff; }
   .streak-ring-wrap {
     flex: 0 0 auto;
@@ -2093,7 +2086,8 @@ function hexToRgba(hex, alpha){
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-/* Змішує колір із білим (ratio 0..1) — для блідої/пастельної частини картки прогресу */
+/* Змішує колір із білим (ratio 0..1) — лишаємо як загальну утиліту, більше не використовується
+   для картки прогресу (замінено на pastelTint нижче, який дає рівномірніший результат для різних відтінків). */
 function blendWithWhite(hex, ratio){
   const h = hex.replace('#', '');
   const r = parseInt(h.substring(0, 2), 16);
@@ -2104,6 +2098,62 @@ function blendWithWhite(hex, ratio){
   const nb = Math.round(b + (255 - b) * ratio);
   return `rgb(${nr}, ${ng}, ${nb})`;
 }
+
+function hexToHsl(hex){
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16) / 255;
+  const g = parseInt(h.substring(2, 4), 16) / 255;
+  const b = parseInt(h.substring(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let hh, s, l = (max + min) / 2;
+  if (max === min){ hh = 0; s = 0; }
+  else {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max){
+      case r: hh = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: hh = (b - r) / d + 2; break;
+      default: hh = (r - g) / d + 4;
+    }
+    hh /= 6;
+  }
+  return { h: hh, s, l };
+}
+
+function hslToRgbString(h, s, l){
+  const hue2rgb = (p, q, t) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  };
+  let r, g, b;
+  if (s === 0){ r = g = b = l; }
+  else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+}
+
+/* Пастельна, світліша версія кольору звички для незаповненої частини картки прогресу.
+   Працює через HSL (а не через пряме "розбавляння" білим), тому дає рівномірно гарний
+   результат незалежно від того, наскільки яскравий/світлий базовий колір —
+   виглядає доладно і коли звичка взагалі не почата (0%). */
+function pastelTint(hex){
+  const { h, s, l } = hexToHsl(hex);
+  const targetL = 0.72;
+  const newL = Math.min(0.86, l + (targetL - l) * 0.68);
+  const newS = Math.max(0.32, Math.min(0.6, s * 0.62));
+  return hslToRgbString(h, newS, newL);
+}
+
+
 
 /* ================= СКИДАННЯ ЛІЧИЛЬНИКА ОПІВНОЧІ ================= */
 /* Якщо настав новий день (з моменту останнього збереження/перевірки),
@@ -3486,9 +3536,14 @@ function renderRail(){
   // Тижневі звички, що не активні сьогодні, тут не показуються — вони живуть в архіві
   // до свого дня, щоб не захаращувати рейку. Щойно настає їхній день, вони з'являються тут.
   const sorted = habits.filter(h => !h.archived && (h.frequency !== 'weekly' || isDueToday(h))).sort((a, b) => {
-    const aDone = a.goal > 0 && a.progress >= a.goal ? 1 : 0;
-    const bDone = b.goal > 0 && b.progress >= b.goal ? 1 : 0;
-    return aDone - bDone; // невиконані (0) — попереду, виконані (1) — праворуч
+    const score = (h) => {
+      const isComplete = h.goal > 0 && h.progress >= h.goal;
+      const isFrozen = !isComplete && h.days[todayKeyStr] === 'frozen';
+      if (isComplete) return 2;   // виконані — праворуч
+      if (isFrozen) return 1;     // заморожені — теж праворуч, але перед виконаними
+      return 0;                  // активні, що ще чекають на дію — попереду
+    };
+    return score(a) - score(b);
   });
   sorted.forEach(h => {
     const pct = h.goal > 0 ? Math.round((h.progress / h.goal) * 100) : 0;
@@ -4183,7 +4238,7 @@ function renderStreakBoard(){
     // Бліда пастельна підкладка — статичний фон картки; яскравий шар .streak-fill
     // накладається зверху і плавно змінює ширину (transition: width), а не перестрибує миттєво.
     const isBlue = c0 === '#047DFF' || c0 === '#2F48FF';
-    const paleColor = blendWithWhite(c0, isBlue ? 0.6 : 0.55);
+    const paleColor = blendWithWhite(c0, isBlue ? 0.6 : 0.45);
     card.style.setProperty('--habit-pale-bg', paleColor);
     card.style.setProperty('--habit-shadow', hexToRgba(c0, 0.45));
 
