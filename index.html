@@ -560,9 +560,10 @@
     content: '';
     position: absolute; inset: -20%;
     border-radius: inherit;
-    background: linear-gradient(100deg, transparent 42%, rgba(90,170,255,0.45) 50%, transparent 58%);
+    background: linear-gradient(100deg, transparent 40%, rgba(255,255,255,0.75) 50%, transparent 60%);
+    mix-blend-mode: screen;
     animation: iceShimmerSweep 5s ease-in-out infinite;
-    z-index: 0;
+    z-index: 3;
     pointer-events: none;
   }
   .streak-fill {
@@ -1748,22 +1749,22 @@ const ICON_IMAGES = {
 };
 
 const COLORS = [
-  ['#3295FF', '#9AD0FF'],
-  ['#5D70FF', '#A8B0FF'],
-  ['#8F5DFF', '#E1DAFF'],
-  ['#E44EF3', '#FFB3F8'],
-  ['#FF7CC1', '#FFE5F4'],
-  ['#FF1744', '#FFB8C2'],
-  ['#FF2E2E', '#FFB8B8'],
-  ['#FF4F2F', '#FFA892'],
-  ['#FF9F31', '#FFD18C'],
-  ['#FFDD2E', '#FFF7C7'],
-  ['#FFB12E', '#FFE07D'],
-  ['#1AEF4A', '#AAFFCD'],
-  ['#15AA3A', '#7CD797'],
-  ['#03FFB8', '#8AF9D5'],
-  ['#0CEEFF', '#A2F8FF'],
-  ['#8590A5', '#BDC4D1'],
+  ['#0A74FF', '#4FB4FF'],
+  ['#3B4CFF', '#7480FF'],
+  ['#8A2FFF', '#B885FF'],
+  ['#E619F2', '#FF6FF5'],
+  ['#FF2E9E', '#FF85C9'],
+  ['#FF0035', '#FF5570'],
+  ['#FF0000', '#FF6666'],
+  ['#FF2200', '#FF7040'],
+  ['#FF7A00', '#FFAA33'],
+  ['#FFD100', '#FFDE47'],
+  ['#FF9500', '#FFBB2E'],
+  ['#00E64D', '#4DFF94'],
+  ['#0A9E33', '#33CC66'],
+  ['#00F0AC', '#3DEFC0'],
+  ['#00DCFF', '#4FEFFF'],
+  ['#7C879C', '#AEB7C6'],
 ];
 
 /* ================= СТАН (зберігається у localStorage браузера на пристрої) ================= */
