@@ -1035,6 +1035,11 @@
     background: rgba(83,214,178,0.08); border: 1.5px solid rgba(83,214,178,0.22);
     font-size: 13px; color: var(--text-secondary); line-height: 1.45;
   }
+  .habit-stats-facts { display: flex; flex-direction: column; gap: 10px; }
+  .habit-stats-insight.fact {
+    margin-top: 10px;
+    background: rgba(168,90,255,0.08); border: 1.5px solid rgba(168,90,255,0.24);
+  }
 
   .period-tabs {
     display: flex; gap: 8px; margin: 14px 0 18px;
@@ -2621,6 +2626,53 @@ function longestEverStreak(h){
   return max;
 }
 
+// Два "вражаючих" факти на основі всієї історії даних: рекордна серія ідеальних днів поспіль
+// та найпродуктивніший календарний місяць за весь час.
+function computeWowFacts(){
+  const active = habits.filter(h => !h.archived);
+  const allKeys = [];
+  habits.forEach(h => Object.keys(h.days).forEach(k => allKeys.push(k)));
+  if (!allKeys.length) return { perfectStreakRecord: 0, bestMonthLabel: null, bestMonthCount: 0 };
+
+  const minDate = allKeys.map(keyToDate).reduce((a, b) => (a < b ? a : b));
+
+  let cur = 0, perfectStreakRecord = 0;
+  for (let d = new Date(minDate); d <= today; d.setDate(d.getDate() + 1)){
+    const key = dayKey(d.getFullYear(), d.getMonth(), d.getDate());
+    let due = 0, done = 0;
+    active.forEach(h => {
+      if (isDueOnDate(h, d)){
+        due++;
+        if (h.days[key] === true) done++;
+      }
+    });
+    if (due > 0 && done === due){ cur++; if (cur > perfectStreakRecord) perfectStreakRecord = cur; }
+    else cur = 0;
+  }
+
+  const monthTotals = {};
+  habits.forEach(h => {
+    Object.keys(h.days).forEach(k => {
+      if (h.days[k] === true){
+        const d = keyToDate(k);
+        const mk = `${d.getFullYear()}-${d.getMonth()}`;
+        monthTotals[mk] = (monthTotals[mk] || 0) + 1;
+      }
+    });
+  });
+  let bestMonthKey = null, bestMonthCount = 0;
+  Object.keys(monthTotals).forEach(mk => {
+    if (monthTotals[mk] > bestMonthCount){ bestMonthCount = monthTotals[mk]; bestMonthKey = mk; }
+  });
+  let bestMonthLabel = null;
+  if (bestMonthKey){
+    const [y, m] = bestMonthKey.split('-').map(Number);
+    bestMonthLabel = `${MONTHS[m]} ${y}`;
+  }
+
+  return { perfectStreakRecord, bestMonthLabel, bestMonthCount };
+}
+
 function computeHabitsStats(period){
   const active = habits.filter(h => !h.archived);
   const archivedCount = habits.length - active.length;
@@ -2822,6 +2874,15 @@ function renderHabitStatsDetail(){
     }
   }
 
+  const wow = computeWowFacts();
+  const wowFactsHtml = [];
+  if (wow.perfectStreakRecord >= 2){
+    wowFactsHtml.push(`🤯 Рекордна серія — ${wow.perfectStreakRecord} ${dayWord(wow.perfectStreakRecord)} поспіль, коли ти виконував абсолютно всі заплановані звички.`);
+  }
+  if (wow.bestMonthLabel && wow.bestMonthCount >= 5){
+    wowFactsHtml.push(`📅 Найпродуктивніший місяць за весь час — ${wow.bestMonthLabel}: ${wow.bestMonthCount} виконаних звичок.`);
+  }
+
   const tabsHtml = ['week','month','all'].map(p =>
     `<div class="period-tab${habitStatsPeriod === p ? ' active' : ''}" data-period="${p}">${HABIT_STATS_PERIOD_LABELS[p]}</div>`
   ).join('');
@@ -2911,7 +2972,8 @@ function renderHabitStatsDetail(){
       <div class="lists-section-label">Топ звичок за стріком</div>
       ${topHtml}
     </div>
-    <div class="habit-stats-insight">💡 ${insightText}</div>`;
+    <div class="habit-stats-insight">💡 ${insightText}</div>
+    ${wowFactsHtml.length ? `<div class="habit-stats-facts">${wowFactsHtml.map(f => `<div class="habit-stats-insight fact">${f}</div>`).join('')}</div>` : ''}`;
 
   document.getElementById('statsBackBtn').addEventListener('click', () => {
     listsView = { screen: 'overview', listId: null };
