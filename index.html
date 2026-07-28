@@ -996,6 +996,70 @@
   .mood-card .list-card-ico .mci-cloud.c2 { bottom: 0px; right: 4px; font-size: 16px; }
   @keyframes mciTwinkle { 0%,100% { opacity: .55; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.05); } }
 
+  /* ---------- Загальна статистика звичок у Списках ---------- */
+  .stats-card {
+    border: 1.5px solid rgba(83,214,178,0.4);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.4), 0 0 0 1px rgba(83,214,178,0.12), 0 0 26px rgba(83,214,178,0.14);
+  }
+  .stats-card .list-card-ico::before {
+    background: radial-gradient(circle, rgba(83,214,178,0.65) 0%, rgba(63,169,209,0.28) 45%, transparent 72%);
+  }
+  .stats-card .list-card-ico span {
+    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5)) drop-shadow(0 0 22px rgba(83,214,178,0.55));
+  }
+  .stats-card .list-card-sub:first-of-type { color: #53D6B2; font-weight: 600; }
+
+  .habit-stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-top: 4px;
+  }
+  .habit-stat-box {
+    padding: 16px 14px; border-radius: var(--radius-lg);
+    background: rgba(255,255,255,0.025); border: 1.5px solid rgba(255,255,255,0.06);
+  }
+  .habit-stat-box-value {
+    font-family: 'Rubik', sans-serif; font-size: 22px; font-weight: 800; color: var(--text-primary); line-height: 1.15;
+  }
+  .habit-stat-box-label { font-size: 11.5px; color: var(--text-tertiary); margin-top: 4px; }
+  .habit-stat-trend { font-size: 12px; font-weight: 700; margin-left: 6px; }
+  .habit-stat-trend.up { color: #4ADE80; }
+  .habit-stat-trend.down { color: #FF6B7A; }
+
+  .habit-stats-top { margin-top: 22px; }
+  .habit-stats-top-empty {
+    text-align: center; padding: 22px 14px; color: var(--text-tertiary); font-size: 13px;
+    background: rgba(255,255,255,0.025); border-radius: 18px; border: 1.5px dashed rgba(255,255,255,0.1);
+  }
+  .habit-stats-insight {
+    margin-top: 22px; padding: 14px 16px; border-radius: var(--radius-lg);
+    background: rgba(83,214,178,0.08); border: 1.5px solid rgba(83,214,178,0.22);
+    font-size: 13px; color: var(--text-secondary); line-height: 1.45;
+  }
+
+  .period-tabs {
+    display: flex; gap: 8px; margin: 14px 0 18px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px; padding: 4px;
+  }
+  .period-tab {
+    flex: 1; text-align: center; padding: 9px 6px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; color: var(--text-tertiary);
+    cursor: pointer; transition: background .15s ease, color .15s ease;
+  }
+  .period-tab.active {
+    background: linear-gradient(135deg, #53D6B2, #3FA9D1); color: #0B1013;
+  }
+
+  .donut-wrap { display: flex; align-items: center; gap: 18px; margin-top: 10px; }
+  .donut-svg { width: 120px; height: 120px; flex: 0 0 auto; }
+  .donut-center-value { font-family: 'Rubik', sans-serif; font-size: 26px; font-weight: 800; fill: var(--text-primary); }
+  .donut-center-label { font-size: 11px; fill: var(--text-tertiary); }
+  .donut-legend { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+  .donut-legend-row { display: flex; align-items: center; gap: 8px; }
+  .donut-legend-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+  .donut-legend-name { flex: 1; min-width: 0; font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .donut-legend-pct { font-size: 12.5px; font-weight: 700; color: var(--text-primary); flex: 0 0 auto; }
+
   .mood-days-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .mood-day-cell {
     aspect-ratio: 1; border-radius: 14px;
@@ -2492,6 +2556,384 @@ function openMoodCalendar(){
   renderListsBody();
 }
 
+/* ---- Розділ "Загальна статистика" у Списках: зведені дані по всіх звичках ---- */
+const WEEKDAY_FULL = ['неділя','понеділок','вівторок','середа','четвер',"п'ятниця",'субота'];
+let habitStatsPeriod = 'week'; // 'week' | 'month' | 'all'
+const HABIT_STATS_PERIOD_LABELS = { week: 'Тиждень', month: 'Місяць', all: 'Весь час' };
+
+function keyToDate(key){
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m, d);
+}
+
+// Повертає межі періоду: перелік дат від startDate до сьогодні (включно), або null для "весь час"
+// (тоді фільтрування по датах просто не застосовується).
+function habitStatsPeriodDates(period){
+  if (period === 'all') return null;
+  const span = period === 'week' ? 7 : 30;
+  const dates = [];
+  for (let i = span - 1; i >= 0; i--){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+// Попередній період такої самої довжини — для порівняння тренду ("+12% до минулого тижня").
+function habitStatsPreviousPeriodDates(period){
+  if (period === 'all') return null;
+  const span = period === 'week' ? 7 : 30;
+  const dates = [];
+  for (let i = span * 2 - 1; i >= span; i--){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+function calcDueDonePct(dates, active){
+  let due = 0, done = 0;
+  dates.forEach(d => {
+    const key = dayKey(d.getFullYear(), d.getMonth(), d.getDate());
+    active.forEach(h => {
+      if (isDueOnDate(h, d)){
+        due++;
+        if (h.days[key] === true) done++;
+      }
+    });
+  });
+  return { due, done, pct: due ? Math.round((done / due) * 100) : 0 };
+}
+
+// Найдовший стрік поспіль коли-небудь (по календарних днях без пропусків) — рекорд, а не поточний стрік.
+// Рахуємо лише для щоденних звичок, бо для тижневих поспіль-по-календарю не має сенсу.
+function longestEverStreak(h){
+  const trueDates = Object.keys(h.days).filter(k => h.days[k] === true).map(keyToDate).sort((a, b) => a - b);
+  if (!trueDates.length) return 0;
+  let max = 1, cur = 1;
+  for (let i = 1; i < trueDates.length; i++){
+    const diffDays = Math.round((trueDates[i] - trueDates[i - 1]) / 86400000);
+    cur = diffDays === 1 ? cur + 1 : 1;
+    if (cur > max) max = cur;
+  }
+  return max;
+}
+
+function computeHabitsStats(period){
+  const active = habits.filter(h => !h.archived);
+  const archivedCount = habits.length - active.length;
+  const periodDates = habitStatsPeriodDates(period);
+  const periodKeys = periodDates ? new Set(periodDates.map(d => dayKey(d.getFullYear(), d.getMonth(), d.getDate()))) : null;
+  const inPeriod = key => !periodKeys || periodKeys.has(key);
+
+  let totalCompletions = 0, frozenCount = 0;
+  habits.forEach(h => {
+    Object.keys(h.days).forEach(k => {
+      if (!inPeriod(k)) return;
+      if (h.days[k] === true) totalCompletions++;
+      else if (h.days[k] === 'frozen') frozenCount++;
+    });
+  });
+
+  // Поточний стрік — не залежить від обраного періоду, це завжди «на зараз».
+  let bestStreak = 0, bestStreakHabit = null;
+  active.forEach(h => {
+    const s = computeStreak(h);
+    if (s > bestStreak){ bestStreak = s; bestStreakHabit = h; }
+  });
+
+  // Відсоток виконання запланованого в межах обраного періоду (або за весь час існування даних).
+  const pctDates = periodDates || (() => {
+    const allKeys = new Set();
+    habits.forEach(h => Object.keys(h.days).forEach(k => allKeys.add(k)));
+    return [...allKeys].map(keyToDate).sort((a, b) => a - b);
+  })();
+  let due = 0, done = 0;
+  const dayInfo = []; // { date, dueCount, doneCount }
+  const perHabitDue = new Map(); // h.id -> { due, done }
+  pctDates.forEach(d => {
+    const key = dayKey(d.getFullYear(), d.getMonth(), d.getDate());
+    let dueCount = 0, doneCount = 0;
+    active.forEach(h => {
+      if (isDueOnDate(h, d)){
+        dueCount++;
+        due++;
+        const rec = perHabitDue.get(h.id) || { due: 0, done: 0 };
+        rec.due++;
+        if (h.days[key] === true){ doneCount++; done++; rec.done++; }
+        perHabitDue.set(h.id, rec);
+      }
+    });
+    dayInfo.push({ date: d, dueCount, doneCount });
+  });
+  const periodPct = due ? Math.round((done / due) * 100) : 0;
+
+  // Тренд порівняно з попереднім періодом такої самої довжини (не рахуємо для "весь час").
+  const prevDates = habitStatsPreviousPeriodDates(period);
+  const trendDelta = prevDates ? periodPct - calcDueDonePct(prevDates, active).pct : null;
+
+  // Найкраща й найслабша звичка за відсотком виконання в межах періоду (мінімум 3 запланованих випадки).
+  let bestRateHabit = null, worstRateHabit = null;
+  perHabitDue.forEach((rec, id) => {
+    if (rec.due < 3) return;
+    const rate = Math.round((rec.done / rec.due) * 100);
+    const h = active.find(x => x.id === id);
+    if (!h) return;
+    if (!bestRateHabit || rate > bestRateHabit.rate) bestRateHabit = { h, rate };
+    if (!worstRateHabit || rate < worstRateHabit.rate) worstRateHabit = { h, rate };
+  });
+  if (bestRateHabit && worstRateHabit && bestRateHabit.h.id === worstRateHabit.h.id) worstRateHabit = null;
+
+  // Рекордний стрік коли-небудь (по щоденних звичках) — окремо від поточного активного стріку.
+  let allTimeBestStreak = 0, allTimeBestStreakHabit = null;
+  habits.forEach(h => {
+    if (h.frequency === 'weekly') return;
+    const rec = longestEverStreak(h);
+    if (rec > allTimeBestStreak){ allTimeBestStreak = rec; allTimeBestStreakHabit = h; }
+  });
+
+  // Ідеальні дні — всі заплановані на той день звички виконано.
+  const perfectDays = dayInfo.filter(x => x.dueCount > 0 && x.doneCount === x.dueCount).length;
+
+  // Найпродуктивніший день тижня в межах періоду.
+  const weekdayCounts = [0,0,0,0,0,0,0];
+  habits.forEach(h => {
+    Object.keys(h.days).forEach(k => {
+      if (h.days[k] === true && inPeriod(k)) weekdayCounts[keyToDate(k).getDay()]++;
+    });
+  });
+  let bestWeekdayIdx = 0;
+  weekdayCounts.forEach((c, i) => { if (c > weekdayCounts[bestWeekdayIdx]) bestWeekdayIdx = i; });
+  const bestWeekdayCount = weekdayCounts[bestWeekdayIdx];
+
+  // Розподіл виконань за звичками в межах періоду — для кругової діаграми.
+  const perHabitCompletions = habits.map(h => {
+    const count = Object.keys(h.days).filter(k => h.days[k] === true && inPeriod(k)).length;
+    return { h, count };
+  }).filter(x => x.count > 0).sort((a, b) => b.count - a.count);
+
+  const topHabits = active
+    .map(h => ({ h, streak: computeStreak(h) }))
+    .sort((a, b) => b.streak - a.streak)
+    .slice(0, 3);
+
+  return { active, archivedCount, totalCompletions, frozenCount, bestStreak, bestStreakHabit,
+    periodPct, due, done, perfectDays, bestWeekdayIdx, bestWeekdayCount, topHabits, perHabitCompletions,
+    trendDelta, bestRateHabit, worstRateHabit, allTimeBestStreak, allTimeBestStreakHabit };
+}
+
+function statsCardHtml(){
+  const active = habits.filter(h => !h.archived);
+  const totalCompletions = habits.reduce((sum, h) =>
+    sum + Object.values(h.days).filter(v => v === true).length, 0);
+  return `
+    <div class="list-card stats-card" id="habitStatsCard">
+      <div class="list-card-ico"><span>📊</span></div>
+      <div class="list-card-info">
+        <div class="list-card-name">Загальна статистика</div>
+        <div class="list-card-sub">${active.length} активних звичок</div>
+        <div class="list-card-sub">${totalCompletions} виконань за весь час</div>
+      </div>
+      <div class="list-card-chevron">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </div>
+    </div>`;
+}
+
+function openHabitStats(){
+  listsView = { screen: 'habitStats', listId: null };
+  renderListsBody();
+}
+
+// Кругова діаграма розподілу виконань за звичками (SVG, побудована на stroke-dasharray).
+function donutChartHtml(perHabitCompletions){
+  const total = perHabitCompletions.reduce((s, x) => s + x.count, 0);
+  if (!total){
+    return `<div class="habit-stats-top-empty">Ще немає виконань за цей період</div>`;
+  }
+  const top = perHabitCompletions.slice(0, 6);
+  const restCount = perHabitCompletions.slice(6).reduce((s, x) => s + x.count, 0);
+  const slices = top.map(x => ({ name: x.h.name, color: x.h.colors[0], count: x.count }));
+  if (restCount > 0) slices.push({ name: 'Інші', color: '#5B6072', count: restCount });
+
+  const r = 70, C = 2 * Math.PI * r;
+  let offset = 0;
+  const circles = slices.map(sl => {
+    const dash = (sl.count / total) * C;
+    const circle = `<circle cx="100" cy="100" r="${r}" fill="none" stroke="${sl.color}" stroke-width="26" stroke-dasharray="${dash.toFixed(2)} ${(C - dash).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"></circle>`;
+    offset += dash;
+    return circle;
+  }).join('');
+
+  const legend = slices.map(sl => `
+    <div class="donut-legend-row">
+      <span class="donut-legend-dot" style="background:${sl.color}"></span>
+      <span class="donut-legend-name">${escapeHtml(sl.name)}</span>
+      <span class="donut-legend-pct">${Math.round(sl.count / total * 100)}%</span>
+    </div>`).join('');
+
+  return `
+    <div class="donut-wrap">
+      <svg viewBox="0 0 200 200" class="donut-svg">
+        <g transform="rotate(-90 100 100)">${circles}</g>
+        <text x="100" y="94" text-anchor="middle" class="donut-center-value">${total}</text>
+        <text x="100" y="114" text-anchor="middle" class="donut-center-label">виконань</text>
+      </svg>
+      <div class="donut-legend">${legend}</div>
+    </div>`;
+}
+
+function renderHabitStatsDetail(){
+  const body = document.getElementById('listsBody');
+  document.getElementById('listsModalTitle').textContent = 'Списки';
+  document.getElementById('listsFab').style.display = 'none';
+
+  const s = computeHabitsStats(habitStatsPeriod);
+  const periodLabel = HABIT_STATS_PERIOD_LABELS[habitStatsPeriod].toLowerCase();
+
+  const topHtml = s.topHabits.length
+    ? s.topHabits.map(({ h, streak }) => `
+        <div class="archive-habit-row">
+          <div class="archive-habit-ico" style="background:linear-gradient(160deg, ${h.colors[0]}, ${h.colors[1]})">${habitIconMarkup(h.icon, 'white')}</div>
+          <div class="archive-habit-info">
+            <div class="archive-habit-name">${escapeHtml(h.name)}</div>
+            <div class="archive-habit-sub">${h.frequency === 'weekly' ? weekdaysLabel(h.weekdays) : 'Щодня'}</div>
+          </div>
+          ${streak > 0 ? `<div class="archive-habit-streak"><div class="flame">${freezeIconMarkup()}</div><span>${streak}</span></div>` : `<div class="archive-habit-sub">без стріку</div>`}
+        </div>`).join('')
+    : `<div class="habit-stats-top-empty">Ще немає активних звичок для порівняння</div>`;
+
+  let insightText = 'Додай кілька звичок і відзначай їх щодня — тут з’явиться більше цікавої статистики.';
+  if (s.active.length){
+    if (s.bestStreak >= 7 && s.bestStreakHabit){
+      insightText = `«${s.bestStreakHabit.name}» тримається без пропусків ${s.bestStreak} ${dayWord(s.bestStreak)} поспіль — це чудовий результат!`;
+    } else if (s.frozenCount > 0 && s.frozenCount >= s.totalCompletions){
+      insightText = `За ${periodLabel} ти заморожував стрік ${s.frozenCount} ${dayWord(s.frozenCount)} — заморозка рятує вогник, але спробуй частіше виконувати звички наживо.`;
+    } else if (s.due > 0 && s.periodPct >= 80){
+      insightText = `За ${periodLabel} виконано ${s.periodPct}% запланованого — так тримати!`;
+    } else if (s.due > 0 && s.periodPct < 40){
+      insightText = `За ${periodLabel} виконано лише ${s.periodPct}% запланованого — спробуй повернутись у ритм.`;
+    } else if (s.perfectDays > 0){
+      insightText = `За ${periodLabel} було ${s.perfectDays} ${dayWord(s.perfectDays)}, коли всі заплановані звички виконано повністю.`;
+    } else if (s.bestWeekdayCount > 0){
+      insightText = `Найпродуктивніший день тижня — ${WEEKDAY_FULL[s.bestWeekdayIdx]}: саме тоді ти найчастіше відзначаєш звички виконаними.`;
+    }
+  }
+
+  const tabsHtml = ['week','month','all'].map(p =>
+    `<div class="period-tab${habitStatsPeriod === p ? ' active' : ''}" data-period="${p}">${HABIT_STATS_PERIOD_LABELS[p]}</div>`
+  ).join('');
+
+  body.innerHTML = `
+    <div class="list-detail-header">
+      <div class="list-detail-back" id="statsBackBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div class="list-detail-titlewrap">
+        <div class="list-detail-title">Загальна статистика</div>
+        <div class="list-detail-progress-text">Зведені дані по всіх звичках</div>
+      </div>
+    </div>
+    <div class="period-tabs">${tabsHtml}</div>
+    <div class="mood-dist">
+      <div class="lists-section-label">Розподіл виконань за звичками</div>
+      ${donutChartHtml(s.perHabitCompletions)}
+    </div>
+    <div class="habit-stats-grid" style="margin-top: 22px;">
+      <div class="habit-stat-box">
+        <div class="habit-stat-box-value">${s.bestStreak}</div>
+        <div class="habit-stat-box-label">${s.bestStreakHabit ? `Поточний стрік · ${escapeHtml(s.bestStreakHabit.name)}` : 'Поточний стрік'}</div>
+      </div>
+      <div class="habit-stat-box">
+        <div class="habit-stat-box-value">${s.totalCompletions}</div>
+        <div class="habit-stat-box-label">Виконань за ${periodLabel}</div>
+      </div>
+      <div class="habit-stat-box">
+        <div class="habit-stat-box-value">${s.periodPct}%${s.trendDelta !== null && s.trendDelta !== 0 ? `<span class="habit-stat-trend ${s.trendDelta > 0 ? 'up' : 'down'}">${s.trendDelta > 0 ? '↑' : '↓'} ${Math.abs(s.trendDelta)}%</span>` : ''}</div>
+        <div class="habit-stat-box-label">Виконано запланованого${s.trendDelta !== null ? ` · до попереднього періоду` : ''}</div>
+      </div>
+      <div class="habit-stat-box">
+        <div class="habit-stat-box-value">${s.frozenCount}</div>
+        <div class="habit-stat-box-label">Разів заморожено стрік</div>
+      </div>
+    </div>
+    <div class="mood-stats-card" style="margin-top: 18px;">
+      <div class="mood-stat-row">
+        ${moodStatIcon('star')}
+        <div class="mood-stat-text">
+          <div class="mood-stat-value">${s.perfectDays}</div>
+          <div class="mood-stat-label">Ідеальних днів за ${periodLabel} · всі звички виконано</div>
+        </div>
+      </div>
+      ${s.allTimeBestStreak > 0 ? `
+      <div class="mood-stat-row">
+        ${moodStatIcon('bulb')}
+        <div class="mood-stat-text">
+          <div class="mood-stat-value">${s.allTimeBestStreak} ${dayWord(s.allTimeBestStreak)}</div>
+          <div class="mood-stat-label">Рекордний стрік коли-небудь · ${escapeHtml(s.allTimeBestStreakHabit.name)}</div>
+        </div>
+      </div>` : ''}
+      ${s.bestWeekdayCount > 0 ? `
+      <div class="mood-stat-row">
+        ${moodStatIcon('trend')}
+        <div class="mood-stat-text">
+          <div class="mood-stat-value">${WEEKDAY_FULL[s.bestWeekdayIdx]}</div>
+          <div class="mood-stat-label">Найпродуктивніший день тижня · ${s.bestWeekdayCount} виконань</div>
+        </div>
+      </div>` : ''}
+      ${s.bestRateHabit ? `
+      <div class="mood-stat-row">
+        ${moodStatIcon('star')}
+        <div class="mood-stat-text">
+          <div class="mood-stat-value">${escapeHtml(s.bestRateHabit.h.name)}</div>
+          <div class="mood-stat-label">Найстабільніша звичка · ${s.bestRateHabit.rate}% виконання</div>
+        </div>
+      </div>` : ''}
+      ${s.worstRateHabit ? `
+      <div class="mood-stat-row">
+        ${moodStatIcon('frown')}
+        <div class="mood-stat-text">
+          <div class="mood-stat-value">${escapeHtml(s.worstRateHabit.h.name)}</div>
+          <div class="mood-stat-label">Потребує уваги · лише ${s.worstRateHabit.rate}% виконання</div>
+        </div>
+      </div>` : ''}
+      <div class="mood-stat-row">
+        ${moodStatIcon('calendar')}
+        <div class="mood-stat-text">
+          <div class="mood-stat-value">${s.active.length}</div>
+          <div class="mood-stat-label">Активних звичок${s.archivedCount ? ` · ${s.archivedCount} в архіві` : ''}</div>
+        </div>
+      </div>
+    </div>
+    <div class="habit-stats-top">
+      <div class="lists-section-label">Топ звичок за стріком</div>
+      ${topHtml}
+    </div>
+    <div class="habit-stats-insight">💡 ${insightText}</div>`;
+
+  document.getElementById('statsBackBtn').addEventListener('click', () => {
+    listsView = { screen: 'overview', listId: null };
+    renderListsBody();
+  });
+  body.querySelectorAll('.period-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (habitStatsPeriod === tab.dataset.period) return;
+      habitStatsPeriod = tab.dataset.period;
+      renderHabitStatsDetail();
+    });
+  });
+}
+
+function dayWord(n){
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'день';
+  if ([2,3,4].includes(mod10) && ![12,13,14].includes(mod100)) return 'дні';
+  return 'днів';
+}
+
+
 function changeMoodMonth(delta){
   moodViewMonth += delta;
   if (moodViewMonth < 0){ moodViewMonth = 11; moodViewYear--; }
@@ -3285,10 +3727,10 @@ function renderListsOverview(){
 
   if (lists.length){
     html += `<div class="lists-section-label">Мої списки</div>`;
-    html += lists.map(listCardHtml).join('') + moodCardHtml();
+    html += lists.map(listCardHtml).join('') + moodCardHtml() + statsCardHtml();
   } else if (!listsAdding){
     html += `<div class="lists-section-label">Мої списки</div>`;
-    html += moodCardHtml();
+    html += moodCardHtml() + statsCardHtml();
   }
 
   body.innerHTML = html;
@@ -3318,6 +3760,8 @@ function renderListsOverview(){
   });
   const moodCard = document.getElementById('moodListCard');
   if (moodCard) moodCard.addEventListener('click', openMoodCalendar);
+  const statsCard = document.getElementById('habitStatsCard');
+  if (statsCard) statsCard.addEventListener('click', openHabitStats);
 }
 
 const LIST_POSTER_EMOJIS = ['🎬', '🍿', '🎞️', '📽️', '🎥'];
@@ -3553,6 +3997,8 @@ function renderListsBody(){
     renderListDetail(list);
   } else if (listsView.screen === 'moodCalendar'){
     renderMoodCalendarDetail();
+  } else if (listsView.screen === 'habitStats'){
+    renderHabitStatsDetail();
   } else {
     renderListsOverview();
   }
