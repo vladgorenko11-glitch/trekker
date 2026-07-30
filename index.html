@@ -1168,6 +1168,18 @@
   }
   .book-status-badge.reading { background: rgba(62,155,255,0.14); color: #3E9BFF; }
   .book-status-badge.read { background: rgba(83,214,178,0.14); color: #53D6B2; }
+  .book-status-badge { cursor: pointer; user-select: none; transition: transform .12s ease, filter .12s ease; }
+  .book-status-badge:active { transform: scale(0.94); filter: brightness(1.1); }
+  .book-status-pick { display: inline-flex; gap: 8px; }
+  .book-status-pick-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 100px;
+    font-size: 12px; font-weight: 700; font-family: inherit; border: 1px solid var(--card-border);
+    background: var(--bg-elevated); color: var(--text-tertiary); cursor: pointer;
+    transition: transform .12s ease, background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .book-status-pick-btn:active { transform: scale(0.94); }
+  .book-status-pick-btn.reading.active { background: rgba(62,155,255,0.14); color: #3E9BFF; border-color: rgba(62,155,255,0.4); }
+  .book-status-pick-btn.read.active { background: rgba(83,214,178,0.14); color: #53D6B2; border-color: rgba(83,214,178,0.4); }
   .book-card-rating {
     display: flex;
     justify-content: center;
@@ -2120,6 +2132,7 @@ let bookFormStatus = 'reading'; // статус, обраний у формі, �
 let justPlacedBookId = null;   // id книги, яку щойно поставили на поличку — для анімації
 let viewingBookId = null;      // id книги, картка якої зараз відкрита
 let bookCardRemoveConfirming = false; // чи зараз показано підтвердження видалення у картці книги
+let bookCardStatusPicking = false; // чи зараз показано вибір статусу (замість бейджа) у картці книги
 let listsView = { screen: 'overview', listId: null }; // поточний екран вкладки "Списки"
 let listsAdding = false; // чи зараз показано поле вводу нового списку
 let listItemAdding = false; // чи показано поле вводу нового пункту всередині списку
@@ -3492,6 +3505,7 @@ function openBookCard(id){
   if (!book) return;
   viewingBookId = id;
   bookCardRemoveConfirming = false;
+  bookCardStatusPicking = false;
   renderBookCardBody();
   document.getElementById('bookCardOverlay').classList.add('open');
 }
@@ -3499,6 +3513,7 @@ function openBookCard(id){
 function closeBookCard(){
   document.getElementById('bookCardOverlay').classList.remove('open');
   viewingBookId = null;
+  bookCardStatusPicking = false;
 }
 
 function renderBookCardBody(){
@@ -3511,7 +3526,14 @@ function renderBookCardBody(){
     </div>
     <div class="book-card-title">${escapeHtml(book.title)}</div>
     <div class="book-card-status-wrap">
-      <span class="book-status-badge ${book.status}">${book.status === 'read' ? '✓ Прочитано' : '📖 Читаю'}</span>
+      ${bookCardStatusPicking ? `
+        <div class="book-status-pick" id="bookCardStatusPick">
+          <button type="button" class="book-status-pick-btn reading${book.status === 'reading' ? ' active' : ''}" data-pick-status="reading">📖 Читаю</button>
+          <button type="button" class="book-status-pick-btn read${book.status === 'read' ? ' active' : ''}" data-pick-status="read">✓ Прочитано</button>
+        </div>
+      ` : `
+        <span class="book-status-badge ${book.status}" id="bookCardStatusBadge" title="Тицьни, щоб обрати статус">${book.status === 'read' ? '✓ Прочитано' : '📖 Читаю'}</span>
+      `}
     </div>
     ${book.status === 'read' ? bookRatingHtml(book.rating || 0) : ''}
     ${book.notes ? `<div class="book-card-notes">${escapeHtml(book.notes)}</div>` : ''}
@@ -3519,6 +3541,26 @@ function renderBookCardBody(){
       <button class="btn btn-secondary" id="bookCardEditBtn" type="button">Редагувати</button>
       <button class="btn book-card-remove-btn${bookCardRemoveConfirming ? ' confirming' : ''}" id="bookCardRemoveBtn" type="button">${bookCardRemoveConfirming ? 'Точно прибрати?' : 'Прибрати з полиці'}</button>
     </div>`;
+
+  if (bookCardStatusPicking){
+    document.getElementById('bookCardStatusPick').querySelectorAll('.book-status-pick-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const newStatus = btn.dataset.pickStatus;
+        bookCardStatusPicking = false;
+        if (newStatus !== book.status){
+          book.status = newStatus;
+          saveState();
+          if (listsView.screen === 'bookshelf') renderBookshelfDetail();
+        }
+        renderBookCardBody();
+      });
+    });
+  } else {
+    document.getElementById('bookCardStatusBadge').addEventListener('click', () => {
+      bookCardStatusPicking = true;
+      renderBookCardBody();
+    });
+  }
 
   const ratingEl = document.getElementById('bookCardRating');
   if (ratingEl){
