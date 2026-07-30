@@ -2114,6 +2114,7 @@ let moodLog = {};       // { 'y-m-d': 1..5 } — настрій дня
 let bookshelfBooks = []; // { id, shelf: 0..BOOKSHELF_SHELF_COUNT-1, title, notes, cover, status:'reading'|'read', color } — книги на полиці (поки порожньо)
 let editingBookId = null;      // id книги, яку зараз редагуємо у формі (null — додаємо нову)
 let bookFormTargetShelf = null; // на яку поличку ставимо нову книгу (обрана натисканням на пунктирний слот)
+let bookFormTargetSlot = null; // на яке саме місце в межах полички ставимо нову книгу
 let bookCoverDataUrl = '';     // обкладинка, обрана у формі, до збереження
 let bookFormStatus = 'reading'; // статус, обраний у формі, до збереження
 let justPlacedBookId = null;   // id книги, яку щойно поставили на поличку — для анімації
@@ -2289,6 +2290,19 @@ function loadState(){
         if (!Array.isArray(l.items)) l.items = [];
       });
       bookshelfBooks = Array.isArray(parsed.bookshelfBooks) ? parsed.bookshelfBooks : [];
+      // Міграція старих записів без збереженої позиції на поличці (slot) —
+      // проставляємо slot за поточним порядком книг у межах свого ряду.
+      (() => {
+        const seenPerShelf = {};
+        bookshelfBooks.forEach(b => {
+          if (typeof b.slot !== 'number'){
+            const s = b.shelf;
+            const next = seenPerShelf[s] || 0;
+            b.slot = next;
+            seenPerShelf[s] = next + 1;
+          }
+        });
+      })();
       if (parsed.sprout && typeof parsed.sprout === 'object'){
         sprout.name = typeof parsed.sprout.name === 'string' ? parsed.sprout.name : sprout.name;
         sprout.goal = typeof parsed.sprout.goal === 'number' ? parsed.sprout.goal : sprout.goal;
@@ -3266,9 +3280,9 @@ function bookSlotCoverHtml(book){
   return `<div class="book-slot book-slot-cover${dropClass}" data-book-id="${book.id}" title="${escapeHtml(book.title || '')}">${inner}</div>`;
 }
 
-function bookSlotEmptyHtml(shelfIndex){
+function bookSlotEmptyHtml(shelfIndex, slotIndex){
   return `
-    <div class="book-slot book-slot-empty-wrap" data-empty-shelf="${shelfIndex}">
+    <div class="book-slot book-slot-empty-wrap" data-empty-shelf="${shelfIndex}" data-empty-slot="${slotIndex}">
       <div class="book-slot-empty"><span class="book-slot-empty-plus">+</span></div>
     </div>`;
 }
@@ -3276,9 +3290,14 @@ function bookSlotEmptyHtml(shelfIndex){
 function bookshelfRowHtml(shelfIndex){
   const layout = BOOKSHELF_ROW_LAYOUT[shelfIndex];
   const books = bookshelfBooks.filter(b => b.shelf === shelfIndex);
-  const emptyCount = Math.max(0, layout.capacity - books.length);
-  const slotsHtml = books.map(bookSlotCoverHtml).join('') +
-    Array.from({ length: emptyCount }, () => bookSlotEmptyHtml(shelfIndex)).join('');
+  // Розставляємо книги саме на ті місця (slot), куди їх поставили —
+  // а не завжди підряд від початку полички.
+  const bySlot = new Map();
+  books.forEach(b => { if (!bySlot.has(b.slot)) bySlot.set(b.slot, b); });
+  const slotsHtml = Array.from({ length: layout.capacity }, (_, i) => {
+    const book = bySlot.get(i);
+    return book ? bookSlotCoverHtml(book) : bookSlotEmptyHtml(shelfIndex, i);
+  }).join('');
   return `<div class="bookshelf-row-slots" style="top:${layout.top};left:${layout.left};width:${layout.width};height:${layout.height};">${slotsHtml}</div>`;
 }
 
@@ -3315,7 +3334,7 @@ function renderBookshelfDetail(){
     el.addEventListener('click', () => openBookCard(el.dataset.bookId));
   });
   body.querySelectorAll('[data-empty-shelf]').forEach(el => {
-    el.addEventListener('click', () => openBookForm(null, Number(el.dataset.emptyShelf)));
+    el.addEventListener('click', () => openBookForm(null, Number(el.dataset.emptyShelf), Number(el.dataset.emptySlot)));
   });
 
   if (justPlacedBookId){
@@ -3325,9 +3344,10 @@ function renderBookshelfDetail(){
 }
 
 /* ---------- Форма додавання / редагування книги ---------- */
-function openBookForm(book, targetShelf){
+function openBookForm(book, targetShelf, targetSlot){
   editingBookId = book ? book.id : null;
   bookFormTargetShelf = (typeof targetShelf === 'number') ? targetShelf : null;
+  bookFormTargetSlot = (typeof targetSlot === 'number') ? targetSlot : null;
   bookCoverDataUrl = book ? (book.cover || '') : '';
   bookFormStatus = book ? book.status : 'reading';
 
@@ -3420,13 +3440,21 @@ function saveBookForm(){
     closeBookForm();
     if (listsView.screen === 'bookshelf') renderBookshelfDetail();
   } else {
-    // Визначаємо поличку: та, на пунктирний слот якої тицьнули, або перша з вільним місцем
+    // Визначаємо поличку і саме місце: те, на пунктирний слот якого тицьнули,
+    // або перше вільне місце, якщо з якоїсь причини цільове місце вже зайняте.
+    const isSlotFree = (s, i) => !bookshelfBooks.some(b => b.shelf === s && b.slot === i);
     let shelf = bookFormTargetShelf;
-    const shelfCount = b => bookshelfBooks.filter(x => x.shelf === b).length;
-    if (shelf === null || shelfCount(shelf) >= BOOKSHELF_ROW_LAYOUT[shelf].capacity){
-      shelf = BOOKSHELF_ROW_LAYOUT.findIndex((row, i) => shelfCount(i) < row.capacity);
+    let slot = bookFormTargetSlot;
+    if (shelf === null || slot === null || !isSlotFree(shelf, slot)){
+      shelf = null; slot = null;
+      outer:
+      for (let s = 0; s < BOOKSHELF_ROW_LAYOUT.length; s++){
+        for (let i = 0; i < BOOKSHELF_ROW_LAYOUT[s].capacity; i++){
+          if (isSlotFree(s, i)){ shelf = s; slot = i; break outer; }
+        }
+      }
     }
-    if (shelf === -1 || shelf === null){
+    if (shelf === null || slot === null){
       closeBookForm();
       return; // полиця повністю заповнена
     }
@@ -3437,7 +3465,8 @@ function saveBookForm(){
       status: bookFormStatus,
       rating: 0,
       color: pickBookColor(),
-      shelf
+      shelf,
+      slot
     };
     bookshelfBooks.push(book);
     justPlacedBookId = book.id;
