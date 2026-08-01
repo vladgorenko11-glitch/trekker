@@ -278,6 +278,7 @@
   /* ---------- Квадратний віджет "цитата дня" (60 варіантів, рандом по даті) ---------- */
   .activity-quote-row {
     display: flex;
+    gap: 10px;
     margin-top: 10px;
   }
   .activity-quote-widget {
@@ -331,6 +332,52 @@
     font-size: 11px;
     font-weight: 600;
     line-height: 1.35;
+  }
+
+  /* ---------- Віджет погоди — займає решту місця в рядку поруч із цитатою ---------- */
+  .activity-weather-widget {
+    flex: 1 1 0;
+    min-width: 0;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: 12px 14px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+  .activity-weather-icon {
+    font-size: 26px;
+    line-height: 1;
+  }
+  .activity-weather-temp {
+    font-family: 'Rubik', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+  .activity-weather-cond {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .activity-weather-city {
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0.75;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .activity-weather-fallback {
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--text-secondary);
   }
 
   .page-switcher {
@@ -6664,10 +6711,15 @@ function renderActivityCenter(){
       </div>
       <div class="activity-quote-row">
         <div class="activity-quote-widget" id="activityQuoteWidget"></div>
+        <div class="activity-weather-widget" id="activityWeatherWidget">
+          <div class="activity-weather-icon">🌡</div>
+          <div class="activity-weather-cond activity-weather-fallback">Визначаємо погоду…</div>
+        </div>
       </div>
     `;
     setupActivityWeekDrag(document.getElementById('activityWeekViewport'));
     document.getElementById('activityStreakWidget').addEventListener('click', openStreakDetail);
+    loadWeatherWidget();
   }
 
   document.getElementById('activityGreeting').textContent = activityGreetingText();
@@ -6820,6 +6872,94 @@ function renderDailyQuoteWidget(){
     <div class="activity-quote-emoji">${q.emoji}</div>
     <div class="activity-quote-text">${escapeHtml(q.text)}</div>
   `;
+}
+
+/* ---------- Погода: геолокація браузера + Open-Meteo (без ключа API) ----------
+   Займає решту місця в рядку поруч із цитатою дня. Запитується один раз при
+   створенні центру активності; якщо геолокація недоступна/відхилена — показуємо
+   акуратний фолбек замість помилки. */
+const WEATHER_CODE_MAP = {
+  0: { emoji: '☀️', text: 'Ясно' },
+  1: { emoji: '🌤', text: 'Малохмарно' },
+  2: { emoji: '⛅', text: 'Хмарно' },
+  3: { emoji: '☁️', text: 'Похмуро' },
+  45: { emoji: '🌫', text: 'Туман' },
+  48: { emoji: '🌫', text: 'Паморозь' },
+  51: { emoji: '🌦', text: 'Мряка' },
+  53: { emoji: '🌦', text: 'Мряка' },
+  55: { emoji: '🌦', text: 'Сильна мряка' },
+  56: { emoji: '🌧', text: 'Крижана мряка' },
+  57: { emoji: '🌧', text: 'Крижана мряка' },
+  61: { emoji: '🌧', text: 'Невеликий дощ' },
+  63: { emoji: '🌧', text: 'Дощ' },
+  65: { emoji: '🌧', text: 'Сильний дощ' },
+  66: { emoji: '🌧', text: 'Крижаний дощ' },
+  67: { emoji: '🌧', text: 'Крижаний дощ' },
+  71: { emoji: '🌨', text: 'Невеликий сніг' },
+  73: { emoji: '🌨', text: 'Сніг' },
+  75: { emoji: '❄️', text: 'Сильний сніг' },
+  77: { emoji: '❄️', text: 'Сніжинки' },
+  80: { emoji: '🌦', text: 'Зливи' },
+  81: { emoji: '🌧', text: 'Зливи' },
+  82: { emoji: '⛈', text: 'Сильні зливи' },
+  85: { emoji: '🌨', text: 'Снігопад' },
+  86: { emoji: '❄️', text: 'Сильний снігопад' },
+  95: { emoji: '⛈', text: 'Гроза' },
+  96: { emoji: '⛈', text: 'Гроза з градом' },
+  99: { emoji: '⛈', text: 'Сильна гроза' },
+};
+
+function weatherCodeInfo(code){
+  return WEATHER_CODE_MAP[code] || { emoji: '🌡', text: 'Погода' };
+}
+
+function getWeatherCoords(){
+  return new Promise((resolve, reject) => {
+    if (!('geolocation' in navigator)){ reject(new Error('no-geo')); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      err => reject(err),
+      { timeout: 7000, maximumAge: 30 * 60 * 1000 }
+    );
+  });
+}
+
+async function fetchCurrentWeather(lat, lon){
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('weather-fetch-failed');
+  const json = await res.json();
+  if (!json.current_weather) throw new Error('weather-empty');
+  return json.current_weather;
+}
+
+function renderWeatherFallback(wrap, message){
+  wrap.innerHTML = `
+    <div class="activity-weather-icon">🌡</div>
+    <div class="activity-weather-cond activity-weather-fallback">${escapeHtml(message)}</div>
+  `;
+}
+
+async function loadWeatherWidget(){
+  const wrap = document.getElementById('activityWeatherWidget');
+  if (!wrap) return;
+  try {
+    const { lat, lon } = await getWeatherCoords();
+    const cw = await fetchCurrentWeather(lat, lon);
+    const info = weatherCodeInfo(cw.weathercode);
+    const temp = Math.round(cw.temperature);
+    wrap.innerHTML = `
+      <div class="activity-weather-icon">${info.emoji}</div>
+      <div class="activity-weather-temp">${temp}°</div>
+      <div class="activity-weather-cond">${escapeHtml(info.text)}</div>
+    `;
+  } catch (err){
+    if (err && err.code === 1){
+      renderWeatherFallback(wrap, 'Дозволь геолокацію, щоб бачити погоду');
+    } else {
+      renderWeatherFallback(wrap, 'Погода зараз недоступна');
+    }
+  }
 }
 
 function renderActivityWidgets(){
