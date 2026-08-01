@@ -400,6 +400,141 @@
     color: var(--text-secondary);
   }
 
+  /* ---------- Віджет "Водний баланс" ---------- */
+  .activity-water-widget {
+    margin-top: 10px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: 12px 14px 13px;
+    box-sizing: border-box;
+  }
+  .water-widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .water-widget-title {
+    font-family: 'Rubik', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .water-widget-settings-btn {
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+  }
+  .water-widget-settings-btn:active { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+  .water-widget-settings-btn svg { width: 15px; height: 15px; }
+  .water-drops-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 11px;
+  }
+  .water-drop {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(255,255,255,0.14);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: transform .15s ease, background .2s ease, border-color .2s ease;
+    flex: 0 0 auto;
+  }
+  .water-drop.filled {
+    background: linear-gradient(135deg, #38BDF8, #2563EB);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(37,99,235,0.35);
+  }
+  .water-drop.just-filled { animation: waterDropPop .35s ease; }
+  @keyframes waterDropPop {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+  }
+  .water-widget-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 11px;
+  }
+  .water-widget-progress {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .water-widget-progress b { color: var(--text-primary); font-weight: 700; }
+  .water-add-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #38BDF8, #2563EB);
+    color: #fff;
+    font-size: 19px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(37,99,235,0.4);
+    transition: transform .12s ease;
+    flex: 0 0 auto;
+  }
+  .water-add-btn:active { transform: scale(0.9); }
+  .water-add-btn.is-done {
+    background: linear-gradient(135deg, #34D399, #059669);
+    box-shadow: 0 3px 10px rgba(5,150,105,0.4);
+  }
+
+  /* ---------- Модалка налаштування цілі водного балансу ---------- */
+  .water-settings-modal { text-align: center; }
+  .water-settings-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: -10px 0 20px;
+    line-height: 1.4;
+  }
+  .water-goal-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    margin-bottom: 22px;
+  }
+  .water-goal-step-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--text-primary);
+    font-size: 22px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .water-goal-step-btn:active { background: rgba(255,255,255,0.14); }
+  .water-goal-value {
+    font-family: 'Rubik', sans-serif;
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--text-primary);
+    min-width: 70px;
+    text-align: center;
+  }
+  .water-goal-value span {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
   .page-switcher {
     position: fixed;
     left: 50%;
@@ -2543,6 +2678,28 @@
   </div>
 </div>
 
+<!-- Оверлей налаштування цілі водного балансу -->
+<div class="overlay" id="waterSettingsOverlay">
+  <div class="modal water-settings-modal">
+    <div class="modal-header">
+      <h2>Водний баланс</h2>
+      <div class="modal-close-btn" id="waterSettingsCloseX">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="water-settings-sub">Скільки склянок води хочеш випивати на день?</div>
+    <div class="water-goal-stepper">
+      <div class="water-goal-step-btn" id="waterGoalMinusBtn">−</div>
+      <div class="water-goal-value" id="waterGoalValueEl">8<span>склянок</span></div>
+      <div class="water-goal-step-btn" id="waterGoalPlusBtn">+</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="waterSettingsCancelBtn" type="button">Скасувати</button>
+      <button class="btn btn-primary" id="waterSettingsSaveBtn" type="button">Зберегти</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="moodOverlay">
   <div class="modal mood-modal">
     <h2>Як минув день?</h2>
@@ -2638,6 +2795,8 @@ let taskArchive = [];   // { id, text, dateKey } — виконані завда
 let lists = [];         // { id, name, type: 'tasks'|'goals'|'wishes', items:[{id,text,done}] } — власні списки
 let moodLog = {};       // { 'y-m-d': 1..5 } — настрій дня
 let bookshelfBooks = []; // { id, shelf: 0..BOOKSHELF_SHELF_COUNT-1, title, notes, cover, status:'reading'|'read', color } — книги на полиці (поки порожньо)
+let waterGoal = 8;      // скільки склянок води хочемо випивати на день (налаштовується)
+let waterLog = {};      // { 'y-m-d': кількість випитих склянок сьогодні }
 let editingBookId = null;      // id книги, яку зараз редагуємо у формі (null — додаємо нову)
 let bookFormTargetShelf = null; // на яку поличку ставимо нову книгу (обрана натисканням на пунктирний слот)
 let bookFormTargetSlot = null; // на яке саме місце в межах полички ставимо нову книгу
@@ -2786,7 +2945,7 @@ function renderStorageBanner(){
 function saveState(){
   if (!storageAvailable) { showSaveStatus('Не збережено — сховище недоступне', true); return; }
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, weeklyCardsHidden }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, weeklyCardsHidden, waterGoal, waterLog }));
     showSaveStatus('Збережено');
   }catch(e){
     console.error('Не вдалося зберегти дані:', e);
@@ -2822,6 +2981,8 @@ function loadState(){
       });
       bookshelfBooks = Array.isArray(parsed.bookshelfBooks) ? parsed.bookshelfBooks : [];
       weeklyCardsHidden = typeof parsed.weeklyCardsHidden === 'boolean' ? parsed.weeklyCardsHidden : false;
+      waterGoal = (typeof parsed.waterGoal === 'number' && parsed.waterGoal > 0) ? parsed.waterGoal : 8;
+      waterLog = (parsed.waterLog && typeof parsed.waterLog === 'object') ? parsed.waterLog : {};
       // Міграція старих записів без збереженої позиції на поличці (slot) —
       // проставляємо slot за поточним порядком книг у межах свого ряду.
       (() => {
@@ -6736,11 +6897,28 @@ function renderActivityCenter(){
           <div class="activity-weather-cond activity-weather-fallback">Визначаємо погоду…</div>
         </div>
       </div>
+      <div class="activity-water-widget" id="activityWaterWidget">
+        <div class="water-widget-header">
+          <div class="water-widget-title">💧 Водний баланс</div>
+          <div class="water-widget-settings-btn" id="waterSettingsBtn" title="Налаштувати ціль">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+        </div>
+        <div class="water-drops-grid" id="waterDropsGrid"></div>
+        <div class="water-widget-footer">
+          <div class="water-widget-progress" id="waterProgressText"></div>
+          <div class="water-add-btn" id="waterAddBtn" title="Випив склянку">+</div>
+        </div>
+      </div>
     `;
     setupActivityWeekDrag(document.getElementById('activityWeekViewport'));
     document.getElementById('activityStreakWidget').addEventListener('click', openStreakDetail);
+    document.getElementById('waterAddBtn').addEventListener('click', addWaterGlass);
+    document.getElementById('waterSettingsBtn').addEventListener('click', openWaterSettings);
     loadWeatherWidget();
   }
+
+  renderWaterWidget();
 
   document.getElementById('activityGreeting').textContent = activityGreetingText();
   document.getElementById('activityDateLabel').textContent = dateLabel;
@@ -6799,15 +6977,6 @@ function activityUsageStreak(){
    Настрій визначає градієнт фону квадратного віджета. Обирається одна цитата
    на добу детерміновано (за календарною датою), тож вона однакова цілий день
    і змінюється рівно опівночі. */
-const QUOTE_MOOD_GRADIENTS = {
-  growth:    'linear-gradient(135deg, #34D399, #059669)',
-  energetic: 'linear-gradient(135deg, #FB923C, #EF4444)',
-  bold:      'linear-gradient(135deg, #8B5CF6, #4C1D95)',
-  calm:      'linear-gradient(135deg, #38BDF8, #3B82F6)',
-  warm:      'linear-gradient(135deg, #FDBA74, #FB7185)',
-  playful:   'linear-gradient(135deg, #FBBF24, #EC4899)',
-};
-
 const DAILY_QUOTES = [
   { text: 'Маленький крок сьогодні — велика звичка завтра.', emoji: '🌱', mood: 'growth' },
   { text: 'Ти не мусиш бути ідеальним. Просто продовжуй.', emoji: '🔥', mood: 'energetic' },
@@ -6880,13 +7049,30 @@ function dailyQuoteIndex(){
   return ((epochDays % n) + n) % n;
 }
 
+/* Генерує унікальний градієнт фону для кожної цитати (за її індексом),
+   відштовхуючись від базового кольору "настрою", але з індивідуальним
+   зсувом відтінку — тож кожен день фон візуально інший, навіть якщо
+   настрій у двох цитат співпадає. Золотий кут (137.508°) забезпечує
+   рівномірний розподіл відтінків по всіх 60 цитатах без повторів. */
+const QUOTE_MOOD_HUE = {
+  growth: 150, energetic: 20, bold: 265, calm: 205, warm: 20, playful: 320,
+};
+function quoteGradientForIndex(i){
+  const q = DAILY_QUOTES[i];
+  const baseHue = QUOTE_MOOD_HUE[q.mood] ?? 210;
+  const hue1 = (baseHue + i * 137.508) % 360;
+  const hue2 = (hue1 + 40) % 360;
+  return `linear-gradient(135deg, hsl(${hue1.toFixed(1)}, 70%, 55%), hsl(${hue2.toFixed(1)}, 65%, 32%))`;
+}
+
 /* Малює квадратний віджет "цитата дня": емодзі + текст на кольоровому
-   градієнті, що відповідає "настрою" цитати. */
+   градієнті, унікальному для цієї конкретної цитати. */
 function renderDailyQuoteWidget(){
   const wrap = document.getElementById('activityQuoteWidget');
   if (!wrap) return;
-  const q = DAILY_QUOTES[dailyQuoteIndex()];
-  wrap.style.background = QUOTE_MOOD_GRADIENTS[q.mood] || QUOTE_MOOD_GRADIENTS.calm;
+  const idx = dailyQuoteIndex();
+  const q = DAILY_QUOTES[idx];
+  wrap.style.background = quoteGradientForIndex(idx);
   wrap.innerHTML = `
     <div class="activity-quote-label">Цитата дня</div>
     <div class="activity-quote-emoji">${q.emoji}</div>
@@ -7022,6 +7208,92 @@ async function loadWeatherWidget(){
   }
 }
 
+/* ---------- Водний баланс: ціль у склянках на день + прогрес сьогодні ----------
+   Ціль (waterGoal) зберігається постійно і задає кількість кружечків-крапельок.
+   Прогрес (waterLog) рахується окремо на кожен день за ключем дати, тож
+   природно "скидається" з настанням нового дня (новий ключ — порожній лічильник). */
+function todayDateKeyStr(){
+  return dayKey(today.getFullYear(), today.getMonth(), today.getDate());
+}
+
+function waterWordUk(n){
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'склянку';
+  if ([2,3,4].includes(mod10) && ![12,13,14].includes(mod100)) return 'склянки';
+  return 'склянок';
+}
+
+function renderWaterWidget(){
+  const grid = document.getElementById('waterDropsGrid');
+  if (!grid) return;
+  const tk = todayDateKeyStr();
+  const filled = Math.min(waterLog[tk] || 0, waterGoal);
+
+  grid.innerHTML = Array.from({ length: waterGoal }, (_, i) => {
+    const isFilled = i < filled;
+    const isJustFilled = isFilled && i === filled - 1 && grid.dataset.justFilledIdx == i;
+    return `<div class="water-drop${isFilled ? ' filled' : ''}${isJustFilled ? ' just-filled' : ''}" data-idx="${i}">💧</div>`;
+  }).join('');
+  delete grid.dataset.justFilledIdx;
+
+  grid.querySelectorAll('.water-drop').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = Number(el.dataset.idx);
+      // Дотик по вже заповненій крапельці — скасовує її і всі наступні (виправлення помилки)
+      const current = Math.min(waterLog[tk] || 0, waterGoal);
+      waterLog[tk] = idx < current ? idx : current;
+      saveState();
+      renderWaterWidget();
+    });
+  });
+
+  const doneCount = filled;
+  const progressEl = document.getElementById('waterProgressText');
+  if (progressEl){
+    progressEl.innerHTML = doneCount >= waterGoal
+      ? `<b>Готово!</b> Вода на сьогодні 💧`
+      : `<b>${doneCount}</b> з ${waterGoal} ${waterWordUk(waterGoal)}`;
+  }
+  const addBtn = document.getElementById('waterAddBtn');
+  if (addBtn) addBtn.classList.toggle('is-done', doneCount >= waterGoal);
+}
+
+function addWaterGlass(){
+  const tk = todayDateKeyStr();
+  const current = Math.min(waterLog[tk] || 0, waterGoal);
+  if (current >= waterGoal) return;
+  waterLog[tk] = current + 1;
+  saveState();
+  const grid = document.getElementById('waterDropsGrid');
+  if (grid) grid.dataset.justFilledIdx = current;
+  renderWaterWidget();
+}
+
+let waterSettingsDraftGoal = 8;
+
+function openWaterSettings(){
+  waterSettingsDraftGoal = waterGoal;
+  updateWaterGoalStepperUI();
+  document.getElementById('waterSettingsOverlay').classList.add('open');
+}
+
+function closeWaterSettings(){
+  document.getElementById('waterSettingsOverlay').classList.remove('open');
+}
+
+function updateWaterGoalStepperUI(){
+  const el = document.getElementById('waterGoalValueEl');
+  if (el) el.innerHTML = `${waterSettingsDraftGoal}<span>${waterWordUk(waterSettingsDraftGoal)}</span>`;
+}
+
+function saveWaterSettings(){
+  waterGoal = waterSettingsDraftGoal;
+  // Якщо ціль зменшили, а сьогодні вже випито більше — прогрес просто "накривається" новою ціллю (обрізається у рендері)
+  saveState();
+  renderWaterWidget();
+  closeWaterSettings();
+}
+
 function renderActivityWidgets(){
   const progressValueEl = document.getElementById('activityProgressValue');
   if (!progressValueEl) return;
@@ -7090,6 +7362,21 @@ document.getElementById('archiveOverlay').addEventListener('click', (e) => {
 document.getElementById('streakCloseX').addEventListener('click', closeStreakDetail);
 document.getElementById('streakOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'streakOverlay') closeStreakDetail();
+});
+
+document.getElementById('waterSettingsCloseX').addEventListener('click', closeWaterSettings);
+document.getElementById('waterSettingsCancelBtn').addEventListener('click', closeWaterSettings);
+document.getElementById('waterSettingsSaveBtn').addEventListener('click', saveWaterSettings);
+document.getElementById('waterSettingsOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'waterSettingsOverlay') closeWaterSettings();
+});
+document.getElementById('waterGoalMinusBtn').addEventListener('click', () => {
+  waterSettingsDraftGoal = Math.max(1, waterSettingsDraftGoal - 1);
+  updateWaterGoalStepperUI();
+});
+document.getElementById('waterGoalPlusBtn').addEventListener('click', () => {
+  waterSettingsDraftGoal = Math.min(20, waterSettingsDraftGoal + 1);
+  updateWaterGoalStepperUI();
 });
 
 document.getElementById('listsBtn').addEventListener('click', () => openListsModal());
