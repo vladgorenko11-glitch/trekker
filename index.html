@@ -414,6 +414,7 @@
     align-items: center;
     justify-content: space-between;
   }
+  .water-widget-header-btns { display: flex; align-items: center; gap: 2px; }
   .water-widget-title {
     font-family: 'Rubik', sans-serif;
     font-size: 13px;
@@ -489,6 +490,93 @@
   .water-add-btn.is-done {
     background: linear-gradient(135deg, #34D399, #059669);
     box-shadow: 0 3px 10px rgba(5,150,105,0.4);
+  }
+
+  /* ---------- Рядок міні-віджетів: секундомір, нотатка, лічильник, дихання ---------- */
+  .activity-mini-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .activity-mini-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: 11px 4px 9px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    transition: transform .12s ease, background .15s ease;
+  }
+  .activity-mini-card:active { transform: scale(0.93); background: rgba(255,255,255,0.045); }
+  .activity-mini-icon { font-size: 19px; line-height: 1; }
+  .activity-mini-value {
+    font-family: 'Rubik', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .activity-mini-label {
+    font-size: 9.5px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  /* ---------- Модалка секундоміра ---------- */
+  .stopwatch-display {
+    font-family: 'Rubik', sans-serif;
+    font-size: 46px;
+    font-weight: 800;
+    color: var(--text-primary);
+    text-align: center;
+    margin: 6px 0 24px;
+    letter-spacing: 0.02em;
+  }
+  .stopwatch-actions { display: flex; gap: 10px; }
+  .stopwatch-actions .btn { flex: 1 1 0; }
+
+  /* ---------- Модалка лічильника ---------- */
+  .counter-stepper-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 6px 0 4px;
+  }
+
+  /* ---------- Модалка дихальної вправи ---------- */
+  .breath-circle-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 14px 0 28px;
+  }
+  .breath-circle {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #38BDF8, #1D4ED8);
+    box-shadow: 0 0 30px rgba(56,189,248,0.35);
+    transform: scale(0.7);
+    transition: transform 4s ease-in-out;
+  }
+  .breath-circle.inhale { transform: scale(1.15); }
+  .breath-circle.exhale { transform: scale(0.7); }
+  .breath-phase-text {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-height: 18px;
   }
 
   /* ---------- Модалка налаштування цілі водного балансу ---------- */
@@ -1938,6 +2026,45 @@
     font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; color: var(--text-tertiary);
     text-transform: uppercase; margin: 18px 2px 10px;
   }
+
+  /* ---------- Тижнева статистика водного балансу (стовпчикова діаграма) ---------- */
+  .water-chart-row {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    gap: 6px; height: 120px; padding: 0 2px;
+  }
+  .water-chart-col {
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    gap: 6px; flex: 1 1 0; height: 100%;
+  }
+  .water-chart-bar-track {
+    width: 100%; max-width: 26px; flex: 1 1 auto;
+    display: flex; align-items: flex-end;
+    background: rgba(255,255,255,0.05); border-radius: 8px;
+    overflow: hidden;
+  }
+  .water-chart-bar-fill {
+    width: 100%; border-radius: 8px;
+    background: linear-gradient(180deg, #38BDF8, #2563EB);
+    transition: height .3s ease;
+    min-height: 3px;
+  }
+  .water-chart-col.goal-reached .water-chart-bar-fill {
+    background: linear-gradient(180deg, #34D399, #059669);
+  }
+  .water-chart-col.is-future .water-chart-bar-track { opacity: 0.4; }
+  .water-chart-val { font-size: 10.5px; font-weight: 700; color: var(--text-secondary); }
+  .water-chart-col.today .water-chart-val { color: #38BDF8; }
+  .water-chart-label { font-size: 11px; color: var(--text-tertiary); font-weight: 600; }
+  .water-chart-col.today .water-chart-label { color: var(--text-primary); }
+
+  .water-detail-modal {
+    background: linear-gradient(165deg, #1E3A5F 0%, #14283F 45%, #0B1622 100%);
+  }
+  .water-detail-modal .streak-week-card,
+  .water-detail-modal .streak-stats-card {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(56,189,248,0.18);
+  }
   .streak-milestone {
     background: var(--card); border: 1px solid var(--card-border);
     border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 10px;
@@ -2678,6 +2805,90 @@
   </div>
 </div>
 
+<!-- Оверлей секундоміра -->
+<div class="overlay" id="stopwatchOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Секундомір</h2>
+      <div class="modal-close-btn" id="stopwatchCloseX">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="stopwatch-display" id="stopwatchDisplay">00:00.0</div>
+    <div class="stopwatch-actions">
+      <button class="btn btn-secondary" id="stopwatchResetBtn" type="button">Скинути</button>
+      <button class="btn btn-primary" id="stopwatchToggleBtn" type="button">Старт</button>
+    </div>
+  </div>
+</div>
+
+<!-- Оверлей швидкої нотатки -->
+<div class="overlay" id="quickNoteOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Нотатка</h2>
+      <div class="modal-close-btn" id="quickNoteCloseX">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <textarea class="notes-input" id="quickNoteInput" placeholder="Швидка нотатка..." style="min-height:160px; margin-bottom:20px;"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="quickNoteClearBtn" type="button">Очистити</button>
+      <button class="btn btn-primary" id="quickNoteSaveBtn" type="button">Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<!-- Оверлей лічильника -->
+<div class="overlay" id="counterOverlay">
+  <div class="modal" style="text-align:center;">
+    <div class="modal-header">
+      <h2>Лічильник</h2>
+      <div class="modal-close-btn" id="counterCloseX">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="water-goal-value" id="counterDisplayEl">0</div>
+    <div class="counter-stepper-row">
+      <div class="water-goal-step-btn" id="counterMinusBtn">−</div>
+      <div class="water-goal-step-btn" id="counterResetMidBtn" title="Скинути" style="font-size:15px;">⟲</div>
+      <div class="water-goal-step-btn" id="counterPlusBtn">+</div>
+    </div>
+  </div>
+</div>
+
+<!-- Оверлей дихальної вправи -->
+<div class="overlay" id="breathOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Дихальна вправа</h2>
+      <div class="modal-close-btn" id="breathCloseX">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="breath-circle-wrap">
+      <div class="breath-circle" id="breathCircle"></div>
+      <div class="breath-phase-text" id="breathPhaseText">Натисни «Почати»</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="breathToggleBtn" type="button" style="width:100%;">Почати</button>
+    </div>
+  </div>
+</div>
+
+<!-- Оверлей тижневої статистики водного балансу -->
+<div class="overlay" id="waterDetailOverlay">
+  <div class="modal streak-modal water-detail-modal">
+    <div class="modal-header">
+      <h2>Вода за тиждень</h2>
+      <div class="modal-close-btn" id="waterDetailCloseX">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div id="waterDetailBody"></div>
+  </div>
+</div>
+
 <!-- Оверлей налаштування цілі водного балансу -->
 <div class="overlay" id="waterSettingsOverlay">
   <div class="modal water-settings-modal">
@@ -2797,6 +3008,9 @@ let moodLog = {};       // { 'y-m-d': 1..5 } — настрій дня
 let bookshelfBooks = []; // { id, shelf: 0..BOOKSHELF_SHELF_COUNT-1, title, notes, cover, status:'reading'|'read', color } — книги на полиці (поки порожньо)
 let waterGoal = 8;      // скільки склянок води хочемо випивати на день (налаштовується)
 let waterLog = {};      // { 'y-m-d': кількість випитих склянок сьогодні }
+let stopwatchState = { running: false, startedAt: null, elapsedMs: 0 }; // секундомір (переживає перезавантаження сторінки)
+let quickNoteText = '';  // швидка нотатка (один текстовий блокнот)
+let tallyCounter = 0;    // простий лічильник (наприклад, для підрахунку повторень чогось)
 let editingBookId = null;      // id книги, яку зараз редагуємо у формі (null — додаємо нову)
 let bookFormTargetShelf = null; // на яку поличку ставимо нову книгу (обрана натисканням на пунктирний слот)
 let bookFormTargetSlot = null; // на яке саме місце в межах полички ставимо нову книгу
@@ -2945,7 +3159,7 @@ function renderStorageBanner(){
 function saveState(){
   if (!storageAvailable) { showSaveStatus('Не збережено — сховище недоступне', true); return; }
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, weeklyCardsHidden, waterGoal, waterLog }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, weeklyCardsHidden, waterGoal, waterLog, stopwatchState, quickNoteText, tallyCounter }));
     showSaveStatus('Збережено');
   }catch(e){
     console.error('Не вдалося зберегти дані:', e);
@@ -2983,6 +3197,15 @@ function loadState(){
       weeklyCardsHidden = typeof parsed.weeklyCardsHidden === 'boolean' ? parsed.weeklyCardsHidden : false;
       waterGoal = (typeof parsed.waterGoal === 'number' && parsed.waterGoal > 0) ? parsed.waterGoal : 8;
       waterLog = (parsed.waterLog && typeof parsed.waterLog === 'object') ? parsed.waterLog : {};
+      if (parsed.stopwatchState && typeof parsed.stopwatchState === 'object'){
+        stopwatchState = {
+          running: !!parsed.stopwatchState.running,
+          startedAt: typeof parsed.stopwatchState.startedAt === 'number' ? parsed.stopwatchState.startedAt : null,
+          elapsedMs: typeof parsed.stopwatchState.elapsedMs === 'number' ? parsed.stopwatchState.elapsedMs : 0,
+        };
+      }
+      quickNoteText = typeof parsed.quickNoteText === 'string' ? parsed.quickNoteText : '';
+      tallyCounter = typeof parsed.tallyCounter === 'number' ? parsed.tallyCounter : 0;
       // Міграція старих записів без збереженої позиції на поличці (slot) —
       // проставляємо slot за поточним порядком книг у межах свого ряду.
       (() => {
@@ -6900,8 +7123,13 @@ function renderActivityCenter(){
       <div class="activity-water-widget" id="activityWaterWidget">
         <div class="water-widget-header">
           <div class="water-widget-title">💧 Водний баланс</div>
-          <div class="water-widget-settings-btn" id="waterSettingsBtn" title="Налаштувати ціль">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <div class="water-widget-header-btns">
+            <div class="water-widget-settings-btn" id="waterStatsBtn" title="Статистика за тиждень">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            </div>
+            <div class="water-widget-settings-btn" id="waterSettingsBtn" title="Налаштувати ціль">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </div>
           </div>
         </div>
         <div class="water-drops-grid" id="waterDropsGrid"></div>
@@ -6910,15 +7138,43 @@ function renderActivityCenter(){
           <div class="water-add-btn" id="waterAddBtn" title="Випив склянку">+</div>
         </div>
       </div>
+      <div class="activity-mini-row">
+        <div class="activity-mini-card" id="miniStopwatchCard">
+          <div class="activity-mini-icon">⏱</div>
+          <div class="activity-mini-value" id="miniStopwatchValue">00:00</div>
+          <div class="activity-mini-label">Секундомір</div>
+        </div>
+        <div class="activity-mini-card" id="miniNotesCard">
+          <div class="activity-mini-icon">📝</div>
+          <div class="activity-mini-value" id="miniNotesValue">Порожньо</div>
+          <div class="activity-mini-label">Нотатка</div>
+        </div>
+        <div class="activity-mini-card" id="miniCounterCard">
+          <div class="activity-mini-icon">🔢</div>
+          <div class="activity-mini-value" id="miniCounterValue">0</div>
+          <div class="activity-mini-label">Лічильник</div>
+        </div>
+        <div class="activity-mini-card" id="miniBreathCard">
+          <div class="activity-mini-icon">🌬</div>
+          <div class="activity-mini-value">Вправа</div>
+          <div class="activity-mini-label">Дихання</div>
+        </div>
+      </div>
     `;
     setupActivityWeekDrag(document.getElementById('activityWeekViewport'));
     document.getElementById('activityStreakWidget').addEventListener('click', openStreakDetail);
     document.getElementById('waterAddBtn').addEventListener('click', addWaterGlass);
     document.getElementById('waterSettingsBtn').addEventListener('click', openWaterSettings);
+    document.getElementById('waterStatsBtn').addEventListener('click', openWaterDetail);
+    document.getElementById('miniStopwatchCard').addEventListener('click', openStopwatchModal);
+    document.getElementById('miniNotesCard').addEventListener('click', openQuickNoteModal);
+    document.getElementById('miniCounterCard').addEventListener('click', openCounterModal);
+    document.getElementById('miniBreathCard').addEventListener('click', openBreathModal);
     loadWeatherWidget();
   }
 
   renderWaterWidget();
+  renderMiniWidgets();
 
   document.getElementById('activityGreeting').textContent = activityGreetingText();
   document.getElementById('activityDateLabel').textContent = dateLabel;
@@ -7294,6 +7550,277 @@ function saveWaterSettings(){
   closeWaterSettings();
 }
 
+/* ---------- Тижнева статистика водного балансу ---------- */
+function openWaterDetail(){
+  renderWaterDetail();
+  document.getElementById('waterDetailOverlay').classList.add('open');
+}
+
+function closeWaterDetail(){
+  document.getElementById('waterDetailOverlay').classList.remove('open');
+}
+
+function renderWaterDetail(){
+  const body = document.getElementById('waterDetailBody');
+  if (!body) return;
+
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const dow = (todayMidnight.getDay() + 6) % 7; // 0 = понеділок
+  const monday = addDaysToDate(todayMidnight, -dow);
+  const WEEKDAY_LETTERS = ['П','В','С','Ч','П','С','Н'];
+
+  let totalWeek = 0;
+  let daysGoalReached = 0;
+  let daysWithAnyData = 0;
+  let chartHtml = '';
+
+  for (let i = 0; i < 7; i++){
+    const d = addDaysToDate(monday, i);
+    const isToday = d.getTime() === todayMidnight.getTime();
+    const isFuture = d.getTime() > todayMidnight.getTime();
+    const k = dayKey(d.getFullYear(), d.getMonth(), d.getDate());
+    const val = isFuture ? 0 : Math.min(waterLog[k] || 0, waterGoal);
+    if (!isFuture){
+      totalWeek += val;
+      if (val > 0) daysWithAnyData++;
+      if (val >= waterGoal) daysGoalReached++;
+    }
+    const pct = waterGoal > 0 ? Math.round((val / waterGoal) * 100) : 0;
+    const reached = val >= waterGoal && waterGoal > 0;
+    chartHtml += `
+      <div class="water-chart-col${reached ? ' goal-reached' : ''}${isToday ? ' today' : ''}${isFuture ? ' is-future' : ''}">
+        <div class="water-chart-val">${isFuture ? '' : val}</div>
+        <div class="water-chart-bar-track"><div class="water-chart-bar-fill" style="height:${isFuture ? 0 : Math.max(pct, val > 0 ? 6 : 0)}%;"></div></div>
+        <div class="water-chart-label">${WEEKDAY_LETTERS[i]}</div>
+      </div>`;
+  }
+
+  const avgPerDay = daysWithAnyData > 0 ? (totalWeek / 7).toFixed(1) : '0';
+
+  body.innerHTML = `
+    <div class="streak-week-card" style="margin-top:0;">
+      <div class="streak-week-title">Цей тиждень</div>
+      <div class="water-chart-row">${chartHtml}</div>
+    </div>
+
+    <div class="streak-stats-card">
+      <div class="streak-stats-title">Підсумок тижня</div>
+      <div class="streak-stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="streak-stat-box">
+          <div class="streak-stat-box-value">${totalWeek}</div>
+          <div class="streak-stat-box-label">Склянок всього</div>
+        </div>
+        <div class="streak-stat-box">
+          <div class="streak-stat-box-value">${avgPerDay}</div>
+          <div class="streak-stat-box-label">В середньому/день</div>
+        </div>
+        <div class="streak-stat-box">
+          <div class="streak-stat-box-value">${daysGoalReached}/7</div>
+          <div class="streak-stat-box-label">Днів з ціллю</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ---------- Міні-віджети: секундомір, нотатка, лічильник, дихальна вправа ---------- */
+function renderMiniWidgets(){
+  updateStopwatchDisplay();
+  const notesEl = document.getElementById('miniNotesValue');
+  if (notesEl) notesEl.textContent = quickNoteText.trim() ? quickNoteText.trim().slice(0, 16) : 'Порожньо';
+  updateCounterDisplay();
+}
+
+/* --- Секундомір: стан переживає перезавантаження сторінки завдяки збереженню startedAt --- */
+let stopwatchTickInterval = null;
+
+function stopwatchCurrentElapsed(){
+  if (stopwatchState.running && stopwatchState.startedAt){
+    return stopwatchState.elapsedMs + (Date.now() - stopwatchState.startedAt);
+  }
+  return stopwatchState.elapsedMs;
+}
+
+function formatStopwatch(ms){
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  const tenths = Math.floor((ms % 1000) / 100);
+  return `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${tenths}`;
+}
+
+function formatStopwatchShort(ms){
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  return `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+}
+
+function updateStopwatchDisplay(){
+  const elapsed = stopwatchCurrentElapsed();
+  const bigEl = document.getElementById('stopwatchDisplay');
+  if (bigEl) bigEl.textContent = formatStopwatch(elapsed);
+  const miniEl = document.getElementById('miniStopwatchValue');
+  if (miniEl) miniEl.textContent = formatStopwatchShort(elapsed);
+}
+
+function updateStopwatchToggleBtn(){
+  const btn = document.getElementById('stopwatchToggleBtn');
+  if (btn) btn.textContent = stopwatchState.running ? 'Пауза' : 'Старт';
+}
+
+function startStopwatchTicker(){
+  stopStopwatchTicker();
+  stopwatchTickInterval = setInterval(updateStopwatchDisplay, 100);
+}
+
+function stopStopwatchTicker(){
+  if (stopwatchTickInterval) clearInterval(stopwatchTickInterval);
+  stopwatchTickInterval = null;
+}
+
+function openStopwatchModal(){
+  updateStopwatchDisplay();
+  updateStopwatchToggleBtn();
+  if (stopwatchState.running) startStopwatchTicker();
+  document.getElementById('stopwatchOverlay').classList.add('open');
+}
+
+function closeStopwatchModal(){
+  document.getElementById('stopwatchOverlay').classList.remove('open');
+  stopStopwatchTicker();
+}
+
+function toggleStopwatch(){
+  if (stopwatchState.running){
+    stopwatchState.elapsedMs = stopwatchCurrentElapsed();
+    stopwatchState.running = false;
+    stopwatchState.startedAt = null;
+    stopStopwatchTicker();
+  } else {
+    stopwatchState.running = true;
+    stopwatchState.startedAt = Date.now();
+    startStopwatchTicker();
+  }
+  saveState();
+  updateStopwatchToggleBtn();
+  updateStopwatchDisplay();
+}
+
+function resetStopwatch(){
+  stopwatchState = { running: false, startedAt: null, elapsedMs: 0 };
+  stopStopwatchTicker();
+  saveState();
+  updateStopwatchToggleBtn();
+  updateStopwatchDisplay();
+}
+
+/* --- Швидка нотатка: один текстовий блокнот --- */
+function openQuickNoteModal(){
+  document.getElementById('quickNoteInput').value = quickNoteText;
+  document.getElementById('quickNoteOverlay').classList.add('open');
+}
+
+function closeQuickNoteModal(){
+  document.getElementById('quickNoteOverlay').classList.remove('open');
+}
+
+function saveQuickNote(){
+  quickNoteText = document.getElementById('quickNoteInput').value;
+  saveState();
+  renderMiniWidgets();
+  closeQuickNoteModal();
+}
+
+function clearQuickNote(){
+  quickNoteText = '';
+  document.getElementById('quickNoteInput').value = '';
+  saveState();
+  renderMiniWidgets();
+}
+
+/* --- Лічильник: проста тала для підрахунку чогось (повторення, склянки, що завгодно) --- */
+function updateCounterDisplay(){
+  const el = document.getElementById('counterDisplayEl');
+  if (el) el.textContent = tallyCounter;
+  const mini = document.getElementById('miniCounterValue');
+  if (mini) mini.textContent = tallyCounter;
+}
+
+function openCounterModal(){
+  updateCounterDisplay();
+  document.getElementById('counterOverlay').classList.add('open');
+}
+
+function closeCounterModal(){
+  document.getElementById('counterOverlay').classList.remove('open');
+}
+
+function counterChange(delta){
+  tallyCounter = Math.max(0, tallyCounter + delta);
+  saveState();
+  updateCounterDisplay();
+}
+
+function resetCounter(){
+  tallyCounter = 0;
+  saveState();
+  updateCounterDisplay();
+}
+
+/* --- Дихальна вправа: box-breathing 4-4-4-4 з анімованим колом --- */
+let breathTimer = null;
+let breathPhaseIdx = -1;
+const BREATH_PHASES = [
+  { text: 'Вдих...', circleCls: 'inhale', dur: 4000 },
+  { text: 'Затримай...', circleCls: 'inhale', dur: 4000 },
+  { text: 'Видих...', circleCls: 'exhale', dur: 4000 },
+  { text: 'Затримай...', circleCls: 'exhale', dur: 4000 },
+];
+
+function openBreathModal(){
+  resetBreathUI();
+  document.getElementById('breathOverlay').classList.add('open');
+}
+
+function closeBreathModal(){
+  document.getElementById('breathOverlay').classList.remove('open');
+  stopBreathCycle();
+  resetBreathUI();
+}
+
+function resetBreathUI(){
+  stopBreathCycle();
+  const circle = document.getElementById('breathCircle');
+  const text = document.getElementById('breathPhaseText');
+  const btn = document.getElementById('breathToggleBtn');
+  if (circle) circle.className = 'breath-circle';
+  if (text) text.textContent = 'Натисни «Почати»';
+  if (btn) btn.textContent = 'Почати';
+}
+
+function stopBreathCycle(){
+  if (breathTimer) clearTimeout(breathTimer);
+  breathTimer = null;
+  breathPhaseIdx = -1;
+}
+
+function runNextBreathPhase(){
+  breathPhaseIdx = (breathPhaseIdx + 1) % BREATH_PHASES.length;
+  const phase = BREATH_PHASES[breathPhaseIdx];
+  const circle = document.getElementById('breathCircle');
+  const text = document.getElementById('breathPhaseText');
+  if (circle) circle.className = 'breath-circle ' + phase.circleCls;
+  if (text) text.textContent = phase.text;
+  breathTimer = setTimeout(runNextBreathPhase, phase.dur);
+}
+
+function toggleBreath(){
+  if (breathTimer){
+    resetBreathUI();
+  } else {
+    document.getElementById('breathToggleBtn').textContent = 'Зупинити';
+    runNextBreathPhase();
+  }
+}
+
 function renderActivityWidgets(){
   const progressValueEl = document.getElementById('activityProgressValue');
   if (!progressValueEl) return;
@@ -7363,6 +7890,39 @@ document.getElementById('streakCloseX').addEventListener('click', closeStreakDet
 document.getElementById('streakOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'streakOverlay') closeStreakDetail();
 });
+
+document.getElementById('waterDetailCloseX').addEventListener('click', closeWaterDetail);
+document.getElementById('waterDetailOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'waterDetailOverlay') closeWaterDetail();
+});
+
+document.getElementById('stopwatchCloseX').addEventListener('click', closeStopwatchModal);
+document.getElementById('stopwatchOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'stopwatchOverlay') closeStopwatchModal();
+});
+document.getElementById('stopwatchToggleBtn').addEventListener('click', toggleStopwatch);
+document.getElementById('stopwatchResetBtn').addEventListener('click', resetStopwatch);
+
+document.getElementById('quickNoteCloseX').addEventListener('click', closeQuickNoteModal);
+document.getElementById('quickNoteOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'quickNoteOverlay') closeQuickNoteModal();
+});
+document.getElementById('quickNoteSaveBtn').addEventListener('click', saveQuickNote);
+document.getElementById('quickNoteClearBtn').addEventListener('click', clearQuickNote);
+
+document.getElementById('counterCloseX').addEventListener('click', closeCounterModal);
+document.getElementById('counterOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'counterOverlay') closeCounterModal();
+});
+document.getElementById('counterMinusBtn').addEventListener('click', () => counterChange(-1));
+document.getElementById('counterPlusBtn').addEventListener('click', () => counterChange(1));
+document.getElementById('counterResetMidBtn').addEventListener('click', resetCounter);
+
+document.getElementById('breathCloseX').addEventListener('click', closeBreathModal);
+document.getElementById('breathOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'breathOverlay') closeBreathModal();
+});
+document.getElementById('breathToggleBtn').addEventListener('click', toggleBreath);
 
 document.getElementById('waterSettingsCloseX').addEventListener('click', closeWaterSettings);
 document.getElementById('waterSettingsCancelBtn').addEventListener('click', closeWaterSettings);
