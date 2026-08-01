@@ -275,6 +275,64 @@
   }
   .activity-widget-label.is-success { color: #33D17A; font-weight: 600; }
 
+  /* ---------- Квадратний віджет "цитата дня" (60 варіантів, рандом по даті) ---------- */
+  .activity-quote-row {
+    display: flex;
+    margin-top: 10px;
+  }
+  .activity-quote-widget {
+    position: relative;
+    width: clamp(112px, 36%, 150px);
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-lg);
+    padding: 8px 12px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 5px;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    transition: background .4s ease;
+    overflow: hidden;
+  }
+  .activity-quote-widget::before {
+    content: '❝';
+    position: absolute;
+    top: -10px;
+    left: 4px;
+    font-family: Georgia, serif;
+    font-size: 46px;
+    line-height: 1;
+    color: rgba(255,255,255,0.18);
+    pointer-events: none;
+  }
+  .activity-quote-label {
+    position: absolute;
+    top: 6px;
+    left: 14px;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.8);
+  }
+  .activity-quote-emoji {
+    position: relative;
+    font-size: 24px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  }
+  .activity-quote-text {
+    position: relative;
+    font-family: 'Rubik', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
   .page-switcher {
     position: fixed;
     left: 50%;
@@ -6604,6 +6662,9 @@ function renderActivityCenter(){
           </div>
         </div>
       </div>
+      <div class="activity-quote-row">
+        <div class="activity-quote-widget" id="activityQuoteWidget"></div>
+      </div>
     `;
     setupActivityWeekDrag(document.getElementById('activityWeekViewport'));
     document.getElementById('activityStreakWidget').addEventListener('click', openStreakDetail);
@@ -6662,6 +6723,105 @@ function activityUsageStreak(){
 
 /* Малює два віджети центру активності: прогрес сьогоднішнього дня та
    загальну серію користування додатком (спільний "вогник" за всі звички) */
+/* ---------- Цитата дня: 60 коротких гасел про звички, з емодзі та "настроєм" ----------
+   Настрій визначає градієнт фону квадратного віджета. Обирається одна цитата
+   на добу детерміновано (за календарною датою), тож вона однакова цілий день
+   і змінюється рівно опівночі. */
+const QUOTE_MOOD_GRADIENTS = {
+  growth:    'linear-gradient(135deg, #34D399, #059669)',
+  energetic: 'linear-gradient(135deg, #FB923C, #EF4444)',
+  bold:      'linear-gradient(135deg, #8B5CF6, #4C1D95)',
+  calm:      'linear-gradient(135deg, #38BDF8, #3B82F6)',
+  warm:      'linear-gradient(135deg, #FDBA74, #FB7185)',
+  playful:   'linear-gradient(135deg, #FBBF24, #EC4899)',
+};
+
+const DAILY_QUOTES = [
+  { text: 'Маленький крок сьогодні — велика звичка завтра.', emoji: '🌱', mood: 'growth' },
+  { text: 'Ти не мусиш бути ідеальним. Просто продовжуй.', emoji: '🔥', mood: 'energetic' },
+  { text: 'Дисципліна — це любов до себе в дії.', emoji: '💪', mood: 'bold' },
+  { text: 'Один день без прогресу — ще не поразка.', emoji: '🌤', mood: 'calm' },
+  { text: 'Звичка росте там, де є терпіння.', emoji: '🌿', mood: 'growth' },
+  { text: 'Сьогодні — ще одна цеглинка твого майбутнього.', emoji: '🧱', mood: 'bold' },
+  { text: 'Не чекай натхнення. Створюй його дією.', emoji: '⚡', mood: 'energetic' },
+  { text: 'Кожна відмітка — голос за нову версію себе.', emoji: '✅', mood: 'growth' },
+  { text: 'Прогрес важливіший за досконалість.', emoji: '📈', mood: 'calm' },
+  { text: 'Ти сильніший за свою відмовку.', emoji: '🦾', mood: 'bold' },
+  { text: 'Маленькі дії, зроблені щодня, змінюють усе.', emoji: '🐾', mood: 'growth' },
+  { text: 'Відпочинок теж частина шляху.', emoji: '😌', mood: 'calm' },
+  { text: 'Найважчий крок — перший. Ти вже його зробив.', emoji: '👣', mood: 'warm' },
+  { text: 'Стабільність важливіша за швидкість.', emoji: '🐢', mood: 'calm' },
+  { text: 'Твоя серія — це доказ твоєї сили волі.', emoji: '🔥', mood: 'energetic' },
+  { text: 'Не порівнюй день 1 з днем 100.', emoji: '📅', mood: 'calm' },
+  { text: 'Кожен новий день — новий шанс.', emoji: '🌅', mood: 'warm' },
+  { text: 'Звички формують характер, характер формує долю.', emoji: '⭐', mood: 'bold' },
+  { text: 'Роби це не тому, що легко, а тому що варто.', emoji: '💎', mood: 'bold' },
+  { text: 'Маленькі перемоги теж перемоги.', emoji: '🏆', mood: 'playful' },
+  { text: 'Ти будуєш себе по цеглинці.', emoji: '🧱', mood: 'growth' },
+  { text: 'Найкращий час почати — зараз.', emoji: '⏳', mood: 'energetic' },
+  { text: 'Постійність перемагає мотивацію.', emoji: '🧭', mood: 'calm' },
+  { text: 'Твій майбутній ти дякує тобі за сьогодні.', emoji: '🙏', mood: 'warm' },
+  { text: 'Помилки — частина шляху, не кінець.', emoji: '🌈', mood: 'warm' },
+  { text: 'Роби трохи, але щодня.', emoji: '🕯', mood: 'calm' },
+  { text: 'Сила у повторенні, а не в ідеальності.', emoji: '🔁', mood: 'growth' },
+  { text: 'Ти вже не той, ким був учора.', emoji: '🦋', mood: 'growth' },
+  { text: 'Кожна звичка — насіння майбутнього тебе.', emoji: '🌾', mood: 'growth' },
+  { text: 'Не здавайся — ти ближче, ніж думаєш.', emoji: '🚀', mood: 'energetic' },
+  { text: 'Твоя дисципліна сьогодні — твоя свобода завтра.', emoji: '🔓', mood: 'bold' },
+  { text: 'Радій маленьким крокам — вони ведуть далеко.', emoji: '🎈', mood: 'playful' },
+  { text: 'Ти пишеш свою історію щодня.', emoji: '✍️', mood: 'warm' },
+  { text: 'Найкраща версія тебе будується сьогодні.', emoji: '🛠', mood: 'bold' },
+  { text: 'Тримайся — вогник вартий цього.', emoji: '🔥', mood: 'energetic' },
+  { text: 'Спокій — теж прогрес.', emoji: '🍃', mood: 'calm' },
+  { text: 'Один крок за раз — і ти дійдеш.', emoji: '🥾', mood: 'growth' },
+  { text: 'Твоя звичка сильніша за твій настрій.', emoji: '💪', mood: 'bold' },
+  { text: 'Роби це для себе, не для когось іншого.', emoji: '💛', mood: 'warm' },
+  { text: 'Маленькі зміни складаються у велике перетворення.', emoji: '🧩', mood: 'growth' },
+  { text: 'Ти не запізнився. Ти саме вчасно.', emoji: '⏰', mood: 'calm' },
+  { text: 'Кожен день — цеглинка у фундамент звички.', emoji: '🏗', mood: 'bold' },
+  { text: 'Продовжуй — навіть повільно це рух вперед.', emoji: '🐌', mood: 'calm' },
+  { text: 'Свято маленьких перемог наближає велику.', emoji: '🎉', mood: 'playful' },
+  { text: 'Твоя турбота про себе — це теж звичка.', emoji: '🫶', mood: 'warm' },
+  { text: 'Сьогодні достатньо зробити хоч трохи.', emoji: '🌼', mood: 'calm' },
+  { text: 'Звичка — це подарунок собі з майбутнього.', emoji: '🎁', mood: 'warm' },
+  { text: 'Твій прогрес не має бути гучним, щоб бути справжнім.', emoji: '🌙', mood: 'calm' },
+  { text: 'Роби крок — решта складеться сама.', emoji: '🧗', mood: 'growth' },
+  { text: 'Ти вже довів собі більше, ніж думаєш.', emoji: '🏅', mood: 'playful' },
+  { text: 'Найкращий проєкт, над яким ти працюєш — це ти.', emoji: '🎨', mood: 'warm' },
+  { text: 'Маленька дія сьогодні — велика зміна за рік.', emoji: '📆', mood: 'growth' },
+  { text: 'Ти будуєш довіру до себе щодня.', emoji: '🤝', mood: 'bold' },
+  { text: 'Спокійна впертість перемагає бурхливий запал.', emoji: '🌊', mood: 'calm' },
+  { text: 'Твоя мета не втече, якщо ти не зупинишся.', emoji: '🎯', mood: 'energetic' },
+  { text: 'Роби це недосконало, але роби.', emoji: '✨', mood: 'playful' },
+  { text: 'Кожен вогник — доказ, що ти показуєшся щодня.', emoji: '🔥', mood: 'energetic' },
+  { text: 'Ти інвестуєш у себе — і це найкраща інвестиція.', emoji: '💰', mood: 'bold' },
+  { text: 'Маленькі звички — великі люди.', emoji: '🌟', mood: 'growth' },
+  { text: 'Продовжуй. Ти вже на половині шляху до нового себе.', emoji: '🛤', mood: 'warm' },
+];
+
+/* Обирає індекс цитати дня, стабільний для конкретної календарної дати
+   (не залежить від часу доби чи кількості рендерів). */
+function dailyQuoteIndex(){
+  const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const epochDays = Math.floor(d.getTime() / 86400000);
+  const n = DAILY_QUOTES.length;
+  return ((epochDays % n) + n) % n;
+}
+
+/* Малює квадратний віджет "цитата дня": емодзі + текст на кольоровому
+   градієнті, що відповідає "настрою" цитати. */
+function renderDailyQuoteWidget(){
+  const wrap = document.getElementById('activityQuoteWidget');
+  if (!wrap) return;
+  const q = DAILY_QUOTES[dailyQuoteIndex()];
+  wrap.style.background = QUOTE_MOOD_GRADIENTS[q.mood] || QUOTE_MOOD_GRADIENTS.calm;
+  wrap.innerHTML = `
+    <div class="activity-quote-label">Цитата дня</div>
+    <div class="activity-quote-emoji">${q.emoji}</div>
+    <div class="activity-quote-text">${escapeHtml(q.text)}</div>
+  `;
+}
+
 function renderActivityWidgets(){
   const progressValueEl = document.getElementById('activityProgressValue');
   if (!progressValueEl) return;
@@ -6697,6 +6857,8 @@ function renderActivityWidgets(){
   flameWrapEl.dataset.lit = nowLit;
   flameWrapEl.innerHTML =
     `<img src="${DASHBOARD_FLAME_SRC}" alt="" class="dashboard-flame-img${streak > 0 ? '' : ' unlit'}${justLit ? ' flame-swap' : ''}">`;
+
+  renderDailyQuoteWidget();
 }
 
 function renderAll(){
