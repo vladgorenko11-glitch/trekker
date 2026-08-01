@@ -2541,6 +2541,9 @@ const SPROUT_STAGE_VIDEOS = [
 // Завдання ростка зараховуються АВТОМАТИЧНО на основі дій користувача в трекері
 // звичок (користувач не може відмітити їх вручну — це лише довідка про те,
 // за що нараховуються бали). Бали накопичуються в sprout.points назавжди.
+// Заморозка вогника (кнопка freezeBtn) КОШТУЄ 3 бали ростка — знімається одразу
+// при заморожуванні дня і повертається, якщо заморозку скасувати (див. freezeBtn
+// click handler нижче по файлу).
 let sprout = {
   name: 'РОСТОК',
   goal: 500,
@@ -2556,6 +2559,7 @@ let sprout = {
     { id: 'q2', text: 'Продовж всі вогники, що є', points: 5 },
     { id: 'q3', text: 'Відкрий нову форму вогника', points: 5 },
     { id: 'q4', text: 'Виконай тижневе завдання', points: 10 },
+    { id: 'q5', text: 'Заморозь вогник', points: -3 },
   ],
 };
 
@@ -5621,9 +5625,11 @@ function renderDetailOverlay(){
       const key = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
       if (h.days[key] === 'frozen'){
         applyToWindowDays(h, today, k => { if (h.days[k] === 'frozen') delete h.days[k]; });
+        sprout.points = (sprout.points || 0) + 3; // повертаємо бали ростка при скасуванні заморозки
         feedbackUndo();
       } else {
         applyToWindowDays(h, today, k => { h.days[k] = 'frozen'; });
+        sprout.points = Math.max(0, (sprout.points || 0) - 3); // заморозка вогника коштує 3 бали ростка
         feedbackComplete();
       }
       renderAll(); saveState();
@@ -6861,7 +6867,7 @@ function renderSproutOverlay(){
         ${sprout.quests.map(q => `
           <div class="sprout-quest-row sprout-quest-auto" data-id="${q.id}">
             <div class="sprout-quest-text">${escapeHtml(q.text)}</div>
-            <div class="sprout-quest-points">+${q.points}</div>
+            <div class="sprout-quest-points"${q.points < 0 ? ' style="color:#FF8A8A;background:rgba(255,90,90,0.14);"' : ''}>${q.points > 0 ? '+' : ''}${q.points}</div>
           </div>`).join('')}
       </div>
     </div>`;
@@ -6875,7 +6881,7 @@ function renderSproutOverlay(){
   });
   document.getElementById('sproutNameEditIcon').addEventListener('click', () => { nameInput.focus(); nameInput.select(); });
   document.getElementById('sproutInfoBtn').addEventListener('click', () => {
-    alert('Продовжуйте вогники звичок, щоб ваш росток набирав бали та ріс. Бали нараховуються автоматично, їх не можна змінити вручну. Прогрес зберігається автоматично.');
+    alert('Продовжуйте вогники звичок, щоб ваш росток набирав бали та ріс. Бали нараховуються автоматично, їх не можна змінити вручну. Заморозка вогника коштує 3 бали. Прогрес зберігається автоматично.');
   });
   document.getElementById('sproutCloseBtn').addEventListener('click', closeSproutOverlay);
   document.getElementById('sproutHeroImg').addEventListener('click', restartSproutAnim);
