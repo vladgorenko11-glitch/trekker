@@ -280,6 +280,7 @@
     display: flex;
     gap: 10px;
     margin-top: 10px;
+    align-items: flex-start;
   }
   .activity-quote-widget {
     position: relative;
@@ -345,35 +346,53 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 4px;
+    gap: 7px;
+  }
+  .activity-weather-top {
+    display: flex;
+    align-items: center;
+    gap: 9px;
   }
   .activity-weather-icon {
-    font-size: 26px;
+    font-size: 28px;
     line-height: 1;
+    flex: 0 0 auto;
   }
+  .activity-weather-main { min-width: 0; }
   .activity-weather-temp {
     font-family: 'Rubik', sans-serif;
     font-size: 22px;
     font-weight: 800;
     color: var(--text-primary);
-    line-height: 1.1;
-  }
-  .activity-weather-cond {
-    font-size: 12px;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.05;
   }
   .activity-weather-city {
     font-size: 11px;
     color: var(--text-secondary);
-    opacity: 0.75;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .activity-weather-cond {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    line-height: 1.3;
+  }
+  .activity-weather-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px 10px;
+    margin-top: 1px;
+  }
+  .activity-weather-stat {
+    font-size: 11px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .activity-weather-stat-ic { font-size: 12px; line-height: 1; }
   .activity-weather-fallback {
     font-size: 11px;
     line-height: 1.35;
@@ -6925,12 +6944,24 @@ function getWeatherCoords(){
 }
 
 async function fetchCurrentWeather(lat, lon){
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,is_day` +
+    `&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('weather-fetch-failed');
   const json = await res.json();
-  if (!json.current_weather) throw new Error('weather-empty');
-  return json.current_weather;
+  if (!json.current) throw new Error('weather-empty');
+  return json;
+}
+
+/* Реверс-геокодинг (координати -> назва міста) через безкоштовний BigDataCloud API,
+   не критичний: якщо не вдалось, просто не показуємо назву міста. */
+async function reverseGeocodeCity(lat, lon){
+  const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=uk`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('geo-fetch-failed');
+  const json = await res.json();
+  return json.city || json.locality || json.principalSubdivision || null;
 }
 
 function renderWeatherFallback(wrap, message){
@@ -6940,19 +6971,47 @@ function renderWeatherFallback(wrap, message){
   `;
 }
 
+/* Малює розширену картку погоди: іконка + температура + місто, стан + "відчувається
+   як", і сітку з вологістю, вітром та мін/макс температурою дня. */
+function renderWeatherWidget(wrap, json, city){
+  const cur = json.current;
+  const info = weatherCodeInfo(cur.weather_code);
+  const temp = Math.round(cur.temperature_2m);
+  const feels = Math.round(cur.apparent_temperature);
+  const humidity = Math.round(cur.relative_humidity_2m);
+  const wind = Math.round(cur.wind_speed_10m);
+  const daily = json.daily || {};
+  const max = daily.temperature_2m_max ? Math.round(daily.temperature_2m_max[0]) : null;
+  const min = daily.temperature_2m_min ? Math.round(daily.temperature_2m_min[0]) : null;
+
+  wrap.innerHTML = `
+    <div class="activity-weather-top">
+      <div class="activity-weather-icon">${info.emoji}</div>
+      <div class="activity-weather-main">
+        <div class="activity-weather-temp">${temp}°</div>
+        ${city ? `<div class="activity-weather-city">${escapeHtml(city)}</div>` : ''}
+      </div>
+    </div>
+    <div class="activity-weather-cond">${escapeHtml(info.text)} · відчувається як ${feels}°</div>
+    <div class="activity-weather-stats">
+      <div class="activity-weather-stat"><span class="activity-weather-stat-ic">💧</span>${humidity}%</div>
+      <div class="activity-weather-stat"><span class="activity-weather-stat-ic">💨</span>${wind} км/год</div>
+      ${max !== null ? `<div class="activity-weather-stat"><span class="activity-weather-stat-ic">⬆️</span>${max}°</div>` : ''}
+      ${min !== null ? `<div class="activity-weather-stat"><span class="activity-weather-stat-ic">⬇️</span>${min}°</div>` : ''}
+    </div>
+  `;
+}
+
 async function loadWeatherWidget(){
   const wrap = document.getElementById('activityWeatherWidget');
   if (!wrap) return;
   try {
     const { lat, lon } = await getWeatherCoords();
-    const cw = await fetchCurrentWeather(lat, lon);
-    const info = weatherCodeInfo(cw.weathercode);
-    const temp = Math.round(cw.temperature);
-    wrap.innerHTML = `
-      <div class="activity-weather-icon">${info.emoji}</div>
-      <div class="activity-weather-temp">${temp}°</div>
-      <div class="activity-weather-cond">${escapeHtml(info.text)}</div>
-    `;
+    const [weatherJson, city] = await Promise.all([
+      fetchCurrentWeather(lat, lon),
+      reverseGeocodeCity(lat, lon).catch(() => null),
+    ]);
+    renderWeatherWidget(wrap, weatherJson, city);
   } catch (err){
     if (err && err.code === 1){
       renderWeatherFallback(wrap, 'Дозволь геолокацію, щоб бачити погоду');
