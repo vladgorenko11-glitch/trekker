@@ -6279,10 +6279,10 @@ function setupActivityWeekDrag(viewport){
     deltaX = 0;
   }
 
-  viewport.addEventListener('touchstart', (e) => { if (e.touches.length === 1) onDown(e.touches[0].clientX); }, { passive: true });
-  viewport.addEventListener('touchmove', (e) => { onMove(e.touches[0].clientX); }, { passive: true });
-  viewport.addEventListener('touchend', onUp);
-  viewport.addEventListener('touchcancel', onUp);
+  viewport.addEventListener('touchstart', (e) => { if (e.touches.length === 1) onDown(e.touches[0].clientX); e.stopPropagation(); }, { passive: true });
+  viewport.addEventListener('touchmove', (e) => { onMove(e.touches[0].clientX); e.stopPropagation(); }, { passive: true });
+  viewport.addEventListener('touchend', (e) => { onUp(); e.stopPropagation(); });
+  viewport.addEventListener('touchcancel', (e) => { onUp(); e.stopPropagation(); });
 
   viewport.addEventListener('mousedown', (e) => { onDown(e.clientX); e.preventDefault(); });
   window.addEventListener('mousemove', (e) => { if (dragging) onMove(e.clientX); });
