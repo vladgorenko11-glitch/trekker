@@ -48,6 +48,7 @@
       radial-gradient(120% 60% at 50% -10%, rgba(62,155,255,0.10), transparent 60%),
       var(--bg);
     min-height: 100vh;
+    min-height: 100svh;
     display: flex;
     justify-content: center;
   }
@@ -56,6 +57,7 @@
     width: 100%;
     max-width: 460px;
     min-height: 100vh;
+    min-height: 100svh;
     padding: 28px 20px 40px;
     display: flex;
     flex-direction: column;
@@ -66,13 +68,15 @@
   /* ---------- Пейджер: дві повноекранні сторінки (Центр активності + Звички), свайп/перемикач ---------- */
   .pager {
     width: 100%;
-    overflow-x: hidden;
-    overflow-y: visible;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
     position: relative;
   }
   .pager-track {
     display: flex;
     width: 200%;
+    height: 100%;
     transform: translateX(-50%); /* за замовчуванням відкрита сторінка звичок (права) */
   }
   .pager-track.pager-dragging { transition: none; }
@@ -82,7 +86,11 @@
     flex: 0 0 50%;
     display: flex;
     justify-content: center;
-    min-height: 100vh;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
   }
   .activity-app { display:flex; flex-direction:column; gap: 18px; }
 
@@ -1494,7 +1502,7 @@
   .archive-modal .archive-body { flex: 1 1 auto; overflow-y: auto; }
 
   /* ---------- Списки ---------- */
-  .lists-modal { min-height: 96vh; max-height: 97vh; border-radius: 28px 28px 0 0; display: flex; flex-direction: column; position: relative; overflow: hidden; padding-top: 26px; }
+  .lists-modal { min-height: 96vh; min-height: 96svh; max-height: 97vh; max-height: 97svh; border-radius: 28px 28px 0 0; display: flex; flex-direction: column; position: relative; overflow: hidden; padding-top: 26px; }
   .lists-modal .lists-body { flex: 1 1 auto; overflow-y: auto; padding-bottom: 70px; }
   .lists-modal .modal-header { margin-bottom: 26px; }
   .lists-modal .modal-header h2 { font-family:'Rubik',sans-serif; font-size: 26px; font-weight: 800; }
@@ -3827,27 +3835,50 @@ function keyToDate(key){
 
 // Повертає межі періоду: перелік дат від startDate до сьогодні (включно), або null для "весь час"
 // (тоді фільтрування по датах просто не застосовується).
+// "Місяць" — це справжній календарний місяць (наприклад, червень, липень), а не останні 30 днів:
+// беруться дні з 1 числа поточного місяця по сьогодні.
 function habitStatsPeriodDates(period){
   if (period === 'all') return null;
-  const span = period === 'week' ? 7 : 30;
+  if (period === 'week'){
+    const dates = [];
+    for (let i = 6; i >= 0; i--){
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      dates.push(d);
+    }
+    return dates;
+  }
+  const year = today.getFullYear();
+  const monthIdx = today.getMonth();
   const dates = [];
-  for (let i = span - 1; i >= 0; i--){
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    dates.push(d);
+  for (let day = 1; day <= today.getDate(); day++){
+    dates.push(new Date(year, monthIdx, day));
   }
   return dates;
 }
 
-// Попередній період такої самої довжини — для порівняння тренду ("+12% до минулого тижня").
+// Попередній період для порівняння тренду ("+12% до минулого тижня"):
+// для тижня — попередні 7 днів, для місяця — повністю попередній календарний місяць.
 function habitStatsPreviousPeriodDates(period){
   if (period === 'all') return null;
-  const span = period === 'week' ? 7 : 30;
+  if (period === 'week'){
+    const dates = [];
+    for (let i = 13; i >= 7; i--){
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      dates.push(d);
+    }
+    return dates;
+  }
+  const year = today.getFullYear();
+  const monthIdx = today.getMonth();
+  const prevMonthFirst = new Date(year, monthIdx - 1, 1);
+  const prevYear = prevMonthFirst.getFullYear();
+  const prevMonthIdx = prevMonthFirst.getMonth();
+  const daysInPrevMonth = new Date(prevYear, prevMonthIdx + 1, 0).getDate();
   const dates = [];
-  for (let i = span * 2 - 1; i >= span; i--){
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    dates.push(d);
+  for (let day = 1; day <= daysInPrevMonth; day++){
+    dates.push(new Date(prevYear, prevMonthIdx, day));
   }
   return dates;
 }
@@ -3928,16 +3959,16 @@ function computeWowFacts(){
   return { perfectStreakRecord, bestMonthLabel, bestMonthCount, daysUsingApp };
 }
 
-// Дані для теплокарти активності за останній рік (у стилі GitHub): для кожного дня —
-// кількість виконаних звичок, згруповано по тижнях (з понеділка), для рендеру сітки.
+// Дані для теплокарти активності (у стилі GitHub): для кожного дня — кількість
+// виконаних звичок, згруповано по тижнях (з понеділка), для рендеру сітки.
+// Сітка починається з тижня, коли з'явився перший запис у трекері (а не фіксовано
+// за рік до сьогодні) — тому реальні дані заповнюють клітинки з самого початку,
+// а не ховаються в кінці довгої переважно порожньої смуги.
 function computeHeatmapData(){
-  const totalWeeks = 53; // ~рік, включно з поточним тижнем
   const today0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const todayDow = (today0.getDay() + 6) % 7; // 0 = понеділок
   const weekEnd = new Date(today0);
   weekEnd.setDate(weekEnd.getDate() + (6 - todayDow)); // неділя поточного тижня
-  const weekStart = new Date(weekEnd);
-  weekStart.setDate(weekStart.getDate() - (totalWeeks - 1) * 7); // понеділок найдавнішого тижня
 
   const dayCounts = {};
   let minDate = null; // найдавніший день, за який взагалі є якийсь запис (початок користування)
@@ -3948,6 +3979,13 @@ function computeHeatmapData(){
       if (h.days[k] === true) dayCounts[k] = (dayCounts[k] || 0) + 1;
     });
   });
+  if (!minDate) minDate = today0;
+
+  const minDow = (minDate.getDay() + 6) % 7;
+  const weekStart = new Date(minDate);
+  weekStart.setDate(weekStart.getDate() - minDow); // понеділок тижня першого запису
+
+  const totalWeeks = Math.max(1, Math.round((weekEnd - weekStart) / (7 * 24 * 60 * 60 * 1000)) + 1);
 
   const weeks = [];
   let maxCount = 0;
@@ -3959,7 +3997,7 @@ function computeHeatmapData(){
       d.setDate(d.getDate() + i);
       const key = dayKey(d.getFullYear(), d.getMonth(), d.getDate());
       const isFuture = d > today0;
-      const isBeforeStart = !isFuture && minDate && d < minDate;
+      const isBeforeStart = !isFuture && d < minDate;
       const count = (isFuture || isBeforeStart) ? 0 : (dayCounts[key] || 0);
       if (!isFuture && !isBeforeStart && count > maxCount) maxCount = count;
       week.push({ date: d, key, count, isFuture, isBeforeStart });
@@ -4538,7 +4576,9 @@ function renderHabitStatsDetail(){
   document.getElementById('listsFab').style.display = 'none';
 
   const s = computeHabitsStats(habitStatsPeriod);
-  const periodLabel = HABIT_STATS_PERIOD_LABELS[habitStatsPeriod].toLowerCase();
+  const periodLabel = habitStatsPeriod === 'month'
+    ? MONTHS[today.getMonth()].toLowerCase()
+    : HABIT_STATS_PERIOD_LABELS[habitStatsPeriod].toLowerCase();
 
   const topHtml = s.topHabits.length
     ? s.topHabits.map(({ h, streak }) => `
@@ -4578,9 +4618,10 @@ function renderHabitStatsDetail(){
     wowFactsHtml.push(`📅 Найпродуктивніший місяць за весь час — ${wow.bestMonthLabel}: ${wow.bestMonthCount} виконаних звичок.`);
   }
 
-  const tabsHtml = ['week','month','all'].map(p =>
-    `<div class="period-tab${habitStatsPeriod === p ? ' active' : ''}" data-period="${p}">${HABIT_STATS_PERIOD_LABELS[p]}</div>`
-  ).join('');
+  const tabsHtml = ['week','month','all'].map(p => {
+    const label = p === 'month' ? MONTHS[today.getMonth()] : HABIT_STATS_PERIOD_LABELS[p];
+    return `<div class="period-tab${habitStatsPeriod === p ? ' active' : ''}" data-period="${p}">${label}</div>`;
+  }).join('');
 
   body.innerHTML = `
     <div class="list-detail-header">
@@ -4672,7 +4713,7 @@ function renderHabitStatsDetail(){
       </div>` : ''}
     </div>
     <div class="mood-dist" style="margin-top: 22px;">
-      <div class="lists-section-label">Теплокарта активності за рік</div>
+      <div class="lists-section-label">Теплокарта активності</div>
       ${heatmapHtml()}
     </div>
     <div class="habit-stats-top">
