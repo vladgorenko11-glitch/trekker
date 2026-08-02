@@ -3966,9 +3966,10 @@ function computeWowFacts(){
 // а не ховаються в кінці довгої переважно порожньої смуги.
 function computeHeatmapData(){
   const today0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const todayDow = (today0.getDay() + 6) % 7; // 0 = понеділок
-  const weekEnd = new Date(today0);
-  weekEnd.setDate(weekEnd.getDate() + (6 - todayDow)); // неділя поточного тижня
+  const yearEnd = new Date(today.getFullYear(), 11, 31); // 31 грудня поточного року
+  const yearEndDow = (yearEnd.getDay() + 6) % 7; // 0 = понеділок
+  const weekEnd = new Date(yearEnd);
+  weekEnd.setDate(weekEnd.getDate() + (6 - yearEndDow)); // неділя тижня, в якому 31 грудня — сітка "тягнеться" пунктиром до кінця року
 
   const dayCounts = {};
   let minDate = null; // найдавніший день, за який взагалі є якийсь запис (початок користування)
