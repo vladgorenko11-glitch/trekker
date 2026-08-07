@@ -1319,39 +1319,10 @@
         rgba(255,255,255,0.06) 352deg 360deg),
       linear-gradient(180deg, #060606 0%, var(--nlo-dark) 42%, #060606 100%);
   }
-  /* 30 днів: концентричні кільця */
-  .nlo-frame.nlo-shape-purple {
-    background:
-      radial-gradient(65% 42% at 50% 30%, color-mix(in srgb, var(--nlo-c1) 55%, transparent), transparent 70%),
-      repeating-radial-gradient(circle at 50% 30%,
-        rgba(255,255,255,0.09) 0px, rgba(255,255,255,0.09) 1.5px,
-        transparent 1.5px, transparent 30px),
-      linear-gradient(180deg, #060606 0%, var(--nlo-dark) 42%, #060606 100%);
-  }
-  /* 90 днів: діагональні широкі смуги */
-  .nlo-frame.nlo-shape-blue {
-    background:
-      radial-gradient(65% 42% at 50% 30%, color-mix(in srgb, var(--nlo-c1) 55%, transparent), transparent 70%),
-      repeating-linear-gradient(118deg,
-        rgba(255,255,255,0.055) 0px, rgba(255,255,255,0.055) 16px,
-        transparent 16px, transparent 58px),
-      linear-gradient(180deg, #060606 0%, var(--nlo-dark) 42%, #060606 100%);
-  }
-  /* 180 днів: розсипані іскри-зорі */
-  .nlo-frame.nlo-shape-silver {
-    background:
-      radial-gradient(65% 42% at 50% 30%, color-mix(in srgb, var(--nlo-c1) 55%, transparent), transparent 70%),
-      radial-gradient(1.6px 1.6px at 18% 22%, rgba(255,255,255,0.9), transparent 60%),
-      radial-gradient(1.6px 1.6px at 78% 18%, rgba(255,255,255,0.8), transparent 60%),
-      radial-gradient(1.2px 1.2px at 32% 42%, rgba(255,255,255,0.7), transparent 60%),
-      radial-gradient(1.6px 1.6px at 66% 46%, rgba(255,255,255,0.85), transparent 60%),
-      radial-gradient(1.2px 1.2px at 12% 58%, rgba(255,255,255,0.6), transparent 60%),
-      radial-gradient(1.6px 1.6px at 88% 55%, rgba(255,255,255,0.75), transparent 60%),
-      radial-gradient(1.2px 1.2px at 46% 15%, rgba(255,255,255,0.7), transparent 60%),
-      radial-gradient(1.6px 1.6px at 55% 62%, rgba(255,255,255,0.65), transparent 60%),
-      linear-gradient(180deg, #060606 0%, var(--nlo-dark) 42%, #060606 100%);
-  }
-  /* 365 днів: точно той самий візерунок променів, що й для 7 днів — лише золотий колір через --nlo-c1/--nlo-c2 */
+  /* 30 / 90 / 180 / 365 днів: той самий візерунок променів-хрестом, що й для 7 днів — колір міняється лише через --nlo-c1/--nlo-c2 */
+  .nlo-frame.nlo-shape-purple,
+  .nlo-frame.nlo-shape-blue,
+  .nlo-frame.nlo-shape-silver,
   .nlo-frame.nlo-shape-gold {
     background:
       radial-gradient(65% 42% at 50% 30%, color-mix(in srgb, var(--nlo-c1) 55%, transparent), transparent 70%),
