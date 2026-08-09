@@ -3951,13 +3951,14 @@ function launchFireworks(){
 }
 
 // Викликається щоразу, коли ОДНУ конкретну звичку щойно реально позначено
-// виконаною сьогодні (не заморожено). На відміну від старої логіки, тут
-// вистачає закрити хоча б 1 звичку — не обов'язково всі за день.
+// виконаною сьогодні (не заморожено). Кожне таке виконання рахується окремо
+// (навіть кілька за один день до 12:00 чи після 21:00) — тому тут НЕ
+// перевіряємо, чи todayKeyStr вже є в масиві, а додаємо запис щоразу.
 function recordTimeOfDayBadges(){
   const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
   const hour = new Date().getHours();
-  if (hour >= 21 && !lateFinishDays.includes(todayKeyStr)) lateFinishDays.push(todayKeyStr);
-  if (hour < 12 && !earlyFinishDays.includes(todayKeyStr)) earlyFinishDays.push(todayKeyStr);
+  if (hour >= 21) lateFinishDays.push(todayKeyStr);
+  if (hour < 12) earlyFinishDays.push(todayKeyStr);
 }
 
 function checkAllDoneCelebration(){
@@ -4600,8 +4601,8 @@ const BADGE_DEFS = [
   { id: 'streak-100', icon: BADGE_IMG_STREAK_100, title: '100 Streak', subtitle: 'Сто днів поспіль — легендарна витримка!', threshold: 100, c1: '#4EC4E3', c2: '#E1F7F9' },
   { id: 'streak-200', icon: BADGE_IMG_STREAK_200, title: '200 Streak', subtitle: 'Двісті днів поспіль — це вже стиль життя!', threshold: 200, c1: '#832DBE', c2: '#EFD5FB' },
   { id: 'perfect-10', icon: BADGE_IMG_PERFECT_10, title: 'На повну', subtitle: 'Десять днів без жодної поблажки — усе виконано наживо.', threshold: 10, kind: 'perfect-days', c1: '#1F9C7A', c2: '#BFF3E3', iconScale: 1.1, iconOffsetY: 9 },
-  { id: 'morning-bird-10', icon: BADGE_IMG_MORNING_BIRD_10, title: 'Ранкова пташка', subtitle: 'Хоча б 1 звичку виконано до 12:00 — 10 разів.', threshold: 10, kind: 'early-finish', c1: '#F2A93C', c2: '#FDE8C4' },
-  { id: 'night-owl-10', icon: BADGE_IMG_NIGHT_OWL_10, title: 'Нічна сова', subtitle: 'Хоча б 1 звичку виконано вже після 21:00 — 10 разів.', threshold: 10, kind: 'late-finish', c1: '#2A3E8C', c2: '#C7D2FF' },
+  { id: 'morning-bird-10', icon: BADGE_IMG_MORNING_BIRD_10, title: 'Ранкова пташка', subtitle: 'Звички, виконані до 12:00 — 20 разів.', threshold: 20, kind: 'early-finish', c1: '#F2A93C', c2: '#FDE8C4' },
+  { id: 'night-owl-10', icon: BADGE_IMG_NIGHT_OWL_10, title: 'Нічна сова', subtitle: 'Звички, виконані вже після 21:00 — 20 разів.', threshold: 20, kind: 'late-finish', c1: '#2A3E8C', c2: '#C7D2FF' },
   { id: 'sprout-level-3', icon: BADGE_IMG_SPROUT_LEVEL_3, title: 'Третій рівень ростка', subtitle: 'Росток досяг 3-го рівня — очок вистачило на новий стрибок росту.', threshold: 3, kind: 'sprout-level', c1: '#2F8F4E', c2: '#D4F4DD', iconScale: 1.2 },
   { id: 'movie-buff-10', icon: BADGE_IMG_MOVIE_BUFF_10, title: 'Кіноман', subtitle: 'Переглянуто 10 фільмів зі списку фільмів.', threshold: 10, kind: 'movies-watched', c1: '#8A3FD1', c2: '#E4D2FA', iconScale: 1.1 },
   { id: 'book-read-1', icon: BADGE_IMG_BOOK_READ_1, title: 'Перша книга', subtitle: 'Прочитано хоча б 1 книгу на книжковій полиці.', threshold: 1, kind: 'books-read', c1: '#3D63C9', c2: '#D6E2FB', iconScale: 1.15 },
