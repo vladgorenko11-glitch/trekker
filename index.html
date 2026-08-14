@@ -1915,6 +1915,19 @@
   }
   .buo-medal-wrap.locked img, .buo-medal-wrap.locked .buo-medal-emoji { filter: grayscale(1) brightness(0.75); opacity: 0.55; }
 
+  /* М'який "поп" тайла в сітці в момент розблокування — без box-shadow кілець
+     (вони погано лягають на нерегулярну форму бейджа-закладки). */
+  @keyframes badgeUnlockPop {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.09); }
+    72% { transform: scale(0.97); }
+    100% { transform: scale(1); }
+  }
+  .badge-tile.badge-tile-pulse .badge-tile-ico { animation: badgeUnlockPop .6s cubic-bezier(.34,1.56,.64,1); }
+  /* Плавне освітлення іконки під час анімації розблокування в сітці */
+  .badge-tile-ico { transition: filter .6s ease; }
+  .badge-tile-ico img, .badge-tile-ico .badge-tile-emoji { transition: filter .6s ease, opacity .6s ease; }
+
   .badge-locked-tip {
     position: fixed; z-index: 9999; max-width: 220px;
     background: var(--surface-primary, #1c1c1e); color: var(--text-on-dark, #fff);
@@ -3576,6 +3589,23 @@ function loadState(){
       if (seenBadgeIds === null){
         seenBadgeIds = getBadgesState().filter(b => b.unlocked).map(b => b.id);
       }
+
+      // Одноразовий скид "переглянутості" бейджів — щоб анімацію розблокування
+      // (з темного замкненого в світле) можна було знову побачити для бейджів,
+      // які вже раніше бачили (наприклад, після зняття/повторного виконання
+      // прогресу). Спрацьовує рівно один раз на пристрій.
+      if (!localStorage.getItem('badgeAnimReplayV1')){
+        seenBadgeIds = [];
+        localStorage.setItem('badgeAnimReplayV1', '1');
+      }
+
+      // Синхронізація "на льоту": якщо бейдж зараз ЗНОВУ замкнений (прогрес
+      // скинули/скасували), забираємо його з seenBadgeIds — тоді, коли він
+      // вдруге розблокується, анімація в сітці бейджів знову спрацює.
+      const lockedIdsNow = getBadgesState().filter(b => !b.unlocked).map(b => b.id);
+      if (lockedIdsNow.length){
+        seenBadgeIds = seenBadgeIds.filter(id => !lockedIdsNow.includes(id));
+      }
     }
   }catch(e){
     console.error('Не вдалося завантажити дані:', e);
@@ -4609,7 +4639,7 @@ const BADGE_DEFS = [
   { id: 'sprout-level-3', icon: BADGE_IMG_SPROUT_LEVEL_3, title: 'Третій рівень ростка', subtitle: 'Росток досяг 3-го рівня — очок вистачило на новий стрибок росту.', threshold: 3, kind: 'sprout-level', c1: '#2F8F4E', c2: '#D4F4DD', iconScale: 1.2 },
   { id: 'movie-buff-10', icon: BADGE_IMG_MOVIE_BUFF_10, title: 'Кіноман', subtitle: 'Переглянуто 10 фільмів зі списку фільмів.', threshold: 10, kind: 'movies-watched', c1: '#8A3FD1', c2: '#E4D2FA', iconScale: 1.1 },
   { id: 'book-read-1', icon: BADGE_IMG_BOOK_READ_1, title: 'Перша книга', subtitle: 'Прочитано хоча б 1 книгу на книжковій полиці.', threshold: 1, kind: 'books-read', c1: '#3D63C9', c2: '#D6E2FB', iconScale: 1.15 },
-  { id: 'book-read-5', icon: BADGE_IMG_BOOK_READ_5, title: 'Книжкова полиця', subtitle: 'Прочитано 5 книг на книжковій полиці.', threshold: 5, kind: 'books-read', c1: '#3D63C9', c2: '#D6E2FB', iconScale: 1.04 },
+  { id: 'book-read-5', icon: BADGE_IMG_BOOK_READ_5, title: 'Книжкова полиця', subtitle: 'Прочитано 5 книг на книжковій полиці.', threshold: 5, kind: 'books-read', c1: '#FF6FA5', c2: '#E01E3C', iconScale: 1.04 },
   { id: 'water-goal-10', icon: BADGE_IMG_WATER_GOAL_10, title: 'Водний баланс', subtitle: 'Досяг денної норми води 10 разів.', threshold: 10, kind: 'water-goal-days', c1: '#1E8FD9', c2: '#CDEBFB', iconScale: 1.1 },
   { id: 'water-goal-30', icon: BADGE_IMG_WATER_GOAL_30, title: 'Гідратований', subtitle: 'Досяг денної норми води 30 разів.', threshold: 30, kind: 'water-goal-days', c1: '#1665C9', c2: '#C4E0FB', iconScale: 1.1 },
   { id: 'weekly-tasks-4', icon: BADGE_IMG_WEEKLY_TASKS_4, title: 'Тижневий боєць', subtitle: 'Виконано щонайменше 4 тижневих завдання.', threshold: 4, kind: 'weekly-tasks-completed', c1: '#D9A21B', c2: '#FCEFC0', iconScale: 1.2 },
@@ -4890,6 +4920,16 @@ function openBadges(){
 }
 
 function badgeTileHtml(b){
+  return `
+    <div class="badge-tile${b.unlocked ? '' : ' locked'}" data-action="open-badge" data-id="${b.id}">
+      ${badgeTileInnerHtml(b)}
+    </div>`;
+}
+
+// Внутрішній вміст тайла (іконка + назва) — винесено окремо, щоб можна було
+// підмінити вміст тайла на льоту (без перестворення самого div.badge-tile),
+// коли граємо анімацію розблокування нового бейджа прямо в сітці.
+function badgeTileInnerHtml(b){
   const iconStyle = b.iconScale || b.iconOffsetY
     ? ` style="transform:scale(${b.iconScale || 1}) translateY(${b.iconOffsetY || 0}px)"`
     : '';
@@ -4897,13 +4937,11 @@ function badgeTileHtml(b){
     ? `<img src="${b.icon}" alt=""${iconStyle}>`
     : `<span class="badge-tile-emoji">${b.icon}</span>`;
   return `
-    <div class="badge-tile${b.unlocked ? '' : ' locked'}" data-action="open-badge" data-id="${b.id}">
       <div class="badge-tile-ico">
         ${iconHtml}
         ${b.unlocked ? '' : `<div class="badge-tile-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>`}
       </div>
-      <div class="badge-tile-name">${escapeHtml(b.unlocked ? b.title : '???')}</div>
-    </div>`;
+      <div class="badge-tile-name">${escapeHtml(b.unlocked ? b.title : '???')}</div>`;
 }
 
 // Глобальний детектор "це був скрол/свайп, а не тап" — щоб клік по бейджу
@@ -4937,6 +4975,19 @@ function renderBadgesDetail(){
 
   const state = getBadgesState();
 
+  // Синхронізуємо seenBadgeIds "наживо" (не лише при завантаженні застосунку):
+  // якщо бейдж зараз знову замкнений, забираємо його з переглянутих — тоді при
+  // повторному розблокуванні анімація в сітці спрацює ще раз.
+  const lockedIdsNow = state.filter(b => !b.unlocked).map(b => b.id);
+  if (lockedIdsNow.length){
+    seenBadgeIds = seenBadgeIds.filter(id => !lockedIdsNow.includes(id));
+  }
+
+  // Запам'ятовуємо, які бейджі новенькі (розблоковані, але ще не переглянуті) —
+  // ДО того, як позначимо їх переглянутими нижче. Саме для них згодом покажемо
+  // автоматичний перехід + анімацію розблокування.
+  const freshlyUnlockedBadges = state.filter(b => b.unlocked && !seenBadgeIds.includes(b.id));
+
   // Щойно людина відкрила екран бейджів — усе, що вже розблоковано, більше не
   // "нове": ховаємо подарунок на кнопці "Списки".
   let seenChanged = false;
@@ -4952,7 +5003,12 @@ function renderBadgesDetail(){
   }
 
   const gridOrEmpty = state.length
-    ? `<div class="badges-grid">${state.map(badgeTileHtml).join('')}</div>`
+    ? `<div class="badges-grid">${state.map(b => {
+        // Новенький, ще не переглянутий бейдж спершу малюємо як замкнений —
+        // "оживить" його трохи згодом окрема анімація нижче.
+        const isFresh = freshlyUnlockedBadges.some(f => f.id === b.id);
+        return isFresh ? badgeTileHtml({ ...b, unlocked: false }) : badgeTileHtml(b);
+      }).join('')}</div>`
     : `<div class="badges-empty">
          <div class="badges-empty-ico">🏆</div>
          <div class="badges-empty-title">Тут з'являться бейджи</div>
@@ -4985,6 +5041,50 @@ function renderBadgesDetail(){
       else showBadgeLockedTip(el, b);
     });
   });
+
+  // Якщо на цей екран потрапили через новий бейдж — трохи чекаємо, поки
+  // модалка й сітка "усядуться", плавно доскролюємо саме до нього, і лише
+  // тоді програємо крос-фейд-анімацію "з темного замкненого — у світле
+  // розблоковане" прямо в тайлі (без заміни DOM-елементів — так фільтр і
+  // прозорість анімуються плавно, а не миттєвим стрибком).
+  if (freshlyUnlockedBadges.length){
+    const target = freshlyUnlockedBadges[0];
+    const tileEl = body.querySelector(`[data-action="open-badge"][data-id="${CSS.escape(target.id)}"]`);
+    if (tileEl){
+      setTimeout(() => {
+        tileEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        setTimeout(() => {
+          // Знімаємо .locked — CSS-transition на .badge-tile-ico сам плавно
+          // прибере grayscale/прозорість, бо картинка лишається тим самим
+          // DOM-вузлом (ми її не перестворюємо).
+          tileEl.classList.remove('locked');
+          tileEl.classList.add('badge-tile-pulse');
+          setTimeout(() => tileEl.classList.remove('badge-tile-pulse'), 700);
+
+          const lockIcon = tileEl.querySelector('.badge-tile-lock');
+          if (lockIcon){
+            lockIcon.style.transition = 'opacity .4s ease';
+            lockIcon.style.opacity = '0';
+            setTimeout(() => lockIcon.remove(), 420);
+          }
+
+          const nameEl = tileEl.querySelector('.badge-tile-name');
+          if (nameEl){
+            nameEl.style.transition = 'opacity .3s ease';
+            nameEl.style.opacity = '0';
+            setTimeout(() => {
+              nameEl.textContent = target.title;
+              nameEl.style.color = '';
+              requestAnimationFrame(() => { nameEl.style.opacity = '1'; });
+            }, 300);
+          }
+
+          vibrate([25]);
+        }, 550);
+      }, 350);
+    }
+  }
 }
 
 /* Маленька спливаюча підказка біля заблокованого бейджа: назва, опис і прогрес.
@@ -5045,6 +5145,7 @@ function openBadgeUnlockOverlay(b){
   overlay.style.setProperty('--buo-c2', b.c2);
 
   const medal = document.getElementById('badgeUnlockMedal');
+  medal.classList.remove('buo-revealing');
   medal.classList.toggle('locked', !b.unlocked);
   const medalIconStyle = b.iconScale || b.iconOffsetY
     ? ` style="transform:scale(${b.iconScale || 1}) translateY(${b.iconOffsetY || 0}px)"`
@@ -5058,6 +5159,8 @@ function openBadgeUnlockOverlay(b){
 
   const progressEl = document.getElementById('badgeUnlockProgress');
   const checkRow = document.getElementById('badgeUnlockCheckRow');
+  checkRow.style.opacity = '';
+  checkRow.style.transition = '';
   if (b.unlocked){
     progressEl.style.display = 'none';
     checkRow.style.display = '';
@@ -6297,7 +6400,10 @@ function genListId(){
 }
 
 function openListsModal(){
-  listsView = { screen: 'overview', listId: null };
+  // Якщо є новий, ще не переглянутий бейдж — одразу переносимо людину на екран
+  // "Бейджи" (а не на загальний огляд списків), щоб анімація розблокування
+  // спрацювала без зайвого тапу.
+  listsView = hasNewBadge() ? { screen: 'badges', listId: null } : { screen: 'overview', listId: null };
   listsAdding = false;
   listItemAdding = false;
   renderListsBody();
