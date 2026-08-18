@@ -3519,6 +3519,20 @@ function loadState(){
         if (h.frequency !== 'weekly') h.frequency = 'daily';
         if (!Array.isArray(h.weekdays)) h.weekdays = [];
         if (typeof h.archived !== 'boolean') h.archived = false;
+        if (typeof h.createdAt !== 'string'){
+          // Міграція старих звичок без збереженої дати створення: беремо
+          // найранішу дату з власної історії (days) як наближення. Це
+          // критично для підрахунку "ідеальних днів" (perfect-days) — без
+          // цього нова звичка вважалась би "потрібною" навіть у дні ДО того,
+          // як вона взагалі з'явилась, і жоден минулий день не міг зарахуватись
+          // як ідеальний.
+          const ownKeys = Object.keys(h.days || {});
+          if (ownKeys.length){
+            h.createdAt = ownKeys.reduce((min, k) => keyToDate(k) < keyToDate(min) ? k : min, ownKeys[0]);
+          } else {
+            h.createdAt = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
+          }
+        }
       });
       activeHabitId = parsed.activeHabitId ?? null;
       nextId = parsed.nextId || 1;
@@ -4714,7 +4728,10 @@ function countPerfectNoFreezeDays(){
   let count = 0;
   allKeys.forEach(key => {
     const d = keyToDate(key);
-    const dueHabits = active.filter(h => isDueOnDate(h, d));
+    // Звичка враховується лише для днів ПІСЛЯ (чи в день) її створення —
+    // інакше щойно додана звичка "вимагала" б виконання заднім числом і
+    // обнуляла б увесь минулий прогрес (didn't exist yet ≠ not done).
+    const dueHabits = active.filter(h => isDueOnDate(h, d) && (!h.createdAt || keyToDate(h.createdAt) <= d));
     if (!dueHabits.length) return;
     const allDone = dueHabits.every(h => h.days[key] === true);
     if (allDone) count++;
@@ -8060,7 +8077,8 @@ document.getElementById('habitSaveBtn').addEventListener('click', () => {
       reminder,
       frequency: selectedFrequency,
       weekdays: selectedFrequency === 'weekly' ? selectedWeekdays.slice() : [],
-      archived: false
+      archived: false,
+      createdAt: dayKey(today.getFullYear(), today.getMonth(), today.getDate())
     };
     habits.push(newHabit);
     activeHabitId = newHabit.id;
