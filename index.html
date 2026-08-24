@@ -9262,13 +9262,12 @@ function renderSproutOverlay(){
   const pct = nextThreshold === undefined
     ? 100
     : Math.min(100, Math.round(((progress - prevThreshold) / (nextThreshold - prevThreshold)) * 100));
-  // Чисельник — прогрес У МЕЖАХ поточного рівня (синхронно з баром вище,
-  // починається з 0 одразу після переходу на новий рівень).
-  // Знаменник — АБСОЛЮТНИЙ поріг наступного рівня (напр. 500 для 3-го рівня),
-  // а не різниця між порогами (400) — щоб цифра завжди відповідала порогу з SPROUT_LEVEL_THRESHOLDS.
+  // Чисельник і знаменник — прогрес та ширина У МЕЖАХ поточного рівня
+  // (та сама база, що й у розрахунку pct вище) — щоб підпис завжди
+  // відповідав заповненню шкали, а не "стрибав" відносно неї.
   const goalLabel = nextThreshold === undefined
     ? `${progress}`
-    : `${progress - prevThreshold}/${nextThreshold}`;
+    : `${progress - prevThreshold}/${nextThreshold - prevThreshold}`;
   wrap.innerHTML = `
     <div class="sprout-modal">
       <div class="sprout-topbar">
