@@ -698,6 +698,20 @@
   }
   .sprout-btn:active { transform: scale(0.9); background: rgba(60,180,110,0.24); }
 
+  /* ---------- Кружок повторного перегляду "Підсумків місяця" (24 год після першого показу) ---------- */
+  /* Розташований під кружком-ростком (не поверх нього) */
+  .stats-reopen-btn {
+    position: absolute; left: 0; top: 44px; z-index: 3;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(140,92,255,0.14);
+    border: 1px solid rgba(140,92,255,0.5);
+    display: none; align-items: center; justify-content: center;
+    font-size: 17px; line-height: 1; cursor: pointer;
+    transition: transform .12s ease, background .12s ease;
+  }
+  .stats-reopen-btn.visible { display: flex; }
+  .stats-reopen-btn:active { transform: scale(0.88); background: rgba(140,92,255,0.3); }
+
   /* ---------- Індикатор нового рівня ростка (до перегляду) ---------- */
   @keyframes sproutNewLevelPulse {
     0%   { box-shadow: 0 0 0 0 rgba(255,196,0,0.55); }
@@ -2942,6 +2956,7 @@
 
   <div class="header">
     <div class="sprout-btn" id="sproutBtn" title="Росток">🌱</div>
+    <div class="stats-reopen-btn" id="statsReopenBtn" title="Підсумки місяця (доступно 24 год)">📊</div>
     <h1>Формуй <span class="accent">звички</span><br>з трекером</h1>
     <div class="lists-btn" id="listsBtn" title="Списки">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -3440,6 +3455,8 @@ let stopwatchState = { running: false, startedAt: null, elapsedMs: 0 }; // се�
 let quickNoteText = '';  // швидка нотатка (один текстовий блокнот)
 let tallyCounter = 0;    // простий лічильник (наприклад, для підрахунку повторень чогось)
 let monthlyStatsShownKey = null; // 'yyyy-m' (місяць 0-індексований) — за який місяць вже показано попап "Підсумки місяця", щоб не спливав повторно
+let monthlyStatsLastPeriod = null; // { year, month } — за який період можна ще раз відкрити звіт кружком біля ростка
+let monthlyStatsExpiresAt = null;  // timestamp (мс) — до якого моменту кружок повторного перегляду доступний (24 год)
 let editingBookId = null;      // id книги, яку зараз редагуємо у формі (null — додаємо нову)
 let bookFormTargetShelf = null; // на яку поличку ставимо нову книгу (обрана натисканням на пунктирний слот)
 let bookFormTargetSlot = null; // на яке саме місце в межах полички ставимо нову книгу
@@ -3588,7 +3605,7 @@ function renderStorageBanner(){
 function saveState(){
   if (!storageAvailable) { showSaveStatus('Не збережено — сховище недоступне', true); return; }
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, lateFinishDays, earlyFinishDays, seenBadgeIds, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, weeklyCardsHidden, waterGoal, waterLog, waterGoalReachedDays, stopwatchState, quickNoteText, tallyCounter, monthlyStatsShownKey }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, lateFinishDays, earlyFinishDays, seenBadgeIds, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, weeklyCardsHidden, waterGoal, waterLog, waterGoalReachedDays, stopwatchState, quickNoteText, tallyCounter, monthlyStatsShownKey, monthlyStatsLastPeriod, monthlyStatsExpiresAt }));
     showSaveStatus('Збережено');
   }catch(e){
     console.error('Не вдалося зберегти дані:', e);
@@ -3660,6 +3677,10 @@ function loadState(){
       quickNoteText = typeof parsed.quickNoteText === 'string' ? parsed.quickNoteText : '';
       tallyCounter = typeof parsed.tallyCounter === 'number' ? parsed.tallyCounter : 0;
       monthlyStatsShownKey = typeof parsed.monthlyStatsShownKey === 'string' ? parsed.monthlyStatsShownKey : null;
+      monthlyStatsLastPeriod = (parsed.monthlyStatsLastPeriod && typeof parsed.monthlyStatsLastPeriod === 'object'
+        && typeof parsed.monthlyStatsLastPeriod.year === 'number' && typeof parsed.monthlyStatsLastPeriod.month === 'number')
+        ? parsed.monthlyStatsLastPeriod : null;
+      monthlyStatsExpiresAt = typeof parsed.monthlyStatsExpiresAt === 'number' ? parsed.monthlyStatsExpiresAt : null;
       // Міграція старих записів без збереженої позиції на поличці (slot) —
       // проставляємо slot за поточним порядком книг у межах свого ряду.
       (() => {
@@ -9733,7 +9754,34 @@ function checkMonthlyStats(){
 
   if (!data.hasAnyData) return; // нема що показувати (наприклад, це перший місяць користування застосунком)
   openMonthlyStatsOverlay(data);
+
+  // Дозволяємо ще раз переглянути цю ж статистику протягом 24 годин
+  // через кружок-бейдж біля ростка в шапці.
+  monthlyStatsLastPeriod = { year: py, month: pm };
+  monthlyStatsExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
+  saveState();
+  updateStatsReopenBtn();
 }
+
+// Показує/ховає кружок повторного перегляду підсумків місяця залежно від того,
+// чи не минуло ще 24 години з моменту автоматичного показу звіту.
+function updateStatsReopenBtn(){
+  const btn = document.getElementById('statsReopenBtn');
+  if (!btn) return;
+  const visible = !!(monthlyStatsLastPeriod && monthlyStatsExpiresAt && Date.now() < monthlyStatsExpiresAt);
+  btn.classList.toggle('visible', visible);
+}
+
+document.getElementById('statsReopenBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (!monthlyStatsLastPeriod || !monthlyStatsExpiresAt || Date.now() >= monthlyStatsExpiresAt) return;
+  const data = computeMonthlyStatsSnapshot(monthlyStatsLastPeriod.year, monthlyStatsLastPeriod.month);
+  openMonthlyStatsOverlay(data);
+});
+
+// Перевіряємо щохвилини — щоб кружок сам зникав рівно через 24 години,
+// навіть якщо застосунок увесь цей час відкритий і не перезавантажувався.
+setInterval(updateStatsReopenBtn, 60 * 1000);
 
 document.getElementById('mainArea').innerHTML = '<div class="loading-state">Завантаження…</div>';
 renderStorageBanner();
@@ -9743,6 +9791,7 @@ checkDayRollover();
 renderAll();
 checkReminders();
 checkMoodPrompt();
+updateStatsReopenBtn();
 checkMonthlyStats();
 </script>
 
