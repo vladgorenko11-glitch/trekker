@@ -1405,6 +1405,86 @@
   }
   .nlo-continue-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.2); }
   .nlo-continue-btn svg { width: 18px; height: 18px; }
+
+  /* ---------- Підсумки місяця: повноекранний вертикальний скрол-звіт (стиль "Wrapped") ---------- */
+  .monthlystats-overlay {
+    position: fixed; inset: 0; z-index: 220;
+    display: none; opacity: 0; transition: opacity .28s ease;
+    background: #05050a;
+  }
+  .monthlystats-overlay.open { display: block; opacity: 1; }
+  .ms-close-btn {
+    position: fixed; top: 18px; right: 18px; z-index: 6;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,0.16); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; cursor: pointer;
+  }
+  .ms-close-btn:active { transform: scale(0.92); }
+  .ms-close-btn svg { width: 18px; height: 18px; }
+  .ms-scroll {
+    position: absolute; inset: 0; overflow-y: auto;
+    scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch;
+  }
+  .ms-slide {
+    min-height: 100vh; min-height: 100svh; scroll-snap-align: start; scroll-snap-stop: always;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 26px 76px; box-sizing: border-box; text-align: center; position: relative;
+    color: #fff; font-family: 'Inter', sans-serif;
+  }
+  .ms-slide-cover  { background: radial-gradient(120% 65% at 50% 0%, #7C4DFF 0%, #2A0F63 46%, #0A0518 100%); }
+  .ms-slide-overall{ background: radial-gradient(120% 65% at 50% 0%, #FF7A45 0%, #7A2A1E 46%, #180806 100%); }
+  .ms-slide-habits { background: radial-gradient(120% 65% at 50% 0%, #22D89A 0%, #0E5F45 46%, #041712 100%); }
+  .ms-slide-water  { background: radial-gradient(120% 65% at 50% 0%, #3FB3FF 0%, #0E4A85 46%, #041424 100%); }
+  .ms-slide-mood   { background: radial-gradient(120% 65% at 50% 0%, #FF5CA8 0%, #7A1B4D 46%, #1A0510 100%); }
+  .ms-slide-extra  { background: radial-gradient(120% 65% at 50% 0%, #FFCF52 0%, #7A5A0E 46%, #1A1204 100%); }
+  .ms-slide-outro  { background: radial-gradient(120% 65% at 50% 0%, #7C4DFF 0%, #2A0F63 46%, #0A0518 100%); }
+
+  .ms-emoji { font-size: 54px; margin-bottom: 12px; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.35)); }
+  .ms-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .78; margin-bottom: 6px; }
+  .ms-title { font-family: 'Rubik', sans-serif; font-size: 25px; font-weight: 800; margin-bottom: 10px; line-height: 1.25; }
+  .ms-subtitle { font-size: 14.5px; opacity: .88; max-width: 300px; line-height: 1.55; margin: 0 auto; }
+  .ms-big-number { font-family: 'Rubik', sans-serif; font-weight: 800; font-size: 74px; line-height: 1; margin: 14px 0 4px; text-shadow: 0 6px 24px rgba(0,0,0,0.3); }
+  .ms-big-number.small { font-size: 52px; }
+
+  .ms-scroll-hint {
+    position: absolute; bottom: 32px; left: 0; right: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    opacity: .8; animation: msBounce 1.7s ease-in-out infinite; font-size: 12.5px; font-weight: 500;
+  }
+  @keyframes msBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+  .ms-scroll-hint svg { width: 20px; height: 20px; }
+
+  .ms-stat-row { display: flex; gap: 14px; margin-top: 22px; flex-wrap: wrap; justify-content: center; }
+  .ms-stat-chip { background: rgba(255,255,255,0.13); border-radius: 16px; padding: 12px 18px; min-width: 84px; }
+  .ms-stat-chip .num { font-family: 'Rubik', sans-serif; font-weight: 800; font-size: 22px; }
+  .ms-stat-chip .lbl { font-size: 11px; opacity: .82; margin-top: 3px; line-height: 1.3; }
+
+  .ms-habit-list { width: 100%; max-width: 340px; margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+  .ms-habit-row { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.12); border-radius: 14px; padding: 9px 12px; text-align: left; }
+  .ms-habit-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex: 0 0 auto; overflow: hidden; }
+  .ms-habit-icon img { width: 100%; height: 100%; object-fit: cover; }
+  .ms-habit-info { flex: 1; min-width: 0; }
+  .ms-habit-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ms-habit-bar-track { height: 6px; border-radius: 4px; background: rgba(255,255,255,0.2); margin-top: 5px; overflow: hidden; }
+  .ms-habit-bar-fill { height: 100%; border-radius: 4px; }
+  .ms-habit-pct { font-size: 12px; font-weight: 700; flex: 0 0 auto; opacity: .92; }
+  .ms-highlight-card { margin-top: 20px; background: rgba(255,255,255,0.12); border-radius: 18px; padding: 14px 18px; max-width: 320px; }
+  .ms-highlight-card .hc-label { font-size: 11.5px; opacity: .8; text-transform: uppercase; letter-spacing: .04em; }
+  .ms-highlight-card .hc-value { font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 16px; margin-top: 4px; }
+
+  .ms-mood-bars { display: flex; align-items: flex-end; gap: 12px; height: 120px; margin-top: 26px; }
+  .ms-mood-bar-col { display: flex; flex-direction: column; align-items: center; gap: 7px; width: 38px; }
+  .ms-mood-bar { width: 100%; border-radius: 8px 8px 3px 3px; min-height: 4px; }
+  .ms-mood-bar-emoji { font-size: 18px; }
+  .ms-mood-bar-count { font-size: 11px; opacity: .8; font-weight: 600; }
+
+  .ms-outro-btn {
+    margin-top: 30px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 999px; color: #fff; font-family: 'Inter', sans-serif; font-size: 15.5px; font-weight: 600;
+    padding: 15px 30px; cursor: pointer;
+  }
+  .ms-outro-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.24); }
   .nlo-spark {
     position: absolute; border-radius: 50%; pointer-events: none;
     background: var(--nlo-c1); opacity: 0;
@@ -3063,6 +3143,14 @@
   </div>
 </div>
 
+<!-- Оверлей "Підсумки місяця" — повноекранний скрол з кольоровими картками статистики -->
+<div class="monthlystats-overlay" id="monthlyStatsOverlay">
+  <div class="ms-close-btn" id="msCloseBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+  </div>
+  <div class="ms-scroll" id="msScroll"></div>
+</div>
+
 <!-- Оверлей "Списки": власні списки завдань, цілей чи бажань -->
 <div class="overlay" id="listsOverlay">
   <div class="modal lists-modal">
@@ -3351,6 +3439,7 @@ let waterGoalReachedDays = []; // ключі днів, коли ціль вод�
 let stopwatchState = { running: false, startedAt: null, elapsedMs: 0 }; // секундомір (переживає перезавантаження сторінки)
 let quickNoteText = '';  // швидка нотатка (один текстовий блокнот)
 let tallyCounter = 0;    // простий лічильник (наприклад, для підрахунку повторень чогось)
+let monthlyStatsShownKey = null; // 'yyyy-m' (місяць 0-індексований) — за який місяць вже показано попап "Підсумки місяця", щоб не спливав повторно
 let editingBookId = null;      // id книги, яку зараз редагуємо у формі (null — додаємо нову)
 let bookFormTargetShelf = null; // на яку поличку ставимо нову книгу (обрана натисканням на пунктирний слот)
 let bookFormTargetSlot = null; // на яке саме місце в межах полички ставимо нову книгу
@@ -3499,7 +3588,7 @@ function renderStorageBanner(){
 function saveState(){
   if (!storageAvailable) { showSaveStatus('Не збережено — сховище недоступне', true); return; }
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, lateFinishDays, earlyFinishDays, seenBadgeIds, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, weeklyCardsHidden, waterGoal, waterLog, waterGoalReachedDays, stopwatchState, quickNoteText, tallyCounter }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, lateFinishDays, earlyFinishDays, seenBadgeIds, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, weeklyCardsHidden, waterGoal, waterLog, waterGoalReachedDays, stopwatchState, quickNoteText, tallyCounter, monthlyStatsShownKey }));
     showSaveStatus('Збережено');
   }catch(e){
     console.error('Не вдалося зберегти дані:', e);
@@ -3570,6 +3659,7 @@ function loadState(){
       }
       quickNoteText = typeof parsed.quickNoteText === 'string' ? parsed.quickNoteText : '';
       tallyCounter = typeof parsed.tallyCounter === 'number' ? parsed.tallyCounter : 0;
+      monthlyStatsShownKey = typeof parsed.monthlyStatsShownKey === 'string' ? parsed.monthlyStatsShownKey : null;
       // Міграція старих записів без збереженої позиції на поличці (slot) —
       // проставляємо slot за поточним порядком книг у межах свого ряду.
       (() => {
@@ -9380,6 +9470,271 @@ document.getElementById('sproutOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'sproutOverlay') closeSproutOverlay();
 });
 
+/* ================= ПІДСУМКИ МІСЯЦЯ ================= */
+/* 1 числа кожного місяця (при першому заході в застосунок) показуємо повноекранний
+   кольоровий звіт зі статистикою за попередній календарний місяць — по кожній звичці
+   окремо, спільна статистика, водний баланс, настрій тощо. Показується рівно один раз
+   на місяць (прапорець monthlyStatsShownKey зберігається в localStorage). */
+
+const MONTHS_NOMINATIVE = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+const MS_WEEKDAY_NAMES = ['неділю','понеділок','вівторок','середу','четвер','пʼятницю','суботу'];
+
+// Збирає всю статистику за конкретний календарний місяць (month — 0-індексований).
+function computeMonthlyStatsSnapshot(year, month){
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const dates = [];
+  for (let d = 1; d <= daysInMonth; d++) dates.push(new Date(year, month, d));
+  const monthEnd = dates[dates.length - 1];
+
+  const relevantHabits = habits.filter(h => keyToDate(h.createdAt) <= monthEnd);
+
+  let due = 0, done = 0, frozen = 0, perfectDays = 0;
+  const perHabit = new Map();
+  const weekdayCounts = [0,0,0,0,0,0,0];
+
+  dates.forEach(d => {
+    const key = dayKey(d.getFullYear(), d.getMonth(), d.getDate());
+    let dueCount = 0, doneCount = 0;
+    relevantHabits.forEach(h => {
+      if (keyToDate(h.createdAt) > d) return;
+      if (!isDueOnDate(h, d)) return;
+      dueCount++; due++;
+      const rec = perHabit.get(h.id) || { h, due: 0, done: 0 };
+      rec.due++;
+      if (h.days[key] === true){
+        doneCount++; done++; rec.done++;
+        weekdayCounts[d.getDay()]++;
+      } else if (h.days[key] === 'frozen'){
+        frozen++;
+      }
+      perHabit.set(h.id, rec);
+    });
+    if (dueCount > 0 && doneCount === dueCount) perfectDays++;
+  });
+
+  const pct = due ? Math.round((done / due) * 100) : 0;
+
+  let bestWeekdayIdx = 0;
+  weekdayCounts.forEach((c, i) => { if (c > weekdayCounts[bestWeekdayIdx]) bestWeekdayIdx = i; });
+
+  const perHabitArr = [...perHabit.values()]
+    .map(rec => ({ h: rec.h, due: rec.due, done: rec.done, rate: rec.due ? Math.round((rec.done / rec.due) * 100) : 0 }))
+    .sort((a, b) => b.done - a.done);
+
+  let bestHabit = null, worstHabit = null;
+  perHabitArr.forEach(rec => {
+    if (rec.due < 3) return;
+    if (!bestHabit || rec.rate > bestHabit.rate) bestHabit = rec;
+    if (!worstHabit || rec.rate < worstHabit.rate) worstHabit = rec;
+  });
+  if (bestHabit && worstHabit && bestHabit.h.id === worstHabit.h.id) worstHabit = null;
+
+  // Водний баланс
+  let waterTotal = 0, waterDaysLogged = 0, waterDaysGoalReached = 0;
+  dates.forEach(d => {
+    const key = dayKey(d.getFullYear(), d.getMonth(), d.getDate());
+    const v = waterLog[key] || 0;
+    if (v > 0) waterDaysLogged++;
+    waterTotal += v;
+    if (waterGoalReachedDays.includes(key)) waterDaysGoalReached++;
+  });
+  const waterAvg = waterDaysLogged ? Math.round((waterTotal / daysInMonth) * 10) / 10 : 0;
+
+  // Настрій
+  const moodCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  let moodSum = 0, moodDays = 0;
+  dates.forEach(d => {
+    const key = dayKey(d.getFullYear(), d.getMonth(), d.getDate());
+    const m = moodLog[key];
+    if (m){ moodCounts[m] = (moodCounts[m] || 0) + 1; moodSum += m; moodDays++; }
+  });
+  const moodAvg = moodDays ? Math.round((moodSum / moodDays) * 10) / 10 : null;
+  const maxMoodCount = Math.max(1, ...Object.values(moodCounts));
+
+  // Швидкі завдання, завершені протягом місяця (архів)
+  const tasksCompleted = taskArchive.filter(t => {
+    const dt = keyToDate(t.dateKey);
+    return dt.getFullYear() === year && dt.getMonth() === month;
+  }).length;
+
+  const hasAnyData = relevantHabits.length > 0 || waterTotal > 0 || moodDays > 0 || tasksCompleted > 0;
+
+  return {
+    year, month, daysInMonth,
+    due, done, pct, frozen, perfectDays,
+    bestWeekdayIdx, bestWeekdayCount: weekdayCounts[bestWeekdayIdx],
+    perHabitArr, bestHabit, worstHabit,
+    waterTotal, waterAvg, waterDaysGoalReached, waterGoal, waterDaysLogged,
+    moodAvg, moodCounts, moodDays, maxMoodCount,
+    tasksCompleted,
+    sproutPoints: sprout.points || 0,
+    hasAnyData
+  };
+}
+
+function msHabitBarRow(rec){
+  const pctW = Math.max(4, rec.rate);
+  return `
+    <div class="ms-habit-row">
+      <div class="ms-habit-icon" style="background:linear-gradient(160deg, ${rec.h.colors[0]}, ${rec.h.colors[1]})">${habitIconMarkup(rec.h.icon, 'white')}</div>
+      <div class="ms-habit-info">
+        <div class="ms-habit-name">${escapeHtml(rec.h.name)}</div>
+        <div class="ms-habit-bar-track"><div class="ms-habit-bar-fill" style="width:${pctW}%; background:linear-gradient(90deg, ${rec.h.colors[0]}, ${rec.h.colors[1]})"></div></div>
+      </div>
+      <div class="ms-habit-pct">${rec.done}/${rec.due}</div>
+    </div>`;
+}
+
+function renderMonthlyStatsOverlay(data){
+  const scroll = document.getElementById('msScroll');
+  const monthLabel = MONTHS_NOMINATIVE[data.month];
+  const monthLabelGen = MONTHS_GENITIVE[data.month];
+
+  const slides = [];
+
+  // 1. Обкладинка
+  slides.push(`
+    <div class="ms-slide ms-slide-cover">
+      <div class="ms-emoji">🎉</div>
+      <div class="ms-eyebrow">Підсумки місяця</div>
+      <div class="ms-title">${monthLabel} ${data.year}</div>
+      <div class="ms-subtitle">Погортай вниз — зібрали для тебе всю статистику за минулий місяць: звички, воду, настрій і не тільки.</div>
+      <div class="ms-scroll-hint">
+        <span>Гортай вниз</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+    </div>`);
+
+  // 2. Загальна статистика
+  if (data.due > 0){
+    slides.push(`
+      <div class="ms-slide ms-slide-overall">
+        <div class="ms-eyebrow">Загальний результат</div>
+        <div class="ms-title">Ти виконав(-ла)</div>
+        <div class="ms-big-number">${data.pct}%</div>
+        <div class="ms-subtitle">запланованого за ${monthLabelGen} — ${data.done} із ${data.due} відміток по звичках</div>
+        <div class="ms-stat-row">
+          <div class="ms-stat-chip"><div class="num">${data.perfectDays}</div><div class="lbl">ідеальних&nbsp;днів</div></div>
+          <div class="ms-stat-chip"><div class="num">${data.frozen}</div><div class="lbl">заморозок</div></div>
+          <div class="ms-stat-chip"><div class="num">${data.bestWeekdayCount}</div><div class="lbl">найкращий день —<br>${MS_WEEKDAY_NAMES[data.bestWeekdayIdx]}</div></div>
+        </div>
+      </div>`);
+  }
+
+  // 3. Звички окремо
+  if (data.perHabitArr.length){
+    const top = data.perHabitArr.slice(0, 6);
+    slides.push(`
+      <div class="ms-slide ms-slide-habits">
+        <div class="ms-eyebrow">По кожному вогнику</div>
+        <div class="ms-title">Твої звички за ${monthLabelGen}</div>
+        <div class="ms-habit-list">${top.map(msHabitBarRow).join('')}</div>
+        ${data.bestHabit ? `
+        <div class="ms-highlight-card">
+          <div class="hc-label">🏆 Найстабільніша звичка</div>
+          <div class="hc-value">${escapeHtml(data.bestHabit.h.name)} — ${data.bestHabit.rate}%</div>
+        </div>` : ''}
+        ${data.worstHabit ? `
+        <div class="ms-highlight-card">
+          <div class="hc-label">💡 Варто підтягнути</div>
+          <div class="hc-value">${escapeHtml(data.worstHabit.h.name)} — ${data.worstHabit.rate}%</div>
+        </div>` : ''}
+      </div>`);
+  }
+
+  // 4. Водний баланс
+  if (data.waterTotal > 0){
+    slides.push(`
+      <div class="ms-slide ms-slide-water">
+        <div class="ms-emoji">💧</div>
+        <div class="ms-eyebrow">Водний баланс</div>
+        <div class="ms-big-number">${data.waterTotal}</div>
+        <div class="ms-subtitle">склянок води випито за ${monthLabelGen} — в середньому ${data.waterAvg} на день</div>
+        <div class="ms-stat-row">
+          <div class="ms-stat-chip"><div class="num">${data.waterDaysGoalReached}</div><div class="lbl">днів з<br>досягнутою ціллю</div></div>
+          <div class="ms-stat-chip"><div class="num">${data.waterGoal}</div><div class="lbl">склянок —<br>денна ціль</div></div>
+        </div>
+      </div>`);
+  }
+
+  // 5. Настрій
+  if (data.moodDays > 0){
+    const moodBars = [1,2,3,4,5].map(m => {
+      const c = data.moodCounts[m] || 0;
+      const h = Math.round((c / data.maxMoodCount) * 90) + (c > 0 ? 10 : 2);
+      return `
+        <div class="ms-mood-bar-col">
+          <div class="ms-mood-bar-count">${c}</div>
+          <div class="ms-mood-bar" style="height:${h}px; background:${MOOD_COLORS[m]}"></div>
+          <div class="ms-mood-bar-emoji">${MOOD_EMOJI[m]}</div>
+        </div>`;
+    }).join('');
+    slides.push(`
+      <div class="ms-slide ms-slide-mood">
+        <div class="ms-emoji">${data.moodAvg >= 4 ? '😄' : data.moodAvg >= 3 ? '🙂' : data.moodAvg >= 2 ? '😐' : '🙁'}</div>
+        <div class="ms-eyebrow">Настрій місяця</div>
+        <div class="ms-title">Середній настрій — ${data.moodAvg} із 5</div>
+        <div class="ms-mood-bars">${moodBars}</div>
+        <div class="ms-subtitle" style="margin-top:22px;">відмічено ${data.moodDays} із ${data.daysInMonth} днів</div>
+      </div>`);
+  }
+
+  // 6. Додатково: швидкі задачі + росток
+  slides.push(`
+    <div class="ms-slide ms-slide-extra">
+      <div class="ms-emoji">✨</div>
+      <div class="ms-eyebrow">А ще</div>
+      <div class="ms-stat-row">
+        <div class="ms-stat-chip"><div class="num">${data.tasksCompleted}</div><div class="lbl">швидких завдань<br>виконано</div></div>
+        <div class="ms-stat-chip"><div class="num">${data.sproutPoints}</div><div class="lbl">балів ростка<br>всього</div></div>
+      </div>
+      <div class="ms-subtitle" style="margin-top:20px;">Кожна маленька дія рухає тебе вперед 🌱</div>
+    </div>`);
+
+  // 7. Фінал
+  slides.push(`
+    <div class="ms-slide ms-slide-outro">
+      <div class="ms-emoji">🚀</div>
+      <div class="ms-title">Новий місяць — нові звички!</div>
+      <div class="ms-subtitle">Продовжуй в тому ж дусі. До зустрічі з підсумками наступного місяця.</div>
+      <div class="ms-outro-btn" id="msOutroCloseBtn">Гайда далі</div>
+    </div>`);
+
+  scroll.innerHTML = slides.join('');
+  scroll.scrollTop = 0;
+  const outroBtn = document.getElementById('msOutroCloseBtn');
+  if (outroBtn) outroBtn.addEventListener('click', closeMonthlyStatsOverlay);
+}
+
+function openMonthlyStatsOverlay(data){
+  renderMonthlyStatsOverlay(data);
+  document.getElementById('monthlyStatsOverlay').classList.add('open');
+}
+function closeMonthlyStatsOverlay(){
+  document.getElementById('monthlyStatsOverlay').classList.remove('open');
+}
+document.getElementById('msCloseBtn').addEventListener('click', closeMonthlyStatsOverlay);
+
+// Перевіряє при заході в застосунок: якщо сьогодні 1 число нового місяця і статистику
+// за попередній місяць ще не показували — показує повноекранний звіт.
+function checkMonthlyStats(){
+  const now = new Date();
+  if (now.getDate() !== 1) return;
+  const curKey = `${now.getFullYear()}-${now.getMonth()}`;
+  if (monthlyStatsShownKey === curKey) return;
+  if (document.querySelector('.overlay.open, .newlevel-overlay.open, .badge-unlock-overlay.open')) return;
+
+  let py = now.getFullYear(), pm = now.getMonth() - 1;
+  if (pm < 0){ pm = 11; py -= 1; }
+  const data = computeMonthlyStatsSnapshot(py, pm);
+
+  monthlyStatsShownKey = curKey;
+  saveState();
+
+  if (!data.hasAnyData) return; // нема що показувати (наприклад, це перший місяць користування застосунком)
+  openMonthlyStatsOverlay(data);
+}
+
 document.getElementById('mainArea').innerHTML = '<div class="loading-state">Завантаження…</div>';
 renderStorageBanner();
 loadState();
@@ -9388,6 +9743,7 @@ checkDayRollover();
 renderAll();
 checkReminders();
 checkMoodPrompt();
+checkMonthlyStats();
 </script>
 
 <script>
