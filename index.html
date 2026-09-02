@@ -5615,7 +5615,7 @@ function saveBookForm(){
       const prevStatus = book.status;
       book.status = bookFormStatus;
       if (bookFormStatus === 'read'){
-        if (prevStatus !== 'read') book.finishedAt = bookTodayKey();
+        if (prevStatus !== 'read' || !book.finishedAt) book.finishedAt = bookTodayKey();
       } else {
         book.rating = 0;
         book.finishedAt = null;
@@ -5724,7 +5724,7 @@ function renderBookCardBody(){
       btn.addEventListener('click', () => {
         const newStatus = btn.dataset.pickStatus;
         bookCardStatusPicking = false;
-        if (newStatus !== book.status){
+        if (newStatus !== book.status || (newStatus === 'read' && !book.finishedAt)){
           if (!book.startedAt) book.startedAt = bookTodayKey(); // на випадок старих книг без дати початку
           book.status = newStatus;
           book.finishedAt = (newStatus === 'read') ? bookTodayKey() : null;
