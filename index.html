@@ -2164,6 +2164,14 @@
   .book-status-pick-btn:active { transform: scale(0.94); }
   .book-status-pick-btn.reading.active { background: rgba(62,155,255,0.14); color: #3E9BFF; border-color: rgba(62,155,255,0.4); }
   .book-status-pick-btn.read.active { background: rgba(83,214,178,0.14); color: #53D6B2; border-color: rgba(83,214,178,0.4); }
+  .book-card-dates {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    text-align: center; margin: -8px 0 16px;
+    font-size: 12.5px; color: var(--text-tertiary);
+  }
+  .book-card-dates-days {
+    font-size: 11.5px; font-weight: 600; color: var(--text-tertiary); opacity: 0.85;
+  }
   .book-card-rating {
     display: flex;
     justify-content: center;
@@ -5389,6 +5397,45 @@ function bookWord(n){
 function pickBookColor(){ return BOOK_COLOR_PALETTE[Math.floor(Math.random() * BOOK_COLOR_PALETTE.length)]; }
 function makeBookId(){ return 'book_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); }
 
+/* ---------- Дати читання книги (коли почав, коли прочитав, скільки днів читав) ---------- */
+function bookTodayKey(){
+  const d = new Date();
+  return dayKey(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function formatBookDate(key){
+  if (!key) return '';
+  const d = keyToDate(key);
+  const now = new Date();
+  const yearSuffix = d.getFullYear() !== now.getFullYear() ? ` ${d.getFullYear()}` : '';
+  return `${d.getDate()} ${MONTHS_GENITIVE[d.getMonth()]}${yearSuffix}`;
+}
+function bookDaysWord(n){
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'день';
+  if ([2,3,4].includes(mod10) && ![12,13,14].includes(mod100)) return 'дні';
+  return 'днів';
+}
+// Кількість днів читання: включно з днем початку і днем завершення (мінімум 1 день).
+function bookReadingDays(startKey, endKey){
+  if (!startKey || !endKey) return null;
+  const diff = Math.round((keyToDate(endKey) - keyToDate(startKey)) / 86400000);
+  return Math.max(1, diff + 1);
+}
+// HTML-блок з датами для картки книги: коли почав читати, і якщо прочитано —
+// коли прочитав та скільки днів читав.
+function bookDatesHtml(book){
+  if (!book.startedAt) return '';
+  const startedLabel = formatBookDate(book.startedAt);
+  if (book.status === 'read' && book.finishedAt){
+    const days = bookReadingDays(book.startedAt, book.finishedAt);
+    return `<div class="book-card-dates">
+      <span>${startedLabel} — ${formatBookDate(book.finishedAt)}</span>
+      <span class="book-card-dates-days">${days} ${bookDaysWord(days)} читання</span>
+    </div>`;
+  }
+  return `<div class="book-card-dates"><span>Читаю з ${startedLabel}</span></div>`;
+}
+
 // Обкладинка вперед: фото, якщо є, або кольорова "обкладинка" з назвою книги
 function bookSlotCoverHtml(book){
   const dropClass = (book.id === justPlacedBookId) ? ' book-slot-drop' : '';
@@ -5550,8 +5597,15 @@ function saveBookForm(){
       book.title = title;
       book.notes = notes;
       book.cover = bookCoverDataUrl;
+      if (!book.startedAt) book.startedAt = bookTodayKey(); // на випадок старих книг без дати початку
+      const prevStatus = book.status;
       book.status = bookFormStatus;
-      if (bookFormStatus !== 'read') book.rating = 0;
+      if (bookFormStatus === 'read'){
+        if (prevStatus !== 'read') book.finishedAt = bookTodayKey();
+      } else {
+        book.rating = 0;
+        book.finishedAt = null;
+      }
       if (typeof book.rating !== 'number') book.rating = 0;
     }
     saveState();
@@ -5576,6 +5630,7 @@ function saveBookForm(){
       closeBookForm();
       return; // полиця повністю заповнена
     }
+    const startedAt = bookTodayKey();
     const book = {
       id: makeBookId(),
       title, notes,
@@ -5584,7 +5639,9 @@ function saveBookForm(){
       rating: 0,
       color: pickBookColor(),
       shelf,
-      slot
+      slot,
+      startedAt,
+      finishedAt: bookFormStatus === 'read' ? startedAt : null
     };
     bookshelfBooks.push(book);
     justPlacedBookId = book.id;
@@ -5640,6 +5697,7 @@ function renderBookCardBody(){
         <span class="book-status-badge ${book.status}" id="bookCardStatusBadge" title="Тицьни, щоб обрати статус">${book.status === 'read' ? '✓ Прочитано' : '📖 Читаю'}</span>
       `}
     </div>
+    ${bookDatesHtml(book)}
     ${book.status === 'read' ? bookRatingHtml(book.rating || 0) : ''}
     ${book.notes ? `<div class="book-card-notes">${escapeHtml(book.notes)}</div>` : ''}
     <div class="book-card-actions">
@@ -5653,7 +5711,10 @@ function renderBookCardBody(){
         const newStatus = btn.dataset.pickStatus;
         bookCardStatusPicking = false;
         if (newStatus !== book.status){
+          if (!book.startedAt) book.startedAt = bookTodayKey(); // на випадок старих книг без дати початку
           book.status = newStatus;
+          book.finishedAt = (newStatus === 'read') ? bookTodayKey() : null;
+          if (newStatus !== 'read') book.rating = 0;
           saveState();
           if (listsView.screen === 'bookshelf') renderBookshelfDetail();
         }
