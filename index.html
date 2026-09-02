@@ -3665,6 +3665,12 @@ function loadState(){
         if (!Array.isArray(l.items)) l.items = [];
       });
       bookshelfBooks = Array.isArray(parsed.bookshelfBooks) ? parsed.bookshelfBooks : [];
+      // Міграція для книг, доданих до появи дат читання: проставляємо дату "сьогодні",
+      // щоб дати й лічильник днів з'явились одразу, без повторного редагування книги.
+      bookshelfBooks.forEach(b => {
+        if (!b.startedAt) b.startedAt = bookTodayKey();
+        if (b.status === 'read' && !b.finishedAt) b.finishedAt = b.startedAt;
+      });
       weeklyCardsHidden = typeof parsed.weeklyCardsHidden === 'boolean' ? parsed.weeklyCardsHidden : false;
       waterGoal = (typeof parsed.waterGoal === 'number' && parsed.waterGoal > 0) ? parsed.waterGoal : 8;
       waterLog = (parsed.waterLog && typeof parsed.waterLog === 'object') ? parsed.waterLog : {};
