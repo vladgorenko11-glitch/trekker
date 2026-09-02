@@ -3665,11 +3665,18 @@ function loadState(){
         if (!Array.isArray(l.items)) l.items = [];
       });
       bookshelfBooks = Array.isArray(parsed.bookshelfBooks) ? parsed.bookshelfBooks : [];
-      // Міграція для книг, доданих до появи дат читання: проставляємо дату "сьогодні",
-      // щоб дати й лічильник днів з'явились одразу, без повторного редагування книги.
+      // Міграція для книг, доданих до появи дат читання: у id книги (book_<часова мітка>_...)
+      // закодовано реальний момент додавання на полицю — беремо дату звідти, а не "сьогодні".
+      // Дату завершення читання для вже прочитаних раніше книг ніде не зберігалось,
+      // тож її свідомо не вигадуємо — вона проставиться коректно з наступної зміни статусу.
       bookshelfBooks.forEach(b => {
-        if (!b.startedAt) b.startedAt = bookTodayKey();
-        if (b.status === 'read' && !b.finishedAt) b.finishedAt = b.startedAt;
+        const m = /^book_(\d+)_/.exec(b.id || '');
+        if (m){
+          const d = new Date(Number(m[1]));
+          b.startedAt = dayKey(d.getFullYear(), d.getMonth(), d.getDate());
+        } else if (!b.startedAt){
+          b.startedAt = bookTodayKey();
+        }
       });
       weeklyCardsHidden = typeof parsed.weeklyCardsHidden === 'boolean' ? parsed.weeklyCardsHidden : false;
       waterGoal = (typeof parsed.waterGoal === 'number' && parsed.waterGoal > 0) ? parsed.waterGoal : 8;
@@ -5439,7 +5446,8 @@ function bookDatesHtml(book){
       <span class="book-card-dates-days">${days} ${bookDaysWord(days)} читання</span>
     </div>`;
   }
-  return `<div class="book-card-dates"><span>Читаю з ${startedLabel}</span></div>`;
+  const label = (book.status === 'read') ? 'На полиці з' : 'Читаю з';
+  return `<div class="book-card-dates"><span>${label} ${startedLabel}</span></div>`;
 }
 
 // Обкладинка вперед: фото, якщо є, або кольорова "обкладинка" з назвою книги
