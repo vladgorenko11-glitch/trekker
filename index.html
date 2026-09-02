@@ -5467,8 +5467,14 @@ function bookDatesHtml(book){
       <span class="book-card-dates-days">Прочитано за ${days} ${bookDaysWord(days)}</span>
     </div>`;
   }
-  const label = (book.status === 'read') ? 'На полиці з' : 'Читаю з';
-  return `<div class="book-card-dates"><span>${label} ${startedLabel}</span></div>`;
+  if (book.status === 'reading'){
+    const days = bookReadingDays(book.startedAt, bookTodayKey());
+    return `<div class="book-card-dates">
+      <span>Читаю з ${startedLabel}</span>
+      <span class="book-card-dates-days">Читаю вже ${days} ${bookDaysWord(days)}</span>
+    </div>`;
+  }
+  return `<div class="book-card-dates"><span>На полиці з ${startedLabel}</span></div>`;
 }
 
 // Обкладинка вперед: фото, якщо є, або кольорова "обкладинка" з назвою книги
