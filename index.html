@@ -2672,6 +2672,7 @@
     margin-bottom: 20px;
   }
   .text-input:focus { outline: none; border-color: #3E9BFF; }
+  .text-input[type="date"] { color-scheme: dark; }
 
   .icon-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
   .icon-option {
@@ -3215,6 +3216,14 @@
     <div class="freq-row">
       <button class="freq-btn active" id="bookStatusReadingBtn" type="button">Читаю</button>
       <button class="freq-btn" id="bookStatusReadBtn" type="button">Прочитано</button>
+    </div>
+
+    <div class="field-label">Дата початку читання</div>
+    <input class="text-input" type="date" id="bookStartDateInput">
+
+    <div id="bookEndDateWrap">
+      <div class="field-label">Дата завершення читання</div>
+      <input class="text-input" type="date" id="bookEndDateInput">
     </div>
 
     <div class="field-label">Нотатки (необов'язково)</div>
@@ -5428,6 +5437,18 @@ function bookDaysWord(n){
   if ([2,3,4].includes(mod10) && ![12,13,14].includes(mod100)) return 'дні';
   return 'днів';
 }
+// Наш dayKey зберігає місяць з 0 (як getMonth()), а <input type="date"> хоче
+// стандартний ISO-формат yyyy-MM-dd з місяцем від 1 і провідними нулями.
+function dayKeyToInputDate(key){
+  if (!key) return '';
+  const [y, m, d] = key.split('-').map(Number);
+  return `${y}-${pad2(m + 1)}-${pad2(d)}`;
+}
+function inputDateToDayKey(value){
+  if (!value) return null;
+  const [y, m, d] = value.split('-').map(Number);
+  return dayKey(y, m - 1, d);
+}
 // Кількість днів читання: включно з днем початку і днем завершення (мінімум 1 день).
 function bookReadingDays(startKey, endKey){
   if (!startKey || !endKey) return null;
@@ -5443,7 +5464,7 @@ function bookDatesHtml(book){
     const days = bookReadingDays(book.startedAt, book.finishedAt);
     return `<div class="book-card-dates">
       <span>${startedLabel} — ${formatBookDate(book.finishedAt)}</span>
-      <span class="book-card-dates-days">${days} ${bookDaysWord(days)} читання</span>
+      <span class="book-card-dates-days">Прочитано за ${days} ${bookDaysWord(days)}</span>
     </div>`;
   }
   const label = (book.status === 'read') ? 'На полиці з' : 'Читаю з';
@@ -5533,6 +5554,8 @@ function openBookForm(book, targetShelf, targetSlot){
   document.getElementById('bookFormTitleEl').textContent = book ? 'Редагувати книгу' : 'Нова книга';
   document.getElementById('bookTitleInput').value = book ? book.title : '';
   document.getElementById('bookNotesInput').value = book ? (book.notes || '') : '';
+  document.getElementById('bookStartDateInput').value = dayKeyToInputDate(book && book.startedAt ? book.startedAt : bookTodayKey());
+  document.getElementById('bookEndDateInput').value = dayKeyToInputDate(book && book.finishedAt ? book.finishedAt : bookTodayKey());
   updateBookCoverPreview();
   updateBookStatusButtons();
 
@@ -5570,6 +5593,8 @@ function updateBookCoverPreview(){
 function updateBookStatusButtons(){
   document.getElementById('bookStatusReadingBtn').classList.toggle('active', bookFormStatus === 'reading');
   document.getElementById('bookStatusReadBtn').classList.toggle('active', bookFormStatus === 'read');
+  // Дата завершення має сенс тільки для прочитаної книги — ховаємо поле для "Читаю".
+  document.getElementById('bookEndDateWrap').style.display = (bookFormStatus === 'read') ? 'block' : 'none';
 }
 
 function readAndResizeCoverImage(file, maxDim){
@@ -5604,6 +5629,12 @@ function saveBookForm(){
     return;
   }
   const notes = document.getElementById('bookNotesInput').value.trim();
+  const startedAt = inputDateToDayKey(document.getElementById('bookStartDateInput').value) || bookTodayKey();
+  let finishedAt = (bookFormStatus === 'read')
+    ? (inputDateToDayKey(document.getElementById('bookEndDateInput').value) || bookTodayKey())
+    : null;
+  // Дата завершення не може бути раніше дати початку — якщо переплутали, підтягуємо до дати початку.
+  if (finishedAt && keyToDate(finishedAt) < keyToDate(startedAt)) finishedAt = startedAt;
 
   if (editingBookId){
     const book = bookshelfBooks.find(b => b.id === editingBookId);
@@ -5611,15 +5642,10 @@ function saveBookForm(){
       book.title = title;
       book.notes = notes;
       book.cover = bookCoverDataUrl;
-      if (!book.startedAt) book.startedAt = bookTodayKey(); // на випадок старих книг без дати початку
-      const prevStatus = book.status;
       book.status = bookFormStatus;
-      if (bookFormStatus === 'read'){
-        if (prevStatus !== 'read' || !book.finishedAt) book.finishedAt = bookTodayKey();
-      } else {
-        book.rating = 0;
-        book.finishedAt = null;
-      }
+      book.startedAt = startedAt;
+      book.finishedAt = finishedAt;
+      if (bookFormStatus !== 'read') book.rating = 0;
       if (typeof book.rating !== 'number') book.rating = 0;
     }
     saveState();
@@ -5644,7 +5670,6 @@ function saveBookForm(){
       closeBookForm();
       return; // полиця повністю заповнена
     }
-    const startedAt = bookTodayKey();
     const book = {
       id: makeBookId(),
       title, notes,
@@ -5655,7 +5680,7 @@ function saveBookForm(){
       shelf,
       slot,
       startedAt,
-      finishedAt: bookFormStatus === 'read' ? startedAt : null
+      finishedAt
     };
     bookshelfBooks.push(book);
     justPlacedBookId = book.id;
