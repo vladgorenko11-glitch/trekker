@@ -3674,16 +3674,16 @@ function loadState(){
         if (!Array.isArray(l.items)) l.items = [];
       });
       bookshelfBooks = Array.isArray(parsed.bookshelfBooks) ? parsed.bookshelfBooks : [];
-      // Міграція для книг, доданих до появи дат читання: у id книги (book_<часова мітка>_...)
-      // закодовано реальний момент додавання на полицю — беремо дату звідти, а не "сьогодні".
-      // Дату завершення читання для вже прочитаних раніше книг ніде не зберігалось,
-      // тож її свідомо не вигадуємо — вона проставиться коректно з наступної зміни статусу.
+      // Міграція для книг, доданих до появи дат читання: якщо дата початку ще не збережена,
+      // беремо її з id книги (book_<часова мітка>_...) — там закодовано реальний момент
+      // додавання на полицю. Якщо дата вже є (в т.ч. вручну змінена користувачем) — не чіпаємо її.
       bookshelfBooks.forEach(b => {
+        if (b.startedAt) return;
         const m = /^book_(\d+)_/.exec(b.id || '');
         if (m){
           const d = new Date(Number(m[1]));
           b.startedAt = dayKey(d.getFullYear(), d.getMonth(), d.getDate());
-        } else if (!b.startedAt){
+        } else {
           b.startedAt = bookTodayKey();
         }
       });
@@ -5450,10 +5450,19 @@ function inputDateToDayKey(value){
   return dayKey(y, m - 1, d);
 }
 // Кількість днів читання: включно з днем початку і днем завершення (мінімум 1 день).
+// Використовується для завершеної книги ("Прочитано за N днів") — там і день початку,
+// і день завершення зараховуються як дні читання.
 function bookReadingDays(startKey, endKey){
   if (!startKey || !endKey) return null;
   const diff = Math.round((keyToDate(endKey) - keyToDate(startKey)) / 86400000);
   return Math.max(1, diff + 1);
+}
+// Скільки календарних днів минуло з дати початку до сьогодні (для книги, яку ще читають) —
+// просто різниця дат, без "+1", щоб не завищувати число (напр. з 28 серпня по 2 вересня — 5 днів).
+function bookDaysElapsedSinceStart(startKey){
+  if (!startKey) return 0;
+  const diff = Math.round((keyToDate(bookTodayKey()) - keyToDate(startKey)) / 86400000);
+  return Math.max(0, diff);
 }
 // HTML-блок з датами для картки книги: коли почав читати, і якщо прочитано —
 // коли прочитав та скільки днів читав.
@@ -5468,10 +5477,11 @@ function bookDatesHtml(book){
     </div>`;
   }
   if (book.status === 'reading'){
-    const days = bookReadingDays(book.startedAt, bookTodayKey());
+    const days = bookDaysElapsedSinceStart(book.startedAt);
+    const daysLine = days === 0 ? 'Розпочато сьогодні' : `Читаю вже ${days} ${bookDaysWord(days)}`;
     return `<div class="book-card-dates">
       <span>Читаю з ${startedLabel}</span>
-      <span class="book-card-dates-days">Читаю вже ${days} ${bookDaysWord(days)}</span>
+      <span class="book-card-dates-days">${daysLine}</span>
     </div>`;
   }
   return `<div class="book-card-dates"><span>На полиці з ${startedLabel}</span></div>`;
