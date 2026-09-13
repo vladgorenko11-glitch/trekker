@@ -748,57 +748,99 @@
 
   .sprout-modal {
     width: 100%;
-    background: linear-gradient(165deg, #1E7A4C 0%, #123F27 65%, #0B2A19 100%);
-    border-radius: 22px 22px 0 0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(120,255,180,0.10) 0%, transparent 45%),
+      linear-gradient(180deg, #13492E 0%, #0C3122 45%, #071C13 100%);
+    border-radius: 28px 28px 0 0;
     overflow: hidden;
     display: flex; flex-direction: column;
     min-height: 82vh;
+    position: relative;
   }
   .sprout-topbar {
-    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-    padding: 16px 16px 0;
+    display: grid; grid-template-columns: auto 1fr auto; align-items: center;
+    gap: 10px;
+    padding: 16px 16px 4px;
     font-family: 'Rubik', sans-serif;
   }
-  .sprout-topbar-close { justify-self: start; color: rgba(255,255,255,0.85); font-size: 14.5px; cursor: pointer; padding: 6px 2px; }
-  .sprout-topbar-title { justify-self: center; text-align: center; }
-  .sprout-topbar-title .t1 { font-size: 15px; font-weight: 600; color: #fff; }
-  .sprout-topbar-title .t2 { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 1px; }
-  .sprout-topbar-more {
-    justify-self: end;
-    width: 26px; height: 26px; border-radius: 50%;
-    background: rgba(255,255,255,0.12);
+  .sprout-topbar-close {
+    justify-self: start;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,0.09);
+    border: 1px solid rgba(255,255,255,0.16);
     display: flex; align-items: center; justify-content: center;
-    color: rgba(255,255,255,0.8); font-size: 15px; cursor: pointer;
+    color: rgba(255,255,255,0.85);
+    cursor: pointer;
   }
+  .sprout-topbar-close svg { width: 16px; height: 16px; }
+  .sprout-topbar-title { justify-self: center; text-align: center; }
+  .sprout-topbar-title .t1 { font-family: 'Playfair Display', 'Rubik', serif; font-size: 18px; font-weight: 600; color: #fff; letter-spacing: .01em; }
+  .sprout-topbar-title .t2 { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: rgba(210,255,225,0.5); margin-top: 2px; }
   .sprout-info-btn {
-    width: 26px; height: 26px; border-radius: 50%;
-    background: rgba(255,255,255,0.12);
+    position: relative;
+    justify-self: end;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,0.09);
+    border: 1px solid rgba(255,255,255,0.16);
     display: flex; align-items: center; justify-content: center;
-    color: rgba(255,255,255,0.8); font-size: 13px; cursor: pointer;
-    margin: 14px 0 0 16px;
+    color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  /* ---------- Банер-картка на кшталт "Bring Greenery to Life" ---------- */
+  .sprout-hero-panel {
+    margin: 14px 16px 0;
+    padding: 18px 16px 0;
+    border-radius: 26px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.09);
+    position: relative;
+    overflow: hidden;
+    min-height: 190px;
+  }
+  .sprout-hero-heading {
+    font-family: 'Playfair Display', 'Rubik', serif;
+    font-size: 22px; line-height: 1.22; font-weight: 600;
+    color: #fff; max-width: 62%;
+  }
+  .sprout-hero-heading .accent { color: #9FEBA9; }
+  .sprout-hero-sub {
+    margin-top: 8px; max-width: 58%;
+    font-size: 11.5px; line-height: 1.4;
+    color: rgba(225,255,235,0.6);
+  }
+  .sprout-level-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    margin-top: 14px;
+    font-family: 'Rubik', sans-serif;
+    font-size: 11.5px; font-weight: 600; letter-spacing: .01em;
+    color: #123F27;
+    background: linear-gradient(90deg, #C7F5C6, #8CE99A);
+    border-radius: 20px; padding: 7px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.22);
   }
   .sprout-hero {
-    display: flex; align-items: center; justify-content: center;
-    padding: 6px 0 10px;
+    display: flex; align-items: flex-end; justify-content: center;
     -webkit-tap-highlight-color: transparent;
-    position: relative;
+    position: absolute;
+    right: -6px; bottom: -10px;
+    width: 148px; height: 148px;
   }
   .sprout-hero::before {
     content: '';
     position: absolute;
-    width: 120px; height: 120px;
-    left: 50%; top: 50%;
+    width: 140px; height: 140px;
+    left: 50%; top: 55%;
     transform: translate(-50%, -50%);
-    background: radial-gradient(circle, rgba(90,230,150,0.5) 0%, rgba(90,230,150,0.22) 45%, transparent 72%);
+    background: radial-gradient(circle, rgba(120,240,170,0.5) 0%, rgba(90,230,150,0.2) 45%, transparent 72%);
     filter: blur(14px);
     pointer-events: none;
     z-index: 0;
   }
   .sprout-hero-emoji {
-    width: 160px; height: 160px;
+    width: 148px; height: 148px;
     object-fit: contain;
     position: relative;
     z-index: 1;
+    cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -806,61 +848,114 @@
     outline: none;
     -webkit-user-drag: none;
   }
+  /* ---------- Рядок іконок-статів (на кшталт Water / Light / Humidity) ---------- */
+  .sprout-stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 14px 16px 0;
+  }
+  .sprout-stat-chip {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 10px 4px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .sprout-stat-chip.active {
+    background: linear-gradient(160deg, rgba(140,233,154,0.24), rgba(140,233,154,0.08));
+    border-color: rgba(140,233,154,0.4);
+  }
+  .sprout-stat-icon { font-size: 15px; }
+  .sprout-stat-label { font-size: 9.5px; color: rgba(225,255,235,0.5); text-transform: uppercase; letter-spacing: .03em; }
+  .sprout-stat-value { font-size: 12.5px; font-weight: 700; color: #fff; }
   .sprout-progress-wrap {
-    margin: 4px 20px 6px;
-    height: 34px;
-    border-radius: 17px;
-    background: rgba(0,0,0,0.25);
-    border: 1px solid rgba(255,255,255,0.12);
+    margin: 12px 16px 0;
+    height: 28px;
+    border-radius: 14px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
     position: relative;
     overflow: hidden;
   }
   .sprout-progress-fill {
     position: absolute; inset: 0 auto 0 0;
     background: linear-gradient(90deg, #2FBF71, #8CE99A);
-    border-radius: 17px;
+    border-radius: 14px;
     transition: width .25s ease;
   }
   .sprout-progress-label {
     position: relative; z-index: 1;
     height: 100%; display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.92);
+    font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,0.92);
   }
   .sprout-next-level-label {
-    margin: 0 20px 20px;
+    margin: 8px 16px 0;
     text-align: center;
-    font-size: 12px; line-height: 1.3;
-    color: var(--text-tertiary, rgba(255,255,255,0.55));
+    font-size: 11.5px; line-height: 1.3;
+    color: rgba(210,255,225,0.5);
   }
   .sprout-card {
-    background: var(--bg-primary, #0F0D14);
-    border-radius: 22px 22px 0 0;
-    padding: 22px 20px 24px;
+    background: transparent;
+    padding: 22px 16px 24px;
+    margin-top: 6px;
     flex: 1;
   }
-  .sprout-name-row {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
+  .sprout-name-card {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 18px;
+    padding: 14px 16px;
   }
+  .sprout-name-avatar {
+    width: 42px; height: 42px; border-radius: 13px; flex: 0 0 auto;
+    background: linear-gradient(155deg, #8CE99A, #1E7A4C);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 19px;
+  }
+  .sprout-name-body { flex: 1; min-width: 0; }
+  .sprout-name-row { display: flex; align-items: center; gap: 8px; }
   .sprout-name-row input {
     font-family: 'Rubik', sans-serif;
-    font-size: 22px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
-    text-align: center;
-    background: none; border: none; color: var(--text-primary);
-    max-width: 220px;
+    font-size: 17px; font-weight: 700; letter-spacing: .01em;
+    text-align: left;
+    background: none; border: none; color: #fff;
+    max-width: 200px; flex: 1; min-width: 0;
+    padding: 0;
   }
-  .sprout-name-row input:focus { outline: none; border-bottom: 1px dashed var(--card-border); }
-  .sprout-name-edit-icon { width: 16px; height: 16px; color: var(--text-tertiary); cursor: pointer; flex: 0 0 auto; }
-  .sprout-name-sub { text-align: center; font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px; }
-  .sprout-quests-title { font-family: 'Rubik', sans-serif; font-size: 16px; font-weight: 600; text-align: center; margin: 20px 0 12px; }
+  .sprout-name-row input:focus { outline: none; border-bottom: 1px dashed rgba(255,255,255,0.3); }
+  .sprout-name-edit-icon { width: 15px; height: 15px; color: rgba(255,255,255,0.45); cursor: pointer; flex: 0 0 auto; }
+  .sprout-name-sub { font-size: 11.5px; color: rgba(210,255,225,0.45); margin-top: 2px; }
+  .sprout-quests-title { font-family: 'Rubik', sans-serif; font-size: 15px; font-weight: 600; color: #fff; margin: 22px 2px 10px; }
+  .sprout-quest-list { display: flex; flex-direction: column; gap: 8px; }
   .sprout-quest-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 2px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 10px;
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
   }
-  .sprout-quest-text { flex: 1; font-size: 13.5px; color: var(--text-primary); }
+  .sprout-quest-icon {
+    width: 36px; height: 36px; border-radius: 11px; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    background: rgba(140,233,154,0.22);
+  }
+  .sprout-quest-icon.icon-flame { background: rgba(255,158,90,0.22); }
+  .sprout-quest-icon.icon-bolt { background: rgba(255,214,90,0.22); }
+  .sprout-quest-icon.icon-medal { background: rgba(255,196,60,0.22); }
+  .sprout-quest-icon.icon-calendar { background: rgba(110,180,255,0.22); }
+  .sprout-quest-icon.icon-freeze { background: rgba(150,215,255,0.22); }
+  .sprout-quest-row.sprout-quest-negative .sprout-quest-icon { background: rgba(150,215,255,0.22); }
+  .sprout-quest-text { flex: 1; font-size: 13.5px; color: #fff; line-height: 1.3; }
   .sprout-quest-points {
-    font-size: 12px; font-weight: 600; color: #6FE39B;
-    background: rgba(47,191,113,0.14);
-    border-radius: 20px; padding: 3px 9px; flex: 0 0 auto;
+    font-size: 12.5px; font-weight: 700; color: #123F27;
+    background: linear-gradient(90deg, #C7F5C6, #8CE99A);
+    border-radius: 20px; padding: 5px 11px; flex: 0 0 auto;
+  }
+  .sprout-quest-row.sprout-quest-negative .sprout-quest-points {
+    color: #6E1B1B;
+    background: linear-gradient(90deg, #FFD3D3, #FF9E9E);
   }
 
   /* ---------- Швидкі завдання на день (без вогника, окремо від звичок) ---------- */
@@ -10202,6 +10297,15 @@ function makeFreshSproutUrl(stage){
   return SPROUT_STAGE_VIDEOS[stage] + '#r' + sproutAnimCounter + '_' + Date.now();
 }
 
+// Різні емодзі-іконки та кольори фону для кожної умови нарахування балів ростка (за id з sprout.quests)
+const SPROUT_QUEST_ICONS = {
+  q1: { emoji: '🔥', cls: 'icon-flame' },     // продовж 1 вогник
+  q2: { emoji: '⚡', cls: 'icon-bolt' },       // продовж всі вогники, що є
+  q3: { emoji: '🏅', cls: 'icon-medal' },      // відкрий нову форму вогника
+  q4: { emoji: '📅', cls: 'icon-calendar' },   // виконай тижневе завдання
+  q5: { emoji: '❄️', cls: 'icon-freeze' },     // заморозь вогник (мінус бали)
+};
+
 function renderSproutOverlay(){
   const wrap = document.getElementById('sproutModalWrap');
   const progress = sproutProgress();
@@ -10220,34 +10324,68 @@ function renderSproutOverlay(){
   wrap.innerHTML = `
     <div class="sprout-modal">
       <div class="sprout-topbar">
-        <div class="sprout-topbar-close" id="sproutCloseBtn">Закрити</div>
+        <div class="sprout-topbar-close" id="sproutCloseBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
         <div class="sprout-topbar-title">
           <div class="t1">Росток</div>
           <div class="t2">мінізастосунок</div>
         </div>
-        <div class="sprout-topbar-more">⋯</div>
+        <div class="sprout-info-btn" id="sproutInfoBtn">i</div>
       </div>
-      <div class="sprout-info-btn" id="sproutInfoBtn">i</div>
-      <div class="sprout-hero">
-        <img class="sprout-hero-emoji" id="sproutHeroImg" src="${makeFreshSproutUrl(stage)}" alt="Росток" style="cursor:pointer;" />
+      <div class="sprout-hero-panel">
+        <div class="sprout-hero-heading">Плекай свій <span class="accent">Росток</span></div>
+        <div class="sprout-hero-sub">Продовжуй звички щодня, і твій росток набиратиме бали та ростиме.</div>
+        <div class="sprout-level-chip">🌿 Рівень ${stage + 1}</div>
+        <div class="sprout-hero">
+          <img class="sprout-hero-emoji" id="sproutHeroImg" src="${makeFreshSproutUrl(stage)}" alt="Росток" />
+        </div>
       </div>
       <div class="sprout-progress-wrap">
         <div class="sprout-progress-fill" style="width:${pct}%"></div>
         <div class="sprout-progress-label">${goalLabel}</div>
       </div>
+      <div class="sprout-stats-row">
+        <div class="sprout-stat-chip active">
+          <div class="sprout-stat-icon">🌱</div>
+          <div class="sprout-stat-label">Рівень</div>
+          <div class="sprout-stat-value">${stage + 1}</div>
+        </div>
+        <div class="sprout-stat-chip">
+          <div class="sprout-stat-icon">⭐</div>
+          <div class="sprout-stat-label">Бали</div>
+          <div class="sprout-stat-value">${progress}</div>
+        </div>
+        <div class="sprout-stat-chip">
+          <div class="sprout-stat-icon">🎯</div>
+          <div class="sprout-stat-label">До рівня</div>
+          <div class="sprout-stat-value">${nextThreshold === undefined ? '—' : (nextThreshold - progress)}</div>
+        </div>
+      </div>
       <div class="sprout-next-level-label">${sproutNextLevelLabel(progress)}</div>
       <div class="sprout-card">
-        <div class="sprout-name-row">
-          <input type="text" id="sproutNameInput" value="${escapeHtml(sprout.name)}" maxlength="18" />
-          <svg class="sprout-name-edit-icon" id="sproutNameEditIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        <div class="sprout-name-card">
+          <div class="sprout-name-avatar">🌱</div>
+          <div class="sprout-name-body">
+            <div class="sprout-name-row">
+              <input type="text" id="sproutNameInput" value="${escapeHtml(sprout.name)}" maxlength="18" />
+              <svg class="sprout-name-edit-icon" id="sproutNameEditIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+            </div>
+            <div class="sprout-name-sub">ім'я вашого паростка</div>
+          </div>
         </div>
-        <div class="sprout-name-sub">ім'я вашого паростка</div>
         <div class="sprout-quests-title">Бали нараховуються автоматично за:</div>
-        ${sprout.quests.map(q => `
-          <div class="sprout-quest-row sprout-quest-auto" data-id="${q.id}">
-            <div class="sprout-quest-text">${escapeHtml(q.text)}</div>
-            <div class="sprout-quest-points"${q.points < 0 ? ' style="color:#FF8A8A;background:rgba(255,90,90,0.14);"' : ''}>${q.points > 0 ? '+' : ''}${q.points}</div>
-          </div>`).join('')}
+        <div class="sprout-quest-list">
+          ${sprout.quests.map(q => {
+            const icon = SPROUT_QUEST_ICONS[q.id] || { emoji: (q.points < 0 ? '❄️' : '🌿'), cls: '' };
+            return `
+            <div class="sprout-quest-row sprout-quest-auto${q.points < 0 ? ' sprout-quest-negative' : ''}" data-id="${q.id}">
+              <div class="sprout-quest-icon ${icon.cls}">${icon.emoji}</div>
+              <div class="sprout-quest-text">${escapeHtml(q.text)}</div>
+              <div class="sprout-quest-points">${q.points > 0 ? '+' : ''}${q.points}</div>
+            </div>`;
+          }).join('')}
+        </div>
       </div>
     </div>`;
 
