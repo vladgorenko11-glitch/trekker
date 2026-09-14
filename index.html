@@ -1366,11 +1366,13 @@
   }
   .streak-fill {
     position: absolute; top: 0; left: 0; bottom: 0;
-    z-index: 0; /* явно нижче .streak-row (z-index:1), щоб вогник/назва завжди лишались зверху */
+    z-index: 0; /* явно нижче .streak-row (z-index:2), щоб вогник/назва завжди лишались зверху */
     width: 0%;
     overflow: hidden;
     transition: width 1s cubic-bezier(.4, 0, .2, 1);
     will-change: width;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -12px 18px -10px rgba(0,0,0,0.22);
   }
   /* Плавний перехід від яскравої (заповненої) частини до матового скла —
@@ -1416,6 +1418,13 @@
   .streak-row {
     position: relative;
     z-index: 2;
+    /* Примусово виносимо рядок у власний апаратний (GPU) шар. У Safari
+       transform-анімація на псевдоелементі .streak-fill::after (shine-ефект
+       при натисканні "+") інколи промотує ЙОГО у власний композитний шар,
+       і без цього такий шар малюється поверх .streak-row попри z-index.
+       Коли обидва — апаратні шари, порядок z-index дотримується коректно. */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
     display: flex;
     align-items: center;
     gap: 12px;
