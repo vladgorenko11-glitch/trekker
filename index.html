@@ -1907,13 +1907,22 @@
   .lists-modal .lists-body { flex: 1 1 auto; overflow-y: auto; padding-bottom: 70px; }
   /* Настрій і Загальна статистика: фон під написами буває занадто світлим
      через кольорові підсвітки позаду — тому тут трохи темніший підклад.
-     Розтягуємо його до самих країв модалки (а не лишаємо вузьку смужку),
-     щоб нічого світле не "вилазило" з-під темної підкладки по краях. */
-  .lists-modal .lists-body.mood-detail-view,
-  .lists-modal .lists-body.stats-detail-view {
+     Кладемо його як ::before на всю модалку (а не лише на .lists-body), щоб
+     він одним суцільним кольором перекривав і заголовок "Списки" вгорі
+     (разом із кнопкою закриття), і весь простір знизу до самого краю. */
+  .lists-modal:has(.lists-body.mood-detail-view)::before,
+  .lists-modal:has(.lists-body.stats-detail-view)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
     background: rgba(6,8,12,0.55);
-    padding: 14px 22px 70px;
-    margin: 0 -22px;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .lists-modal .modal-header,
+  .lists-modal .lists-body {
+    position: relative;
+    z-index: 1;
   }
   .lists-modal .modal-header { margin-bottom: 26px; }
   .lists-modal .modal-header h2 { font-family:'Rubik',sans-serif; font-size: 26px; font-weight: 800; }
@@ -3463,7 +3472,7 @@
   .activity-app .activity-widget-card { border-radius: 22px; }
   .activity-app .activity-widget-ring-wrap {
     width: 44px; height: 44px;
-    border-radius: 14px;
+    border-radius: 50%;
     background: radial-gradient(120% 120% at 30% 20%, rgba(140,123,255,0.40), rgba(140,123,255,0.12));
     border: 1px solid rgba(255,255,255,0.18);
   }
@@ -3499,7 +3508,7 @@
   }
 
   .activity-app .activity-water-widget { border-radius: 22px; }
-  .activity-app .water-drop {
+  .activity-app .water-drop:not(.filled) {
     background: rgba(255,255,255,0.08);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
@@ -10320,7 +10329,7 @@ function renderActivityWidgets(){
 
   const ringColor = allDone ? '#33D17A' : '#FF8A2B';
   document.getElementById('activityProgressRingWrap').innerHTML =
-    dashboardRingSvg(pct, 46, 4.5, ringColor) +
+    dashboardRingSvg(pct, 44, 4.5, ringColor) +
     `<div class="activity-widget-ring-icon">🎯</div>`;
 
   const streak = activityUsageStreak();
