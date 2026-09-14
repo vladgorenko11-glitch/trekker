@@ -1870,7 +1870,7 @@
   .overlay {
     position: fixed; inset: 0; background: rgba(6,8,12,0.72);
     display: none; align-items: flex-end; justify-content: center;
-    z-index: 50; backdrop-filter: blur(2px);
+    z-index: 50; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
   }
   .overlay.open { display: flex; }
 
@@ -1891,7 +1891,11 @@
     overflow-y: auto;
     animation: slideUp .22s ease;
   }
-  @keyframes slideUp { from { transform: translateY(30px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+  /* Раніше тут ще анімувалась opacity 0→1 разом із backdrop-filter (blur) —
+     саме ця комбінація і давала короткий "спалах" при відкритті картки звички:
+     браузер встигає домалювати розмиття вже після того, як шар став видимим.
+     Тепер анімуємо лише зсув, без прозорості — розмиття одразу коректне. */
+  @keyframes slideUp { from { transform: translateY(30px); } to { transform: translateY(0); } }
 
   .modal h2 { font-family:'Rubik',sans-serif; font-size: 19px; margin: 0 0 20px; text-align: center; }
 
@@ -1901,6 +1905,16 @@
   /* ---------- Списки ---------- */
   .lists-modal { min-height: 96vh; min-height: 96svh; max-height: 97vh; max-height: 97svh; border-radius: 28px 28px 0 0; display: flex; flex-direction: column; position: relative; overflow: hidden; padding-top: 26px; }
   .lists-modal .lists-body { flex: 1 1 auto; overflow-y: auto; padding-bottom: 70px; }
+  /* Настрій і Загальна статистика: фон під написами буває занадто світлим
+     через кольорові підсвітки позаду — тому тут трохи темніший підклад.
+     Розтягуємо його до самих країв модалки (а не лишаємо вузьку смужку),
+     щоб нічого світле не "вилазило" з-під темної підкладки по краях. */
+  .lists-modal .lists-body.mood-detail-view,
+  .lists-modal .lists-body.stats-detail-view {
+    background: rgba(6,8,12,0.55);
+    padding: 14px 22px 70px;
+    margin: 0 -22px;
+  }
   .lists-modal .modal-header { margin-bottom: 26px; }
   .lists-modal .modal-header h2 { font-family:'Rubik',sans-serif; font-size: 26px; font-weight: 800; }
   .lists-modal .modal-close-btn {
@@ -3381,6 +3395,136 @@
     border-radius: var(--radius-md);
     line-height: 1.5;
     margin: -8px 0 4px;
+  }
+
+  /* ================================================================
+     Рестайл "Центру активності" (ліва вкладка) — оформлення бленду
+     двох референсів: теплі бурштинові акценти + фіолетові скляні картки.
+     Тільки візуал: розмітка, дані й логіка нижче не змінюються.
+     ================================================================ */
+  #slideActivity { position: relative; }
+  #slideActivity::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(48% 30% at 88% 2%, rgba(255,154,61,0.22), transparent 72%),
+      radial-gradient(44% 30% at 6% 26%, rgba(140,123,255,0.18), transparent 74%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  #slideActivity .activity-app { position: relative; z-index: 1; }
+
+  .activity-app .activity-greeting {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    background: linear-gradient(100deg, #FFFFFF 45%, #FFD9AE 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .activity-app .activity-date {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--card-border);
+    font-weight: 600;
+  }
+
+  /* Спільна "скляна" поверхня для карток центру активності (крім квоти —
+     у неї свій кольоровий градієнт з JS, обробляється окремо нижче). */
+  .activity-app .activity-week-card,
+  .activity-app .activity-widget-card,
+  .activity-app .activity-weather-widget,
+  .activity-app .activity-water-widget,
+  .activity-app .activity-mini-card {
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(128deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.02) 30%, rgba(255,255,255,0.05) 70%, rgba(255,255,255,0.10) 100%),
+      rgba(255,255,255,0.055);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid rgba(255,255,255,0.20);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.30),
+      inset 0 -12px 20px -14px rgba(255,255,255,0.08),
+      0 10px 28px -14px rgba(0,0,0,0.55);
+  }
+
+  .activity-app .activity-week-card { border-radius: 26px; }
+  .activity-app .activity-day.today .activity-day-num {
+    box-shadow: 0 4px 14px rgba(255,138,43,0.45), 0 0 0 3px rgba(255,255,255,0.18);
+  }
+
+  .activity-app .activity-widget-card { border-radius: 22px; }
+  .activity-app .activity-widget-ring-wrap {
+    width: 44px; height: 44px;
+    border-radius: 14px;
+    background: radial-gradient(120% 120% at 30% 20%, rgba(140,123,255,0.40), rgba(140,123,255,0.12));
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .activity-app .activity-widget-flame-wrap {
+    width: 44px; height: 44px;
+    border-radius: 14px;
+    background: radial-gradient(120% 120% at 30% 20%, rgba(255,154,61,0.40), rgba(255,154,61,0.12));
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .activity-app .activity-widget-value { font-size: 18px; font-weight: 800; }
+
+  .activity-app .activity-quote-widget {
+    border-radius: 22px;
+    border: 1px solid rgba(255,255,255,0.28);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 10px 24px -12px rgba(0,0,0,0.5);
+  }
+  .activity-app .activity-quote-widget::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(128deg, rgba(255,255,255,0.22) 0%, transparent 32%, transparent 68%, rgba(255,255,255,0.10) 100%);
+    pointer-events: none;
+  }
+
+  .activity-app .activity-weather-widget { border-radius: 22px; }
+  .activity-app .activity-weather-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(120% 120% at 30% 20%, rgba(140,123,255,0.35), rgba(140,123,255,0.10));
+    border: 1px solid rgba(255,255,255,0.18);
+    font-size: 22px;
+  }
+
+  .activity-app .activity-water-widget { border-radius: 22px; }
+  .activity-app .water-drop {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1.5px solid rgba(255,255,255,0.22);
+  }
+
+  .activity-app .activity-mini-card { border-radius: 20px; }
+  .activity-app .activity-mini-icon {
+    width: 34px; height: 34px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 2px;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .activity-app .activity-mini-card:nth-child(1) .activity-mini-icon {
+    background: radial-gradient(120% 120% at 30% 20%, rgba(140,123,255,0.40), rgba(140,123,255,0.12));
+  }
+  .activity-app .activity-mini-card:nth-child(2) .activity-mini-icon {
+    background: radial-gradient(120% 120% at 30% 20%, rgba(255,154,61,0.40), rgba(255,154,61,0.12));
+  }
+  .activity-app .activity-mini-card:nth-child(3) .activity-mini-icon {
+    background: radial-gradient(120% 120% at 30% 20%, rgba(56,189,248,0.40), rgba(56,189,248,0.12));
+  }
+  .activity-app .activity-mini-card:nth-child(4) .activity-mini-icon {
+    background: radial-gradient(120% 120% at 30% 20%, rgba(51,209,122,0.40), rgba(51,209,122,0.12));
   }
 </style>
 </head>
@@ -6398,6 +6542,7 @@ function donutChartHtml(perHabitCompletions){
 
 function renderHabitStatsDetail(){
   const body = document.getElementById('listsBody');
+  body.className = 'lists-body stats-detail-view';
   document.getElementById('listsModalTitle').textContent = 'Списки';
   document.getElementById('listsFab').style.display = 'none';
 
@@ -6579,6 +6724,7 @@ function changeMoodMonth(delta){
 
 function renderMoodCalendarDetail(){
   const body = document.getElementById('listsBody');
+  body.className = 'lists-body mood-detail-view';
   document.getElementById('listsModalTitle').textContent = 'Списки';
   document.getElementById('listsFab').style.display = 'none';
 
@@ -7474,6 +7620,7 @@ function listCardHtml(list){
 
 function renderListsOverview(){
   const body = document.getElementById('listsBody');
+  body.className = 'lists-body';
   document.getElementById('listsModalTitle').textContent = 'Списки';
   const fab = document.getElementById('listsFab');
 
