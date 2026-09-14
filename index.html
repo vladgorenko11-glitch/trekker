@@ -8722,6 +8722,13 @@ function renderStreakBoard(){
   const existingById = {};
   grid.querySelectorAll('.streak-card').forEach(el => { existingById[el.dataset.habitId] = el; });
 
+  // Позиція в DOM, куди вставляти наступну картку — рухається вперед лише
+  // коли порядок справді змінюється. Так виклик appendChild/insertBefore
+  // не чіпає картки, які й так стоять на своєму місці: зайве переміщення
+  // вузла в DOM скидає поточний стан CSS-переходу ширини заливки, і вона
+  // на мить "стрибає" на неправильне значення, перекриваючи вогник і текст.
+  let afterEl = null;
+
   visible.forEach(h => {
     const isComplete = h.goal > 0 && h.progress >= h.goal;
     const isFrozen = !isComplete && h.days[todayKeyStr] === 'frozen';
@@ -8845,7 +8852,14 @@ function renderStreakBoard(){
     btn.className = 'streak-action-btn' + (isComplete ? ' done' : '');
     btn.innerHTML = isComplete ? checkIconSvg(c0) : '+';
 
-    grid.appendChild(card);
+    // Вставляємо картку в DOM лише якщо вона ще не стоїть одразу після
+    // попередньої — уникаємо зайвого переміщення вузла (і пов'язаного з
+    // ним скидання CSS-переходу заливки) на кожному рендері.
+    const expectedNext = afterEl ? afterEl.nextElementSibling : grid.firstElementChild;
+    if (expectedNext !== card){
+      grid.insertBefore(card, afterEl ? afterEl.nextSibling : grid.firstChild);
+    }
+    afterEl = card;
   });
 
   // Прибираємо картки звичок, яких більше немає серед видимих сьогодні.
