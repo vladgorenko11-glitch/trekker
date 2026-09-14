@@ -1294,6 +1294,11 @@
   .streak-grid:empty { display: none; }
   .streak-card {
     position: relative;
+    /* isolation: isolate — власний, ізольований стекінг-контекст картки.
+       Без цього Safari під час will-change-анімації заливки (.streak-fill)
+       іноді промотує її у власний композитний шар і на мить малює ПОВЕРХ
+       .streak-row (вогник+назва), хоч z-index і каже інакше. */
+    isolation: isolate;
     background: var(--habit-pale-bg, var(--card));
     border: 1px solid var(--habit-pale-border, rgba(255,255,255,0.14));
     border-radius: var(--radius-lg);
@@ -1361,6 +1366,7 @@
   }
   .streak-fill {
     position: absolute; top: 0; left: 0; bottom: 0;
+    z-index: 0; /* явно нижче .streak-row (z-index:1), щоб вогник/назва завжди лишались зверху */
     width: 0%;
     overflow: hidden;
     transition: width 1s cubic-bezier(.4, 0, .2, 1);
@@ -1409,7 +1415,7 @@
   }
   .streak-row {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     display: flex;
     align-items: center;
     gap: 12px;
