@@ -2014,173 +2014,134 @@
   .lists-add-row input::placeholder { color: var(--text-tertiary); }
 
   .list-card {
-    display: flex; align-items: center; gap: 16px;
-    padding: 18px 16px; border-radius: 22px;
-    background: linear-gradient(165deg, #1F2330 0%, #171A24 100%);
-    border: 1px solid rgba(255,255,255,0.06);
-    box-shadow: 0 10px 26px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; gap: 12px;
+    min-height: 96px;
+    padding: 18px 84px 18px 18px; border-radius: 24px;
+    background: linear-gradient(135deg, #3B2A66 0%, #1B1533 100%);
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.4);
     cursor: pointer; margin-bottom: 12px;
     transition: transform .12s ease;
   }
   .list-card:active { transform: scale(0.98); }
   .list-card-ico {
-    width: 84px; height: 84px; flex: 0 0 auto;
+    position: absolute; right: 14px; top: 50%;
+    width: 64px; height: 64px; flex: 0 0 auto;
     display: flex; align-items: center; justify-content: center;
-    position: relative;
-  }
-  .list-card-ico::before {
-    content: '';
-    position: absolute; inset: 4px;
-    background: radial-gradient(circle, rgba(168,90,255,0.65) 0%, rgba(168,90,255,0.28) 45%, transparent 72%);
-    filter: blur(11px);
-    z-index: 0;
+    transform: translateY(-50%) rotate(-8deg);
+    z-index: 1;
   }
   .list-card-ico span {
-    position: relative; z-index: 1;
-    font-size: 46px; line-height: 1;
+    font-size: 48px; line-height: 1;
     display: inline-block;
-    transform: rotate(-6deg);
-    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5)) drop-shadow(0 0 22px rgba(168,90,255,0.55));
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.4));
   }
   .list-card-info { flex: 1; min-width: 0; }
   .list-card-name {
     font-family: 'Rubik', sans-serif;
-    font-size: 18px; font-weight: 700; color: var(--text-primary);
+    font-size: 17px; font-weight: 700; color: #fff;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .list-card-sub { font-size: 13.5px; color: var(--text-tertiary); margin-top: 4px; }
-  .list-card-chevron { flex: 0 0 auto; color: var(--text-tertiary); }
-  .list-card-chevron svg { width: 20px; height: 20px; }
+  .list-card-sub { font-size: 13px; color: rgba(255,255,255,0.62); margin-top: 3px; line-height: 1.35; }
+  .list-card-chevron { display: none; }
 
-  .list-watched-folder { margin-top: 6px; padding: 14px 16px; }
-  .list-watched-folder .list-card-ico { width: 52px; height: 52px; }
-  .list-watched-folder .list-card-ico span { font-size: 28px; }
+  .list-watched-folder { margin-top: 6px; padding: 16px 76px 16px 16px; min-height: 78px; }
+  .list-watched-folder .list-card-ico { width: 48px; height: 48px; right: 14px; }
+  .list-watched-folder .list-card-ico span { font-size: 32px; }
   .list-watched-folder .list-card-name { font-size: 15.5px; }
   .list-watched-folder .list-card-sub { font-size: 12.5px; }
   .list-watched-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 14px 4px 12px; }
 
-  .mood-card {
-    border: 1.5px solid rgba(255,201,77,0.4);
-    box-shadow: 0 10px 26px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,201,77,0.12), 0 0 26px rgba(255,201,77,0.14);
-  }
-  .mood-card .list-card-ico::before {
-    background: radial-gradient(circle, rgba(255,201,77,0.65) 0%, rgba(255,159,67,0.28) 45%, transparent 72%);
-  }
-  .mood-card .list-card-ico span {
-    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5)) drop-shadow(0 0 22px rgba(255,201,77,0.55));
-  }
-  .mood-card .list-card-sub:first-of-type { color: #FFC94D; font-weight: 600; }
+  @keyframes mciTwinkle { 0%,100% { opacity: .55; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.05); } }
 
+  /* ---------- Настрій ---------- */
+  .mood-card {
+    background: linear-gradient(135deg, #6B4A1E 0%, #241708 100%);
+    border-color: rgba(255,201,77,0.28);
+  }
+  .mood-card .list-card-sub:first-of-type { color: #FFD98A; font-weight: 600; }
   .mood-card .list-card-ico { overflow: visible; }
   .mood-card .list-card-ico .mci-sparkle {
-    position: absolute; z-index: 1; font-size: 13px;
+    position: absolute; z-index: 2; font-size: 13px;
     filter: drop-shadow(0 0 8px rgba(255,201,77,0.65));
     animation: mciTwinkle 2.4s ease-in-out infinite;
   }
-  .mood-card .list-card-ico .mci-sparkle.s1 { top: 2px; left: 6px; animation-delay: 0s; }
-  .mood-card .list-card-ico .mci-sparkle.s2 { top: 10px; right: 2px; font-size: 10px; animation-delay: .6s; }
-  .mood-card .list-card-ico .mci-sparkle.s3 { bottom: 26px; left: -4px; font-size: 10px; animation-delay: 1.2s; }
+  .mood-card .list-card-ico .mci-sparkle.s1 { top: -4px; left: 2px; animation-delay: 0s; }
+  .mood-card .list-card-ico .mci-sparkle.s2 { top: 4px; right: -8px; font-size: 10px; animation-delay: .6s; }
+  .mood-card .list-card-ico .mci-sparkle.s3 { bottom: 12px; left: -10px; font-size: 10px; animation-delay: 1.2s; }
   .mood-card .list-card-ico .mci-cloud {
-    position: absolute; z-index: 2; font-size: 20px; line-height: 1;
+    position: absolute; z-index: 1; font-size: 20px; line-height: 1;
     filter: drop-shadow(0 3px 6px rgba(0,0,0,0.45));
   }
-  .mood-card .list-card-ico .mci-cloud.c1 { bottom: 6px; left: 2px; }
-  .mood-card .list-card-ico .mci-cloud.c2 { bottom: 0px; right: 4px; font-size: 16px; }
-  @keyframes mciTwinkle { 0%,100% { opacity: .55; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.05); } }
+  .mood-card .list-card-ico .mci-cloud.c1 { bottom: -2px; left: -6px; }
+  .mood-card .list-card-ico .mci-cloud.c2 { bottom: -8px; right: -4px; font-size: 16px; }
 
   /* ---------- Загальна статистика звичок у Списках ---------- */
   .stats-card {
-    border: 1.5px solid rgba(83,214,178,0.4);
-    box-shadow: 0 10px 26px rgba(0,0,0,0.4), 0 0 0 1px rgba(83,214,178,0.12), 0 0 26px rgba(83,214,178,0.14);
+    background: linear-gradient(135deg, #1F4A3D 0%, #10241D 100%);
+    border-color: rgba(83,214,178,0.28);
   }
-  .stats-card .list-card-ico::before {
-    background: radial-gradient(circle, rgba(83,214,178,0.65) 0%, rgba(63,169,209,0.28) 45%, transparent 72%);
-  }
-  .stats-card .list-card-ico span {
-    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5)) drop-shadow(0 0 22px rgba(83,214,178,0.55));
-  }
-  .stats-card .list-card-sub:first-of-type { color: #53D6B2; font-weight: 600; }
+  .stats-card .list-card-sub:first-of-type { color: #6FE3C2; font-weight: 600; }
 
   /* ---------- Книжкова полиця ---------- */
   .bookshelf-card {
-    border: 1.5px solid rgba(201,150,62,0.45);
-    box-shadow: 0 10px 26px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,150,62,0.12), 0 0 26px rgba(201,150,62,0.16);
+    background: linear-gradient(135deg, #4A2E14 0%, #1E1206 100%);
+    border-color: rgba(201,150,62,0.3);
   }
-  .bookshelf-card .list-card-ico::before {
-    background: radial-gradient(circle, rgba(201,150,62,0.65) 0%, rgba(158,102,255,0.18) 45%, transparent 72%);
-  }
-  .bookshelf-card .list-card-ico span {
-    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5)) drop-shadow(0 0 22px rgba(201,150,62,0.55));
-  }
-  .bookshelf-card .list-card-sub { color: #D9A566; font-weight: 600; }
-
+  .bookshelf-card .list-card-sub { color: #E3B37A; font-weight: 600; }
   .bookshelf-card .list-card-ico { overflow: visible; }
   .bookshelf-card .list-card-ico .bci-sparkle {
-    position: absolute; z-index: 1; font-size: 12px; color: #FFD98A;
+    position: absolute; z-index: 2; font-size: 12px; color: #FFD98A;
     filter: drop-shadow(0 0 8px rgba(217,165,102,0.65));
     animation: mciTwinkle 2.4s ease-in-out infinite;
   }
-  .bookshelf-card .list-card-ico .bci-sparkle.bs1 { top: 0px; left: 8px; animation-delay: .3s; }
-  .bookshelf-card .list-card-ico .bci-sparkle.bs2 { top: 6px; right: -2px; font-size: 10px; animation-delay: 1s; }
+  .bookshelf-card .list-card-ico .bci-sparkle.bs1 { top: -4px; left: 4px; animation-delay: .3s; }
+  .bookshelf-card .list-card-ico .bci-sparkle.bs2 { top: 2px; right: -8px; font-size: 10px; animation-delay: 1s; }
   .bookshelf-card .list-card-ico .bci-deco {
-    position: absolute; z-index: 2; font-size: 18px; line-height: 1;
+    position: absolute; z-index: 1; font-size: 18px; line-height: 1;
     filter: drop-shadow(0 3px 7px rgba(0,0,0,0.5));
     transform: rotate(-4deg);
   }
-  .bookshelf-card .list-card-ico .bci-deco.bd1 { bottom: 10px; left: -6px; font-size: 16px; transform: rotate(-18deg); }
-  .bookshelf-card .list-card-ico .bci-deco.bd2 { bottom: 2px; right: -4px; font-size: 17px; transform: rotate(10deg); }
-  .bookshelf-card .list-card-ico .bci-deco.bd3 { top: 4px; right: 12px; font-size: 14px; transform: rotate(6deg); }
+  .bookshelf-card .list-card-ico .bci-deco.bd1 { bottom: 8px; left: -10px; font-size: 16px; transform: rotate(-18deg); }
+  .bookshelf-card .list-card-ico .bci-deco.bd2 { bottom: -4px; right: -6px; font-size: 17px; transform: rotate(10deg); }
+  .bookshelf-card .list-card-ico .bci-deco.bd3 { top: -6px; right: 10px; font-size: 14px; transform: rotate(6deg); }
 
   /* ---------- Папка виконаних швидких задач в архіві ---------- */
   .task-archive-card {
-    border: 1.5px solid rgba(52,199,89,0.4);
-    box-shadow: 0 10px 26px rgba(0,0,0,0.4), 0 0 0 1px rgba(52,199,89,0.14), 0 0 26px rgba(52,199,89,0.16);
-    background: linear-gradient(165deg, #1B2A20 0%, #171A24 100%);
+    background: linear-gradient(135deg, #1E4029 0%, #0F2016 100%);
+    border-color: rgba(52,199,89,0.3);
   }
-  .task-archive-card .list-card-ico::before {
-    background: radial-gradient(circle, rgba(52,199,89,0.65) 0%, rgba(52,199,89,0.24) 45%, transparent 72%);
-  }
-  .task-archive-card .list-card-ico span:not(.tac-tick) {
-    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5)) drop-shadow(0 0 22px rgba(52,199,89,0.55));
-  }
-  .task-archive-card .list-card-sub { color: #55D67F; font-weight: 600; }
+  .task-archive-card .list-card-sub { color: #6FE3A0; font-weight: 600; }
   .task-archive-card .list-card-ico { overflow: visible; }
   .task-archive-card .list-card-ico .tac-tick {
-    position: absolute; z-index: 2; font-size: 13px; color: #55D67F;
+    position: absolute; z-index: 2; font-size: 13px; color: #6FE3A0;
     filter: drop-shadow(0 0 7px rgba(52,199,89,0.75));
     animation: mciTwinkle 2.4s ease-in-out infinite;
   }
-  .task-archive-card .list-card-ico .tac-tick.t1 { top: -1px; left: 2px; animation-delay: .2s; }
-  .task-archive-card .list-card-ico .tac-tick.t2 { bottom: 4px; right: -5px; font-size: 11px; animation-delay: 1s; }
-  .task-archive-card .list-card-chevron { color: #55D67F; opacity: 0.85; }
+  .task-archive-card .list-card-ico .tac-tick.t1 { top: -6px; left: 0px; animation-delay: .2s; }
+  .task-archive-card .list-card-ico .tac-tick.t2 { bottom: 2px; right: -8px; font-size: 11px; animation-delay: 1s; }
 
-  /* ---------- Картка "Бейджи" у Списках (поки що заглушка з оформленням, як у Настрою/Полиці) ---------- */
+  /* ---------- Картка "Бейджи" у Списках ---------- */
   .badges-card {
-    border: 1.5px solid rgba(158,102,255,0.45);
-    box-shadow: 0 10px 26px rgba(0,0,0,0.4), 0 0 0 1px rgba(158,102,255,0.12), 0 0 26px rgba(158,102,255,0.16);
+    background: linear-gradient(135deg, #3B2760 0%, #19102E 100%);
+    border-color: rgba(158,102,255,0.3);
   }
-  .badges-card .list-card-ico::before {
-    background: radial-gradient(circle, rgba(158,102,255,0.65) 0%, rgba(255,138,43,0.18) 45%, transparent 72%);
-  }
-  .badges-card .list-card-ico span {
-    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5)) drop-shadow(0 0 22px rgba(158,102,255,0.55));
-  }
-  .badges-card .list-card-sub { color: #B98CFF; font-weight: 600; }
-
+  .badges-card .list-card-sub { color: #C7A8FF; font-weight: 600; }
   .badges-card .list-card-ico { overflow: visible; }
   .badges-card .list-card-ico .bgi-sparkle {
-    position: absolute; z-index: 1; font-size: 12px; color: #FFD98A;
+    position: absolute; z-index: 2; font-size: 12px; color: #FFD98A;
     filter: drop-shadow(0 0 8px rgba(158,102,255,0.65));
     animation: mciTwinkle 2.4s ease-in-out infinite;
   }
-  .badges-card .list-card-ico .bgi-sparkle.gs1 { top: 0px; left: 8px; animation-delay: .3s; }
-  .badges-card .list-card-ico .bgi-sparkle.gs2 { top: 6px; right: -2px; font-size: 10px; animation-delay: 1s; }
+  .badges-card .list-card-ico .bgi-sparkle.gs1 { top: -4px; left: 4px; animation-delay: .3s; }
+  .badges-card .list-card-ico .bgi-sparkle.gs2 { top: 2px; right: -8px; font-size: 10px; animation-delay: 1s; }
   .badges-card .list-card-ico .bgi-deco {
-    position: absolute; z-index: 2; font-size: 16px; line-height: 1;
+    position: absolute; z-index: 1; font-size: 16px; line-height: 1;
     filter: drop-shadow(0 3px 7px rgba(0,0,0,0.5));
   }
-  .badges-card .list-card-ico .bgi-deco.gd1 { bottom: 8px; left: -6px; font-size: 14px; transform: rotate(-16deg); }
-  .badges-card .list-card-ico .bgi-deco.gd2 { bottom: 0px; right: -4px; font-size: 14px; transform: rotate(14deg); }
+  .badges-card .list-card-ico .bgi-deco.gd1 { bottom: 6px; left: -10px; font-size: 14px; transform: rotate(-16deg); }
+  .badges-card .list-card-ico .bgi-deco.gd2 { bottom: -4px; right: -6px; font-size: 14px; transform: rotate(14deg); }
 
   /* ---------- Порожній екран розділу "Бейджи" (коли бейджів взагалі ще нема) ---------- */
   .badges-empty {
@@ -3009,18 +2970,31 @@
   .rating-star:active { transform: scale(0.88); }
 
   /* ---------- Настрій дня ---------- */
-  .mood-modal { max-width: 400px; text-align: center; }
-  .mood-modal .mood-sub { font-size: 13px; color: var(--text-secondary); margin: -12px 0 22px; }
-  .mood-options { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 22px; }
+  .mood-modal {
+    max-width: 400px; text-align: left;
+    background: radial-gradient(140% 95% at 12% -5%, #FF8A3D 0%, #B8350F 26%, #4A123B 52%, #1B1224 74%, #0C0E1B 100%);
+    border: none;
+  }
+  .mood-modal h2 { text-align: left; font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 10px; }
+  .mood-modal .mood-sub { text-align: left; font-size: 14px; color: rgba(255,255,255,0.55); margin: 0 0 20px; }
+  .mood-divider { height: 1px; background: rgba(255,255,255,0.12); margin: 0 0 22px; }
+  .mood-options { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 24px; }
   .mood-option {
     flex: 1; display: flex; align-items: center; justify-content: center;
-    width: 48px; height: 48px; border-radius: 50%; font-size: 24px;
-    background: var(--bg-elevated); border: 2px solid transparent;
-    cursor: pointer; transition: transform .12s ease, border-color .15s ease, background .15s ease;
+    width: 50px; height: 50px; border-radius: 50%; font-size: 22px;
+    background: rgba(255,255,255,0.06); border: 2px solid transparent;
+    cursor: pointer; transition: transform .12s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
   }
   .mood-option:active { transform: scale(0.9); }
-  .mood-option.selected { border-color: #FFC94D; background: rgba(255,201,77,0.12); box-shadow: 0 0 0 3px rgba(255,201,77,0.15); }
-  .mood-saved-note { font-size: 12.5px; color: var(--text-tertiary); margin-top: 4px; }
+  .mood-option.selected {
+    background: linear-gradient(160deg, #FF7A3D, #E8452A);
+    border-color: transparent;
+    box-shadow: 0 0 0 4px rgba(255,122,61,0.18), 0 6px 16px rgba(232,69,42,0.35);
+    transform: scale(1.05);
+  }
+  .mood-saved-note { font-size: 12.5px; color: rgba(255,255,255,0.45); margin-top: 4px; }
+  .mood-modal .btn-secondary { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+  .mood-modal .btn-primary { background: linear-gradient(135deg, #FF7A3D, #E8452A); color: #200D02; }
 
   .modal-header { display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 20px; }
   .modal-header h2 { margin: 0; }
@@ -4085,12 +4059,13 @@
   <div class="modal mood-modal">
     <h2>Як минув день?</h2>
     <div class="mood-sub">Відзнач свій настрій сьогодні</div>
+    <div class="mood-divider"></div>
     <div class="mood-options" id="moodOptions">
-      <div class="mood-option" data-mood="1">😞</div>
+      <div class="mood-option" data-mood="1">😡</div>
       <div class="mood-option" data-mood="2">🙁</div>
       <div class="mood-option" data-mood="3">😐</div>
       <div class="mood-option" data-mood="4">🙂</div>
-      <div class="mood-option" data-mood="5">😄</div>
+      <div class="mood-option" data-mood="5">🥰</div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="moodSkipBtn" type="button">Пізніше</button>
@@ -4986,7 +4961,7 @@ setInterval(checkReminders, 20000);
 setInterval(checkDayRollover, 20000);
 
 /* ================= НАСТРІЙ ДНЯ ================= */
-const MOOD_EMOJI = { 1: '😞', 2: '🙁', 3: '😐', 4: '🙂', 5: '😄' };
+const MOOD_EMOJI = { 1: '😡', 2: '🙁', 3: '😐', 4: '🙂', 5: '🥰' };
 const MOOD_LABELS = { 1: 'Дуже погано', 2: 'Погано', 3: 'Нейтрально', 4: 'Добре', 5: 'Чудово' };
 const MOOD_COLORS = { 1: '#3E86FF', 2: '#FFC94D', 3: '#22C55E', 4: '#7C5AFF', 5: '#FF4D6A' };
 let moodPromptShownKey = null; // щоб не спливало по кілька разів за сесію, якщо натиснули "Пізніше"
