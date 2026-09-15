@@ -4150,6 +4150,7 @@ let quickTasks = [];    // { id, text, done } — завдання чисто н
 let quickTasksDateKey = null; // ключ дня, для якого існує поточний список quickTasks
 let quickTaskAdding = false;  // чи зараз показано поле вводу нового завдання
 let taskArchive = [];   // { id, text, dateKey } — виконані завдання, перенесені сюди після опівночі
+let archiveView = { screen: 'overview' }; // 'overview' — загальний архів, 'tasks' — папка виконаних швидких задач
 let lists = [];         // { id, name, type: 'tasks'|'goals'|'wishes', items:[{id,text,done}] } — власні списки
 let moodLog = {};       // { 'y-m-d': 1..5 } — настрій дня
 let bookshelfBooks = []; // { id, shelf: 0..BOOKSHELF_SHELF_COUNT-1, title, notes, cover, status:'reading'|'read', color } — книги на полиці (поки порожньо)
@@ -7152,12 +7153,87 @@ function openWatchedFromArchive(listId){
 }
 
 function openArchiveModal(){
+  archiveView = { screen: 'overview' };
   renderArchiveBody();
   document.getElementById('archiveOverlay').classList.add('open');
 }
 
 function closeArchiveModal(){
   document.getElementById('archiveOverlay').classList.remove('open');
+  archiveView = { screen: 'overview' };
+}
+
+/* Картка-«папка» з виконаними швидкими задачами — щоб не захаращувати
+   головний екран архіву довгим списком по днях, він ховається за одну
+   картку з лічильником, як і папка "Переглянуто" у списках. */
+function quickTasksFolderCardHtml(count){
+  const mod10 = count % 10, mod100 = count % 100;
+  let word;
+  if (mod10 === 1 && mod100 !== 11) word = 'задача виконана';
+  else if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) word = 'задачі виконано';
+  else word = 'задач виконано';
+  return `
+    <div class="list-card list-watched-folder" data-action="open-task-archive">
+      <div class="list-card-ico"><span>📁</span></div>
+      <div class="list-card-info">
+        <div class="list-card-name">Швидкі задачі</div>
+        <div class="list-card-sub">${count} ${word}</div>
+      </div>
+      <div class="list-card-chevron">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </div>
+    </div>`;
+}
+
+/* Окремий екран усередині архіву — тільки виконані швидкі задачі,
+   згруповані по днях, з кнопкою "назад" на головний екран архіву. */
+function renderTaskArchiveScreen(body){
+  const byDate = {};
+  taskArchive.forEach(t => {
+    if (!byDate[t.dateKey]) byDate[t.dateKey] = [];
+    byDate[t.dateKey].push(t);
+  });
+  const dateKeys = Object.keys(byDate).sort().reverse();
+
+  let html = `
+    <div class="list-detail-header" style="margin-bottom:10px;">
+      <div class="list-detail-back" id="taskArchiveBackBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div class="list-detail-titlewrap">
+        <div class="list-detail-title">Швидкі задачі</div>
+        <div class="list-detail-progress-text">${taskArchive.length ? `${taskArchive.length} виконано` : 'Поки що порожньо'}</div>
+      </div>
+    </div>`;
+
+  if (!dateKeys.length){
+    html += '<div class="archive-empty">Тут з\'являться виконані швидкі задачі.</div>';
+  } else {
+    html += dateKeys.map(dk => `
+      <div class="archive-day-group">
+        <div class="archive-day-label">${escapeHtml(archiveDateLabel(dk))}</div>
+        ${byDate[dk].map(t => `
+          <div class="archive-task-row" data-id="${t.id}">
+            <div class="archive-task-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <div class="archive-task-text">${escapeHtml(t.text)}</div>
+            <div class="archive-task-del" data-action="archive-delete" data-id="${t.id}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+  }
+
+  body.innerHTML = html;
+
+  document.getElementById('taskArchiveBackBtn').addEventListener('click', () => {
+    archiveView = { screen: 'overview' };
+    renderArchiveBody();
+  });
+  body.querySelectorAll('[data-action="archive-delete"]').forEach(el => {
+    el.addEventListener('click', (e) => { e.stopPropagation(); deleteArchivedTask(el.dataset.id); });
+  });
 }
 
 /* ---------- Деталі стріку (спільний вогник за всі звички) ---------- */
@@ -7284,6 +7360,7 @@ function renderStreakDetail(){
 
 function deleteArchivedTask(id){
   taskArchive = taskArchive.filter(t => t.id !== id);
+  if (!taskArchive.length && archiveView.screen === 'tasks') archiveView = { screen: 'overview' };
   saveState();
   renderArchiveBody();
   renderArchiveButton();
@@ -7360,6 +7437,11 @@ function renderArchiveBody(){
   const body = document.getElementById('archiveBody');
   if (!body) return;
 
+  if (archiveView.screen === 'tasks'){
+    renderTaskArchiveScreen(body);
+    return;
+  }
+
   const upcomingWeekly = habits.filter(h => !h.archived && h.frequency === 'weekly' && !isDueToday(h));
   const archivedHabits = habits.filter(h => h.archived);
   const listsWithWatched = lists
@@ -7382,26 +7464,7 @@ function renderArchiveBody(){
   }
 
   if (taskArchive.length){
-    const byDate = {};
-    taskArchive.forEach(t => {
-      if (!byDate[t.dateKey]) byDate[t.dateKey] = [];
-      byDate[t.dateKey].push(t);
-    });
-    const dateKeys = Object.keys(byDate).sort().reverse();
-    html += dateKeys.map(dk => `
-      <div class="archive-day-group">
-        <div class="archive-day-label">${escapeHtml(archiveDateLabel(dk))}</div>
-        ${byDate[dk].map(t => `
-          <div class="archive-task-row" data-id="${t.id}">
-            <div class="archive-task-check">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-            </div>
-            <div class="archive-task-text">${escapeHtml(t.text)}</div>
-            <div class="archive-task-del" data-action="archive-delete" data-id="${t.id}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
-            </div>
-          </div>`).join('')}
-      </div>`).join('');
+    html += `<div class="archive-day-label">Виконані задачі</div>${quickTasksFolderCardHtml(taskArchive.length)}`;
   }
 
   if (!html){
@@ -7410,8 +7473,8 @@ function renderArchiveBody(){
   }
   body.innerHTML = html;
 
-  body.querySelectorAll('[data-action="archive-delete"]').forEach(el => {
-    el.addEventListener('click', (e) => { e.stopPropagation(); deleteArchivedTask(el.dataset.id); });
+  body.querySelectorAll('[data-action="open-task-archive"]').forEach(el => {
+    el.addEventListener('click', (e) => { e.stopPropagation(); archiveView = { screen: 'tasks' }; renderArchiveBody(); });
   });
   body.querySelectorAll('[data-action="restore-habit"]').forEach(el => {
     el.addEventListener('click', (e) => { e.stopPropagation(); restoreHabitFromArchive(Number(el.dataset.id)); });
