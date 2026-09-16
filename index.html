@@ -11181,7 +11181,7 @@ checkMonthlyStats();
     // Елементи з власним горизонтальним скролом (рядок звичок, теплокарта) —
     // не даємо пейджеру перехоплювати цей свайп, інакше він "з'їдає" preventDefault
     // і кидає користувача на іншу сторінку замість прокрутки рядка.
-    if (e.target.closest && e.target.closest('.habit-rail, .heatmap-scroll')) {
+    if (e.target.closest && e.target.closest('.habit-rail, .heatmap-scroll, .overlay')) {
       isDragging = false;
       return;
     }
