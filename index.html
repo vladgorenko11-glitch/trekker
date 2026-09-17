@@ -1681,6 +1681,7 @@
   .ms-slide-mood   { background: radial-gradient(120% 65% at 50% 0%, #FF5CA8 0%, #7A1B4D 46%, #1A0510 100%); }
   .ms-slide-extra  { background: radial-gradient(120% 65% at 50% 0%, #FFCF52 0%, #7A5A0E 46%, #1A1204 100%); }
   .ms-slide-meals  { background: radial-gradient(120% 65% at 50% 0%, #FF8A5C 0%, #7A2E12 46%, #1A0A04 100%); }
+  .ms-slide-books  { background: radial-gradient(120% 65% at 50% 0%, #C97BFF 0%, #4A1D80 46%, #14061F 100%); }
   .ms-slide-compare{ background: radial-gradient(120% 65% at 50% 0%, #4DE0C4 0%, #0E5F5A 46%, #041716 100%); }
   .ms-slide-outro  { background: radial-gradient(120% 65% at 50% 0%, #7C4DFF 0%, #2A0F63 46%, #0A0518 100%); }
 
@@ -1694,6 +1695,12 @@
   .ms-compare-item .ci-delta.down { background: rgba(255,99,99,0.25); color: #FF9B9B; }
   .ms-compare-item .ci-delta.flat { background: rgba(255,255,255,0.18); color: #fff; }
   .ms-compare-item .ci-prev { font-size: 12px; opacity: .75; margin-top: 2px; }
+
+  .ms-books-grid { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; max-width: 340px; margin-top: 24px; }
+  .ms-book-cover { width: 84px; height: 122px; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 24px -8px rgba(0,0,0,0.55); position: relative; flex: 0 0 auto; }
+  .ms-book-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ms-book-cover .fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+  .ms-book-cover .ms-book-title { position: absolute; left: 0; right: 0; bottom: 0; padding: 5px 6px 4px; font-size: 10px; line-height: 1.25; font-weight: 600; color: #fff; background: linear-gradient(0deg, rgba(0,0,0,0.75), rgba(0,0,0,0)); text-align: left; }
 
   .ms-emoji { font-size: 54px; margin-bottom: 12px; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.35)); }
   .ms-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .78; margin-bottom: 6px; }
@@ -11342,7 +11349,14 @@ function computeMonthlyStatsSnapshot(year, month){
   const mealsPossible = daysInMonth * 3;
   const mealPercent = mealsPossible ? Math.round((mealsLogged / mealsPossible) * 100) : 0;
 
-  const hasAnyData = relevantHabits.length > 0 || waterTotal > 0 || moodDays > 0 || tasksCompleted > 0 || mealsLogged > 0;
+  // Книги, прочитані за місяць (finishedAt потрапляє в межі цього календарного місяця)
+  const booksFinished = bookshelfBooks.filter(b => {
+    if (b.status !== 'read' || !b.finishedAt) return false;
+    const d = keyToDate(b.finishedAt);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+
+  const hasAnyData = relevantHabits.length > 0 || waterTotal > 0 || moodDays > 0 || tasksCompleted > 0 || mealsLogged > 0 || booksFinished.length > 0;
 
   return {
     year, month, daysInMonth,
@@ -11353,6 +11367,7 @@ function computeMonthlyStatsSnapshot(year, month){
     moodAvg, moodCounts, moodDays, maxMoodCount,
     tasksCompleted,
     mealsLogged, mealsPossible, mealPercent, mealFullDays, mealBestStreak,
+    booksFinished,
     sproutPoints: sprout.points || 0,
     hasAnyData
   };
@@ -11506,7 +11521,25 @@ function renderMonthlyStatsOverlay(data){
       </div>`);
   }
 
-  // 7. Додатково: швидкі задачі + росток
+  // 7. Книги місяця
+  if (data.booksFinished.length){
+    const booksHtml = data.booksFinished.map(b => `
+      <div class="ms-book-cover">
+        ${b.cover
+          ? `<img src="${b.cover}" alt="">`
+          : `<div class="fallback" style="background:${b.color || '#7C4DFF'}">📖</div>`}
+        <div class="ms-book-title">${escapeHtml(b.title)}</div>
+      </div>`).join('');
+    slides.push(`
+      <div class="ms-slide ms-slide-books">
+        <div class="ms-emoji">📚</div>
+        <div class="ms-eyebrow">Книги місяця</div>
+        <div class="ms-title">${data.booksFinished.length === 1 ? 'Прочитано 1 книгу' : `Прочитано ${data.booksFinished.length} книги(-г)`}</div>
+        <div class="ms-books-grid">${booksHtml}</div>
+      </div>`);
+  }
+
+  // 8. Додатково: швидкі задачі + росток
   slides.push(`
     <div class="ms-slide ms-slide-extra">
       <div class="ms-emoji">✨</div>
@@ -11518,7 +11551,7 @@ function renderMonthlyStatsOverlay(data){
       <div class="ms-subtitle" style="margin-top:20px;">Кожна маленька дія рухає тебе вперед 🌱</div>
     </div>`);
 
-  // 8. Порівняння з попереднім місяцем
+  // 9. Порівняння з попереднім місяцем
   const comparison = computeMonthlyComparison(data.year, data.month);
   if (comparison.items.length){
     const prevMonthLabel = MONTHS_NOMINATIVE[comparison.previous.month];
@@ -11546,7 +11579,7 @@ function renderMonthlyStatsOverlay(data){
       </div>`);
   }
 
-  // 9. Фінал
+  // 10. Фінал
   slides.push(`
     <div class="ms-slide ms-slide-outro">
       <div class="ms-emoji">🚀</div>
