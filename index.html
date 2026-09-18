@@ -2430,6 +2430,76 @@
   }
   .bookshelf-note { margin-top: 14px; }
 
+  /* ---------- Перемикач режиму перегляду книг (список / полиця) ---------- */
+  .book-view-toggle-btn {
+    width: 36px; height: 36px; border-radius: 50%; flex: 0 0 auto;
+    background: rgba(217,165,102,0.16); border: 1px solid rgba(217,165,102,0.4);
+    color: #D9A566; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform .12s ease;
+  }
+  .book-view-toggle-btn svg { width: 17px; height: 17px; }
+  .book-view-toggle-btn:active { transform: scale(0.9); }
+
+  /* ---------- Книжкова полиця — картки-віджети книг (основний режим) ---------- */
+  .book-widget-list { display: flex; flex-direction: column; gap: 14px; }
+  .book-widget-card {
+    position: relative;
+    border-radius: 24px;
+    padding: 20px 20px 18px;
+    overflow: hidden;
+    cursor: pointer;
+    background:
+      radial-gradient(120% 90% at 8% 0%, rgba(255,150,40,0.55) 0%, rgba(255,120,20,0.16) 30%, rgba(10,7,5,0) 55%),
+      linear-gradient(160deg, #16110C 0%, #0B0906 55%, #060504 100%);
+    box-shadow: 0 10px 24px -10px rgba(0,0,0,0.6);
+    transition: transform .12s ease;
+  }
+  .book-widget-card:active { transform: scale(0.985); }
+  .book-widget-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .book-widget-left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .book-widget-icon {
+    width: 38px; height: 38px; border-radius: 50%; flex: 0 0 auto;
+    background: rgba(255,255,255,0.08);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; margin-bottom: 16px;
+  }
+  .book-widget-icon svg { width: 17px; height: 17px; }
+  .book-widget-title {
+    font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 19px; color: #F6F0E6;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .book-widget-meta {
+    font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 7px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .book-widget-status { margin-top: 10px; }
+  .book-widget-cover {
+    width: 82px; height: 82px; flex: 0 0 auto; border-radius: 16px; overflow: hidden;
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid rgba(255,150,60,0.55);
+    box-shadow: 0 0 18px rgba(255,140,40,0.35), inset 0 0 0 1px rgba(0,0,0,0.2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .book-widget-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .book-widget-cover .book-widget-cover-placeholder { width: 30px; height: 30px; color: rgba(255,255,255,0.28); }
+  .book-widget-cover .book-widget-cover-placeholder svg { width: 100%; height: 100%; }
+  .book-widget-progress { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+  .book-widget-bar { flex: 1; display: flex; gap: 3px; }
+  .book-widget-seg { flex: 1; height: 9px; border-radius: 5px; background: rgba(255,255,255,0.12); }
+  .book-widget-seg.filled { background: #F6F0E6; }
+  .book-widget-seg.partial {
+    position: relative; overflow: visible;
+    background: linear-gradient(to right, #F6F0E6 var(--p, 50%), rgba(255,255,255,0.12) var(--p, 50%));
+  }
+  .book-widget-seg-line {
+    position: absolute; top: -3px; bottom: -3px; left: var(--p, 50%); width: 2px; margin-left: -1px;
+    background: #FF8A3D; box-shadow: 0 0 6px rgba(255,138,61,0.9); border-radius: 1px;
+  }
+  .book-widget-left-label {
+    font-size: 13px; color: rgba(255,255,255,0.65); white-space: nowrap; font-variant-numeric: tabular-nums;
+  }
+
   @keyframes bookCoverDropIn {
     0% { transform: translateY(-40px) scale(0.85); opacity: 0; }
     60% { transform: translateY(1px) scale(1.03); opacity: 1; }
@@ -2468,6 +2538,8 @@
   .bookshelf-move-cancel { padding: 6px 12px; font-size: 13px; white-space: nowrap; }
 
   /* ---------- Форма книги: обкладинка, статус ---------- */
+  .book-form-row-2 { display: flex; gap: 12px; }
+  .book-form-row-2 > div { flex: 1; min-width: 0; }
   .book-cover-upload {
     width: 100%; max-width: 150px; aspect-ratio: 3/4; margin: 0 auto 20px;
     border-radius: var(--radius-md); border: 1.5px dashed var(--card-border);
@@ -3947,6 +4019,20 @@
     <div class="field-label">Назва</div>
     <input class="text-input" id="bookTitleInput" placeholder="Наприклад: Кобзар" maxlength="60">
 
+    <div class="field-label">Автор (необов'язково)</div>
+    <input class="text-input" id="bookAuthorInput" placeholder="Наприклад: Тарас Шевченко" maxlength="60">
+
+    <div class="book-form-row-2">
+      <div>
+        <div class="field-label">Жанр (необов'язково)</div>
+        <input class="text-input" id="bookGenreInput" placeholder="Наприклад: Поезія" maxlength="40">
+      </div>
+      <div>
+        <div class="field-label">Рік (необов'язково)</div>
+        <input class="text-input" id="bookYearInput" type="number" placeholder="1840" min="0" max="2100">
+      </div>
+    </div>
+
     <div class="field-label">Обкладинка (необов'язково)</div>
     <div class="book-cover-upload" id="bookCoverUpload">
       <div class="book-cover-placeholder" id="bookCoverPlaceholder">+ Додати фото</div>
@@ -3967,6 +4053,17 @@
     <div id="bookEndDateWrap">
       <div class="field-label">Дата завершення читання</div>
       <input class="text-input" type="date" id="bookEndDateInput">
+    </div>
+
+    <div class="book-form-row-2">
+      <div>
+        <div class="field-label">Всього сторінок</div>
+        <input class="text-input" type="number" id="bookTotalPagesInput" placeholder="520" min="0" max="20000">
+      </div>
+      <div id="bookCurrentPageWrap">
+        <div class="field-label">Прочитано сторінок</div>
+        <input class="text-input" type="number" id="bookCurrentPageInput" placeholder="0" min="0" max="20000">
+      </div>
     </div>
 
     <div class="field-label">Нотатки (необов'язково)</div>
@@ -4281,6 +4378,7 @@ let viewingBookId = null;      // id книги, картка якої зара�
 let bookCardRemoveConfirming = false; // чи зараз показано підтвердження видалення у картці книги
 let bookCardStatusPicking = false; // чи зараз показано вибір статусу (замість бейджа) у картці книги
 let movingBookId = null;       // id книги, яку зараз переміщують на полиці (режим вибору нового місця)
+let bookViewMode = 'list';     // 'list' — звичайний список книг (основний режим), 'shelf' — візуальна книжкова полиця
 let listsView = { screen: 'overview', listId: null }; // поточний екран вкладки "Списки"
 let listsAdding = false; // чи зараз показано поле вводу нового списку
 let listItemAdding = false; // чи показано поле вводу нового пункту всередині списку
@@ -4420,7 +4518,7 @@ function renderStorageBanner(){
 function saveState(){
   if (!storageAvailable) { showSaveStatus('Не збережено — сховище недоступне', true); return; }
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, lateFinishDays, earlyFinishDays, seenBadgeIds, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, countdowns, weeklyCardsHidden, waterGoal, waterLog, waterGoalReachedDays, stopwatchState, quickNoteText, tallyCounter, monthlyStatsShownKey, monthlyStatsLastPeriod, monthlyStatsExpiresAt, mealLog }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, lateFinishDays, earlyFinishDays, seenBadgeIds, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, bookViewMode, countdowns, weeklyCardsHidden, waterGoal, waterLog, waterGoalReachedDays, stopwatchState, quickNoteText, tallyCounter, monthlyStatsShownKey, monthlyStatsLastPeriod, monthlyStatsExpiresAt, mealLog }));
     showSaveStatus('Збережено');
   }catch(e){
     console.error('Не вдалося зберегти дані:', e);
@@ -4472,6 +4570,7 @@ function loadState(){
         if (!Array.isArray(l.items)) l.items = [];
       });
       bookshelfBooks = Array.isArray(parsed.bookshelfBooks) ? parsed.bookshelfBooks : [];
+      bookViewMode = (parsed.bookViewMode === 'shelf') ? 'shelf' : 'list';
       countdowns = Array.isArray(parsed.countdowns) ? parsed.countdowns.filter(c => c && typeof c.id === 'string') : [];
       // Міграція для книг, доданих до появи дат читання: якщо дата початку ще не збережена,
       // беремо її з id книги (book_<часова мітка>_...) — там закодовано реальний момент
@@ -6531,6 +6630,132 @@ function bookshelfRowHtml(shelfIndex){
   return `<div class="bookshelf-row-slots" style="top:${layout.top};left:${layout.left};width:${layout.width};height:${layout.height};">${slotsHtml}</div>`;
 }
 
+/* ---------- Перемикання між режимами перегляду книг: звичайний список (основний) і візуальна полиця ---------- */
+function renderBookScreen(){
+  if (bookViewMode === 'shelf') renderBookshelfDetail();
+  else renderBookListDetail();
+}
+
+// Перше вільне місце на полиці (перебираємо поличку за поличкою, місце за місцем) —
+// потрібне, щоб додати книгу зі звичайного списку, де немає вибору конкретного слота руками.
+function findFirstEmptyBookSlot(){
+  for (let s = 0; s < BOOKSHELF_SHELF_COUNT; s++){
+    const cap = BOOKSHELF_ROW_LAYOUT[s].capacity;
+    for (let i = 0; i < cap; i++){
+      if (!bookshelfBooks.some(b => b.shelf === s && b.slot === i)) return { shelf: s, slot: i };
+    }
+  }
+  return null;
+}
+
+const BOOK_VIEW_ICON_SHELF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="4" height="16" rx="1"/><rect x="9" y="7" width="4" height="13" rx="1"/><rect x="15" y="4" width="4" height="16" rx="1"/></svg>`;
+const BOOK_VIEW_ICON_LIST = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1.4" fill="currentColor" stroke="none"/></svg>`;
+
+const BOOK_WIDGET_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>`;
+const BOOK_WIDGET_COVER_PLACEHOLDER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>`;
+const BOOK_WIDGET_SEGMENTS = 8;
+
+// Картка-віджет книги (шаблон з фото: іконка + обкладинка справа зверху, назва, метадані, сегментований прогрес-бар).
+function bookWidgetProgressHtml(book){
+  const total = book.totalPages || 0;
+  const current = book.status === 'read' ? total : Math.min(book.currentPage || 0, total);
+  const fraction = total > 0 ? current / total : 0;
+  const filledExact = fraction * BOOK_WIDGET_SEGMENTS;
+  const filledFull = Math.min(BOOK_WIDGET_SEGMENTS, Math.floor(filledExact + 1e-6));
+  const partialFrac = filledExact - filledFull;
+
+  const segs = Array.from({ length: BOOK_WIDGET_SEGMENTS }, (_, i) => {
+    if (i < filledFull) return `<div class="book-widget-seg filled"></div>`;
+    if (i === filledFull && partialFrac > 0.03){
+      return `<div class="book-widget-seg partial" style="--p:${(partialFrac * 100).toFixed(1)}%"><span class="book-widget-seg-line"></span></div>`;
+    }
+    return `<div class="book-widget-seg"></div>`;
+  }).join('');
+
+  const left = Math.max(0, total - current);
+  const leftLabel = total > 0 ? `${left} залишилось` : '—';
+
+  return `
+    <div class="book-widget-progress">
+      <div class="book-widget-bar">${segs}</div>
+      <div class="book-widget-left-label">${leftLabel}</div>
+    </div>`;
+}
+
+function bookWidgetCardHtml(book){
+  const coverInner = book.cover
+    ? `<img src="${book.cover}" alt="">`
+    : `<div class="book-widget-cover-placeholder">${BOOK_WIDGET_COVER_PLACEHOLDER}</div>`;
+
+  const metaParts = [book.author, book.genre, book.year].filter(Boolean).map(escapeHtml);
+  const metaLine = metaParts.length ? metaParts.join(' • ') : (book.status === 'read' ? 'Прочитано' : 'Читаю');
+
+  return `
+    <div class="book-widget-card" data-book-id="${book.id}">
+      <div class="book-widget-row">
+        <div class="book-widget-left">
+          <div class="book-widget-icon">${BOOK_WIDGET_ICON}</div>
+          <div class="book-widget-title">${escapeHtml(book.title || '')}</div>
+          <div class="book-widget-meta">${metaLine}</div>
+        </div>
+        <div class="book-widget-cover">${coverInner}</div>
+      </div>
+      ${bookWidgetProgressHtml(book)}
+    </div>`;
+}
+
+// Звичайний список книг — основний (за замовчуванням) режим перегляду полиці.
+function renderBookListDetail(){
+  const body = document.getElementById('listsBody');
+  document.getElementById('listsFab').style.display = 'none';
+  const isEmpty = bookshelfBooks.length === 0;
+  const isFull = bookshelfBooks.length >= BOOKSHELF_TOTAL_CAPACITY;
+
+  let subtitle;
+  if (isEmpty) subtitle = 'Полиця поки порожня';
+  else subtitle = `${bookshelfBooks.length} з ${BOOKSHELF_TOTAL_CAPACITY} ${bookWord(bookshelfBooks.length)}`;
+
+  const listHtml = isEmpty
+    ? `<div class="habit-stats-insight bookshelf-note">💡 Ще немає жодної книги — додай першу кнопкою "+" вище.</div>`
+    : `<div class="book-widget-list">${bookshelfBooks.map(bookWidgetCardHtml).join('')}</div>`;
+
+  body.innerHTML = `
+    <div class="list-detail-header">
+      <div class="list-detail-back" id="bookListBackBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div class="list-detail-titlewrap">
+        <div class="list-detail-title">📚 Книжкова полиця</div>
+        <div class="list-detail-progress-text">${subtitle}</div>
+      </div>
+      <div class="book-view-toggle-btn" id="bookViewToggleBtn" title="Показати книжкову полицю">${BOOK_VIEW_ICON_SHELF}</div>
+      <div class="countdown-add-btn" id="bookListAddBtn" title="Додати книгу"${isFull ? ' style="opacity:.35; pointer-events:none;"' : ''}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+    </div>
+    ${listHtml}`;
+
+  document.getElementById('bookListBackBtn').addEventListener('click', () => {
+    listsView = { screen: 'overview', listId: null };
+    renderListsBody();
+  });
+  document.getElementById('bookViewToggleBtn').addEventListener('click', () => {
+    bookViewMode = 'shelf';
+    saveState();
+    renderBookScreen();
+  });
+  const addBtn = document.getElementById('bookListAddBtn');
+  if (!isFull){
+    addBtn.addEventListener('click', () => {
+      const pos = findFirstEmptyBookSlot();
+      if (pos) openBookForm(null, pos.shelf, pos.slot);
+    });
+  }
+  body.querySelectorAll('.book-widget-card[data-book-id]').forEach(el => {
+    el.addEventListener('click', () => openBookCard(el.dataset.bookId));
+  });
+}
+
 function renderBookshelfDetail(){
   const body = document.getElementById('listsBody');
   document.getElementById('listsFab').style.display = 'none';
@@ -6558,6 +6783,7 @@ function renderBookshelfDetail(){
         <div class="list-detail-title">📚 Книжкова полиця</div>
         <div class="list-detail-progress-text">${subtitle}</div>
       </div>
+      <div class="book-view-toggle-btn" id="bookViewToggleBtn" title="Показати списком">${BOOK_VIEW_ICON_LIST}</div>
     </div>
     <div class="bookshelf-frame">${rowsHtml}</div>
     ${movingNoteHtml}
@@ -6568,6 +6794,16 @@ function renderBookshelfDetail(){
     listsView = { screen: 'overview', listId: null };
     renderListsBody();
   });
+
+  const viewToggleBtn = document.getElementById('bookViewToggleBtn');
+  if (viewToggleBtn){
+    viewToggleBtn.addEventListener('click', () => {
+      movingBookId = null;
+      bookViewMode = 'list';
+      saveState();
+      renderBookScreen();
+    });
+  }
 
   const moveCancelBtn = document.getElementById('bookshelfMoveCancelBtn');
   if (moveCancelBtn){
@@ -6626,6 +6862,11 @@ function openBookForm(book, targetShelf, targetSlot){
 
   document.getElementById('bookFormTitleEl').textContent = book ? 'Редагувати книгу' : 'Нова книга';
   document.getElementById('bookTitleInput').value = book ? book.title : '';
+  document.getElementById('bookAuthorInput').value = book ? (book.author || '') : '';
+  document.getElementById('bookGenreInput').value = book ? (book.genre || '') : '';
+  document.getElementById('bookYearInput').value = book && book.year ? book.year : '';
+  document.getElementById('bookTotalPagesInput').value = book && book.totalPages ? book.totalPages : '';
+  document.getElementById('bookCurrentPageInput').value = book && book.currentPage ? book.currentPage : '';
   document.getElementById('bookNotesInput').value = book ? (book.notes || '') : '';
   document.getElementById('bookStartDateInput').value = dayKeyToInputDate(book && book.startedAt ? book.startedAt : bookTodayKey());
   document.getElementById('bookEndDateInput').value = dayKeyToInputDate(book && book.finishedAt ? book.finishedAt : bookTodayKey());
@@ -6668,6 +6909,8 @@ function updateBookStatusButtons(){
   document.getElementById('bookStatusReadBtn').classList.toggle('active', bookFormStatus === 'read');
   // Дата завершення має сенс тільки для прочитаної книги — ховаємо поле для "Читаю".
   document.getElementById('bookEndDateWrap').style.display = (bookFormStatus === 'read') ? 'block' : 'none';
+  // "Прочитано сторінок" має сенс тільки поки книгу читають — для прочитаної це завжди 100%.
+  document.getElementById('bookCurrentPageWrap').style.display = (bookFormStatus === 'read') ? 'none' : 'block';
 }
 
 function readAndResizeCoverImage(file, maxDim){
@@ -6701,6 +6944,15 @@ function saveBookForm(){
     setTimeout(() => { input.style.borderColor = ''; }, 1200);
     return;
   }
+  const author = document.getElementById('bookAuthorInput').value.trim();
+  const genre = document.getElementById('bookGenreInput').value.trim();
+  const yearRaw = parseInt(document.getElementById('bookYearInput').value, 10);
+  const year = Number.isFinite(yearRaw) && yearRaw > 0 ? yearRaw : null;
+  const totalPagesRaw = parseInt(document.getElementById('bookTotalPagesInput').value, 10);
+  const totalPages = Number.isFinite(totalPagesRaw) && totalPagesRaw > 0 ? totalPagesRaw : 0;
+  let currentPageRaw = parseInt(document.getElementById('bookCurrentPageInput').value, 10);
+  let currentPage = Number.isFinite(currentPageRaw) && currentPageRaw > 0 ? currentPageRaw : 0;
+  if (totalPages > 0 && currentPage > totalPages) currentPage = totalPages;
   const notes = document.getElementById('bookNotesInput').value.trim();
   const startedAt = inputDateToDayKey(document.getElementById('bookStartDateInput').value) || bookTodayKey();
   let finishedAt = (bookFormStatus === 'read')
@@ -6713,6 +6965,11 @@ function saveBookForm(){
     const book = bookshelfBooks.find(b => b.id === editingBookId);
     if (book){
       book.title = title;
+      book.author = author;
+      book.genre = genre;
+      book.year = year;
+      book.totalPages = totalPages;
+      book.currentPage = currentPage;
       book.notes = notes;
       book.cover = bookCoverDataUrl;
       book.status = bookFormStatus;
@@ -6723,7 +6980,7 @@ function saveBookForm(){
     }
     saveState();
     closeBookForm();
-    if (listsView.screen === 'bookshelf') renderBookshelfDetail();
+    if (listsView.screen === 'bookshelf') renderBookScreen();
   } else {
     // Визначаємо поличку і саме місце: те, на пунктирний слот якого тицьнули,
     // або перше вільне місце, якщо з якоїсь причини цільове місце вже зайняте.
@@ -6746,6 +7003,8 @@ function saveBookForm(){
     const book = {
       id: makeBookId(),
       title, notes,
+      author, genre, year,
+      totalPages, currentPage,
       cover: bookCoverDataUrl,
       status: bookFormStatus,
       rating: 0,
@@ -6828,7 +7087,7 @@ function renderBookCardBody(){
           book.finishedAt = (newStatus === 'read') ? bookTodayKey() : null;
           if (newStatus !== 'read') book.rating = 0;
           saveState();
-          if (listsView.screen === 'bookshelf') renderBookshelfDetail();
+          if (listsView.screen === 'bookshelf') renderBookScreen();
         }
         renderBookCardBody();
       });
@@ -6865,7 +7124,7 @@ function renderBookCardBody(){
     bookshelfBooks = bookshelfBooks.filter(b => b.id !== book.id);
     saveState();
     closeBookCard();
-    if (listsView.screen === 'bookshelf') renderBookshelfDetail();
+    if (listsView.screen === 'bookshelf') renderBookScreen();
   });
 }
 
@@ -8356,7 +8615,7 @@ function renderListsBody(){
   } else if (listsView.screen === 'habitStats'){
     renderHabitStatsDetail();
   } else if (listsView.screen === 'bookshelf'){
-    renderBookshelfDetail();
+    renderBookScreen();
   } else if (listsView.screen === 'countdowns'){
     renderCountdownsDetail();
   } else if (listsView.screen === 'badges'){
@@ -11019,7 +11278,8 @@ document.getElementById('bookCardMoveBtn').addEventListener('click', () => {
   const movingId = viewingBookId;
   closeBookCard();
   movingBookId = movingId;
-  if (listsView.screen === 'bookshelf') renderBookshelfDetail();
+  bookViewMode = 'shelf'; // переміщення книги відбувається на візуальній поличці
+  if (listsView.screen === 'bookshelf') renderBookScreen();
 });
 document.getElementById('bookCardOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'bookCardOverlay') closeBookCard();
