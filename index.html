@@ -6593,29 +6593,38 @@ function hslToHexBook(h, s, l){
   const toHex = x => Math.round(Math.max(0, Math.min(1, x)) * 255).toString(16).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
-// Середній колір верхньої частини обкладинки (звідти "падає" світло на картку), підсилений по насиченості.
+// Домінантний колір обкладинки: усереднення по всьому фото з акцентом на насичені пікселі
+// (щоб не з'їжджати в сіро-бежевий, якщо зверху світлий фон/поля) — саме він і "світиться" на картці.
+const BOOK_GLOW_VERSION = 2; // підняти число, щоб примусово перерахувати підсвітку для вже доданих книг
 function extractCoverGlowColor(dataUrl){
   return new Promise((resolve) => {
     if (!dataUrl){ resolve(null); return; }
     const img = new Image();
     img.onload = () => {
       try{
-        const size = 32;
-        const topH = Math.max(4, Math.ceil(size * 0.55));
+        const size = 48;
         const canvas = document.createElement('canvas');
         canvas.width = size; canvas.height = size;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, size, size);
-        const data = ctx.getImageData(0, 0, size, topH).data;
-        let r = 0, g = 0, b = 0, n = 0;
+        const data = ctx.getImageData(0, 0, size, size).data;
+        let vr = 0, vg = 0, vb = 0, vn = 0; // насичені пікселі — головне джерело кольору
+        let ar = 0, ag = 0, ab = 0, an = 0; // усі пікселі — запасний варіант
         for (let i = 0; i < data.length; i += 4){
           if (data[i + 3] < 128) continue;
-          r += data[i]; g += data[i + 1]; b += data[i + 2]; n++;
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          ar += r; ag += g; ab += b; an++;
+          const max = Math.max(r, g, b), min = Math.min(r, g, b);
+          const sat = max === 0 ? 0 : (max - min) / max;
+          if (sat > 0.18 && max > 40 && max < 250){ vr += r; vg += g; vb += b; vn++; }
         }
-        if (!n){ resolve('#E8A24A'); return; }
-        const hsl = rgbToHslBook(r / n, g / n, b / n);
-        const s = Math.min(0.85, Math.max(hsl.s, 0.5));
-        const l = Math.min(0.62, Math.max(0.4, hsl.l));
+        let r, g, b;
+        if (an === 0){ resolve('#E8A24A'); return; }
+        if (vn > an * 0.04){ r = vr / vn; g = vg / vn; b = vb / vn; }
+        else { r = ar / an; g = ag / an; b = ab / an; }
+        const hsl = rgbToHslBook(r, g, b);
+        const s = Math.min(0.85, Math.max(hsl.s, 0.45));
+        const l = Math.min(0.6, Math.max(0.38, hsl.l));
         resolve(hslToHexBook(hsl.h, s, l));
       }catch(err){ resolve('#E8A24A'); }
     };
@@ -6632,14 +6641,17 @@ function bookWidgetCardBackground(book){
   const glow = book.glowColor || book.color || '#E8A24A';
   return `radial-gradient(150% 80% at 50% -16%, ${bookGlowRgba(glow, 0.55)} 0%, ${bookGlowRgba(glow, 0.2)} 38%, rgba(10,7,5,0) 68%), linear-gradient(160deg, #16110C 0%, #0B0906 55%, #060504 100%)`;
 }
-// Рахує колір підсвітки асинхронно і кешує на книзі (для книг, доданих ще до цієї фічі).
+// Рахує колір підсвітки асинхронно і кешує на книзі (для книг, доданих ще до цієї фічі,
+// або з підсвіткою, порахованою старою версією алгоритму).
 function ensureBookGlowColor(book){
-  if (!book.cover || book.glowColor || book._glowPending) return;
+  if (!book.cover || book._glowPending) return;
+  if (book.glowColor && book.glowColorV === BOOK_GLOW_VERSION) return;
   book._glowPending = true;
   extractCoverGlowColor(book.cover).then(color => {
     book._glowPending = false;
     if (!color) return;
     book.glowColor = color;
+    book.glowColorV = BOOK_GLOW_VERSION;
     saveState();
     if (listsView.screen === 'bookshelf') renderBookScreen();
   });
@@ -6649,6 +6661,7 @@ function scheduleBookGlowColor(book){
   extractCoverGlowColor(book.cover).then(color => {
     if (!color) return;
     book.glowColor = color;
+    book.glowColorV = BOOK_GLOW_VERSION;
     saveState();
     if (listsView.screen === 'bookshelf') renderBookScreen();
     if (viewingBookId === book.id) renderBookCardBody();
@@ -6909,7 +6922,7 @@ function renderBookListDetail(){
 
   const listHtml = isEmpty
     ? `<div class="habit-stats-insight bookshelf-note">💡 Ще немає жодної книги — додай першу кнопкою "+" вище.</div>`
-    : `<div class="book-widget-list">${bookshelfBooks.map(bookWidgetCardHtml).join('')}</div>`;
+    : `<div class="book-widget-list">${bookshelfBooks.slice().reverse().map(bookWidgetCardHtml).join('')}</div>`;
 
   body.innerHTML = `
     <div class="list-detail-header">
