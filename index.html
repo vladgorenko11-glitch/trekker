@@ -2469,7 +2469,7 @@
   }
   .book-widget-meta {
     font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 7px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.4; white-space: normal; overflow-wrap: anywhere;
   }
   .book-widget-status { margin-top: 10px; }
   .book-widget-cover {
@@ -2490,11 +2490,7 @@
   }
   .book-widget-bar-fill {
     position: absolute; top: 0; left: 0; bottom: 0;
-    background: #F6F0E6; border-radius: 999px;
-  }
-  .book-widget-bar-divider {
-    position: absolute; top: 0; bottom: 0; width: 1px;
-    background: rgba(0,0,0,0.22); margin-left: -0.5px;
+    background: #F6F0E6; border-radius: 0;
   }
   .book-widget-bar-marker {
     position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px;
@@ -4617,6 +4613,7 @@ function loadState(){
         } else {
           b.startedAt = bookTodayKey();
         }
+        if (!Array.isArray(b.pagesLog)) b.pagesLog = [];
       });
       weeklyCardsHidden = typeof parsed.weeklyCardsHidden === 'boolean' ? parsed.weeklyCardsHidden : false;
       waterGoal = (typeof parsed.waterGoal === 'number' && parsed.waterGoal > 0) ? parsed.waterGoal : 8;
@@ -6795,23 +6792,46 @@ const BOOK_VIEW_ICON_LIST = `<svg viewBox="0 0 24 24" fill="none" stroke="curren
 
 const BOOK_WIDGET_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>`;
 const BOOK_WIDGET_COVER_PLACEHOLDER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>`;
-const BOOK_WIDGET_SEGMENTS = 8;
-
 // Картка-віджет книги (шаблон з фото: іконка + обкладинка справа зверху, назва, метадані, суцільна шкала сторінок).
 function bookWidgetProgressHtml(book){
   const total = book.totalPages || 0;
   const current = book.status === 'read' ? total : Math.min(book.currentPage || 0, total);
   const fraction = total > 0 ? current / total : 0;
 
-  const dividers = Array.from({ length: BOOK_WIDGET_SEGMENTS - 1 }, (_, i) => {
-    const pos = ((i + 1) / BOOK_WIDGET_SEGMENTS * 100).toFixed(3);
-    return `<div class="book-widget-bar-divider" style="left:${pos}%"></div>`;
-  }).join('');
+  // Шкала складається з окремих шматків: кожне додавання сторінок (натиснув «+» і підтвердив) —
+  // це окремий шматок, а між шматками лишається пробіл. Межі рахуємо від поточної сторінки назад
+  // (останній запис закінчується на current), тож пробіли завжди стоять рівно там, де ти зупинявся,
+  // і тільки в межах прочитаної частини. Все, що було прочитано до першого запису, — перший шматок.
+  const GAP_PX = 3;
+  const bounds = [];
+  if (total > 0 && current > 0){
+    const log = Array.isArray(book.pagesLog) ? book.pagesLog : [];
+    let pos = current;
+    for (let i = log.length - 1; i >= 0; i--){
+      const pg = Number(log[i] && log[i].pages) || 0;
+      if (pg <= 0) continue;
+      pos -= pg;
+      if (pos <= 0) break;
+      bounds.push(pos);
+    }
+    bounds.reverse();
+  }
+  const edges = [0, ...bounds, current];
+  const segHtml = total > 0 ? edges.slice(0, -1).map((start, i) => {
+    const end = edges[i + 1];
+    const startPct = (start / total * 100).toFixed(3);
+    const widthPct = ((end - start) / total * 100).toFixed(3);
+    const isFirst = i === 0;
+    const isLast = i === edges.length - 2;
+    const cut = (isFirst ? 0 : GAP_PX / 2) + (isLast ? 0 : GAP_PX / 2);
+    const leftCss = isFirst ? `${startPct}%` : `calc(${startPct}% + ${GAP_PX / 2}px)`;
+    const widthCss = cut ? `max(2px, calc(${widthPct}% - ${cut}px))` : `${widthPct}%`;
+    return `<div class="book-widget-bar-fill" style="left:${leftCss};width:${widthCss}"></div>`;
+  }).join('') : '';
 
   const barHtml = `
     <div class="book-widget-bar">
-      <div class="book-widget-bar-fill" style="width:${(fraction * 100).toFixed(2)}%"></div>
-      ${dividers}
+      ${segHtml}
       ${fraction > 0 ? `<div class="book-widget-bar-marker" style="left:${(fraction * 100).toFixed(2)}%"></div>` : ''}
     </div>`;
 
@@ -6858,11 +6878,17 @@ function wireBookQuickLog(container){
       bookQuickLogOpenId = null;
       if (book && Number.isFinite(add) && add > 0){
         const total = book.totalPages || 0;
+        const prevPage = Math.min(book.currentPage || 0, total);
         book.currentPage = Math.min(total, (book.currentPage || 0) + add);
         if (total > 0 && book.currentPage >= total){
           book.status = 'read';
           if (!book.finishedAt) book.finishedAt = bookTodayKey();
         }
+        // Кожне відмічення сторінок — окремий запис у логу (навіть у межах одного дня):
+        // саме він дає окремий шматок на шкалі з пробілом після нього.
+        if (!Array.isArray(book.pagesLog)) book.pagesLog = [];
+        const loggedPages = Math.min(add, total - prevPage);
+        if (loggedPages > 0) book.pagesLog.push({ date: bookTodayKey(), pages: loggedPages });
         saveState();
       }
       renderBookScreenAndCard();
