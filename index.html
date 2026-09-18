@@ -2448,11 +2448,9 @@
     padding: 20px 20px 18px;
     overflow: hidden;
     cursor: pointer;
-    background:
-      radial-gradient(120% 90% at 8% 0%, rgba(255,150,40,0.55) 0%, rgba(255,120,20,0.16) 30%, rgba(10,7,5,0) 55%),
-      linear-gradient(160deg, #16110C 0%, #0B0906 55%, #060504 100%);
+    background: linear-gradient(160deg, #16110C 0%, #0B0906 55%, #060504 100%);
     box-shadow: 0 10px 24px -10px rgba(0,0,0,0.6);
-    transition: transform .12s ease;
+    transition: transform .12s ease, background .4s ease;
   }
   .book-widget-card:active { transform: scale(0.985); }
   .book-widget-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
@@ -2475,30 +2473,56 @@
   }
   .book-widget-status { margin-top: 10px; }
   .book-widget-cover {
-    width: 82px; height: 82px; flex: 0 0 auto; border-radius: 16px; overflow: hidden;
-    background: rgba(255,255,255,0.04);
-    border: 1.5px solid rgba(255,150,60,0.55);
-    box-shadow: 0 0 18px rgba(255,140,40,0.35), inset 0 0 0 1px rgba(0,0,0,0.2);
+    width: 82px; height: 82px; flex: 0 0 auto; border-radius: 16px; overflow: visible;
     display: flex; align-items: center; justify-content: center;
   }
-  .book-widget-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .book-widget-cover img {
+    width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 16px;
+    box-shadow: 0 14px 24px -8px rgba(0,0,0,0.65), 0 4px 10px -3px rgba(0,0,0,0.5);
+  }
+  .book-widget-cover-empty { background: rgba(255,255,255,0.05); border-radius: 16px; }
   .book-widget-cover .book-widget-cover-placeholder { width: 30px; height: 30px; color: rgba(255,255,255,0.28); }
   .book-widget-cover .book-widget-cover-placeholder svg { width: 100%; height: 100%; }
   .book-widget-progress { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
-  .book-widget-bar { flex: 1; display: flex; gap: 3px; }
-  .book-widget-seg { flex: 1; height: 9px; border-radius: 5px; background: rgba(255,255,255,0.12); }
-  .book-widget-seg.filled { background: #F6F0E6; }
-  .book-widget-seg.partial {
-    position: relative; overflow: visible;
-    background: linear-gradient(to right, #F6F0E6 var(--p, 50%), rgba(255,255,255,0.12) var(--p, 50%));
+  .book-widget-bar {
+    position: relative; flex: 1; height: 15px; border-radius: 999px;
+    background: rgba(255,255,255,0.12); overflow: hidden;
   }
-  .book-widget-seg-line {
-    position: absolute; top: -3px; bottom: -3px; left: var(--p, 50%); width: 2px; margin-left: -1px;
+  .book-widget-bar-fill {
+    position: absolute; top: 0; left: 0; bottom: 0;
+    background: #F6F0E6; border-radius: 999px;
+  }
+  .book-widget-bar-divider {
+    position: absolute; top: 0; bottom: 0; width: 1px;
+    background: rgba(0,0,0,0.22); margin-left: -0.5px;
+  }
+  .book-widget-bar-marker {
+    position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px;
     background: #FF8A3D; box-shadow: 0 0 6px rgba(255,138,61,0.9); border-radius: 1px;
   }
   .book-widget-left-label {
     font-size: 13px; color: rgba(255,255,255,0.65); white-space: nowrap; font-variant-numeric: tabular-nums;
   }
+  .book-widget-add-btn {
+    flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.12); color: #F6F0E6; font-size: 15px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: transform .1s ease, background .15s ease;
+  }
+  .book-widget-add-btn:active { transform: scale(0.88); background: rgba(255,255,255,0.2); }
+  .book-widget-quicklog { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+  .book-widget-quicklog-input {
+    width: 56px; height: 28px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08); color: #F6F0E6; font-size: 13px; text-align: center;
+    -moz-appearance: textfield;
+  }
+  .book-widget-quicklog-input::placeholder { color: rgba(255,255,255,0.35); }
+  .book-widget-quicklog-btn {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; border: none;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer;
+  }
+  .book-widget-quicklog-btn.confirm { background: #F6F0E6; color: #16110C; }
+  .book-widget-quicklog-btn.cancel { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.65); }
 
   @keyframes bookCoverDropIn {
     0% { transform: translateY(-40px) scale(0.85); opacity: 0; }
@@ -2558,11 +2582,17 @@
   /* ---------- Картка книги ---------- */
   .book-card-cover {
     width: 100%; max-width: 190px; aspect-ratio: 3/4; margin: 0 auto 18px;
-    border-radius: var(--radius-md); overflow: hidden; background: var(--bg-elevated);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .book-card-cover img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);
+    box-shadow: 0 16px 32px -10px rgba(0,0,0,0.55), 0 6px 16px -6px rgba(0,0,0,0.4);
+  }
+  .book-card-cover-fallback-box {
+    width: 100%; height: 100%; border-radius: var(--radius-md); background: var(--bg-elevated);
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 12px 26px rgba(0,0,0,0.4);
   }
-  .book-card-cover img { width: 100%; height: 100%; object-fit: contain; }
   .book-card-cover-fallback { font-size: 46px; }
   .book-card-title {
     font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 19px;
@@ -2611,6 +2641,8 @@
   }
   .book-rating-star.filled { color: #E8B23D; }
   .book-rating-star:active { transform: scale(1.2); }
+  .book-card-progress { margin: 2px 0 18px; }
+  .book-card-progress .book-widget-progress { margin-top: 0; }
   .book-card-notes {
     background: var(--bg-elevated); border: 1px solid var(--card-border); border-radius: var(--radius-md);
     padding: 14px; font-size: 13.5px; line-height: 1.5; color: var(--text-secondary);
@@ -4061,7 +4093,7 @@
         <input class="text-input" type="number" id="bookTotalPagesInput" placeholder="520" min="0" max="20000">
       </div>
       <div id="bookCurrentPageWrap">
-        <div class="field-label">Прочитано сторінок</div>
+        <div class="field-label">Прочитано сторінок (наразі)</div>
         <input class="text-input" type="number" id="bookCurrentPageInput" placeholder="0" min="0" max="20000">
       </div>
     </div>
@@ -4377,6 +4409,7 @@ let justPlacedBookId = null;   // id книги, яку щойно постав�
 let viewingBookId = null;      // id книги, картка якої зараз відкрита
 let bookCardRemoveConfirming = false; // чи зараз показано підтвердження видалення у картці книги
 let bookCardStatusPicking = false; // чи зараз показано вибір статусу (замість бейджа) у картці книги
+let bookQuickLogOpenId = null; // id книги, для якої зараз відкрита інлайн-форма "додати сторінки сьогодні"
 let movingBookId = null;       // id книги, яку зараз переміщують на полиці (режим вибору нового місця)
 let bookViewMode = 'list';     // 'list' — звичайний список книг (основний режим), 'shelf' — візуальна книжкова полиця
 let listsView = { screen: 'overview', listId: null }; // поточний екран вкладки "Списки"
@@ -6525,6 +6558,102 @@ function bookWord(n){
 }
 
 function pickBookColor(){ return BOOK_COLOR_PALETTE[Math.floor(Math.random() * BOOK_COLOR_PALETTE.length)]; }
+
+// ---------- Підсвітка картки книги, обчислена з кольору обкладинки ----------
+function hexToRgbBook(hex){
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
+  if (!m) return { r: 232, g: 162, b: 74 };
+  return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+}
+function rgbToHslBook(r, g, b){
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0; const l = (max + min) / 2;
+  if (max !== min){
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max){
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      default: h = (r - g) / d + 4;
+    }
+    h /= 6;
+  }
+  return { h, s, l };
+}
+function hslToHexBook(h, s, l){
+  const hue2rgb = (p, q, t) => { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1/6) return p + (q - p) * 6 * t; if (t < 1/2) return q; if (t < 2/3) return p + (q - p) * (2/3 - t) * 6; return p; };
+  let r, g, b;
+  if (s === 0){ r = g = b = l; }
+  else{
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1/3);
+  }
+  const toHex = x => Math.round(Math.max(0, Math.min(1, x)) * 255).toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+// Середній колір верхньої частини обкладинки (звідти "падає" світло на картку), підсилений по насиченості.
+function extractCoverGlowColor(dataUrl){
+  return new Promise((resolve) => {
+    if (!dataUrl){ resolve(null); return; }
+    const img = new Image();
+    img.onload = () => {
+      try{
+        const size = 32;
+        const topH = Math.max(4, Math.ceil(size * 0.55));
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, size, size);
+        const data = ctx.getImageData(0, 0, size, topH).data;
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let i = 0; i < data.length; i += 4){
+          if (data[i + 3] < 128) continue;
+          r += data[i]; g += data[i + 1]; b += data[i + 2]; n++;
+        }
+        if (!n){ resolve('#E8A24A'); return; }
+        const hsl = rgbToHslBook(r / n, g / n, b / n);
+        const s = Math.min(0.85, Math.max(hsl.s, 0.5));
+        const l = Math.min(0.62, Math.max(0.4, hsl.l));
+        resolve(hslToHexBook(hsl.h, s, l));
+      }catch(err){ resolve('#E8A24A'); }
+    };
+    img.onerror = () => resolve('#E8A24A');
+    img.src = dataUrl;
+  });
+}
+function bookGlowRgba(hex, alpha){
+  const { r, g, b } = hexToRgbBook(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+// Фон картки-віджета: тепле світло згори по кольору обкладинки, що гасне до темного низу.
+function bookWidgetCardBackground(book){
+  const glow = book.glowColor || book.color || '#E8A24A';
+  return `radial-gradient(150% 80% at 50% -16%, ${bookGlowRgba(glow, 0.55)} 0%, ${bookGlowRgba(glow, 0.2)} 38%, rgba(10,7,5,0) 68%), linear-gradient(160deg, #16110C 0%, #0B0906 55%, #060504 100%)`;
+}
+// Рахує колір підсвітки асинхронно і кешує на книзі (для книг, доданих ще до цієї фічі).
+function ensureBookGlowColor(book){
+  if (!book.cover || book.glowColor || book._glowPending) return;
+  book._glowPending = true;
+  extractCoverGlowColor(book.cover).then(color => {
+    book._glowPending = false;
+    if (!color) return;
+    book.glowColor = color;
+    saveState();
+    if (listsView.screen === 'bookshelf') renderBookScreen();
+  });
+}
+// Рахує колір підсвітки одразу після завантаження нового фото (форма додавання/редагування книги).
+function scheduleBookGlowColor(book){
+  extractCoverGlowColor(book.cover).then(color => {
+    if (!color) return;
+    book.glowColor = color;
+    saveState();
+    if (listsView.screen === 'bookshelf') renderBookScreen();
+    if (viewingBookId === book.id) renderBookCardBody();
+  });
+}
 function makeBookId(){ return 'book_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); }
 
 /* ---------- Дати читання книги (коли почав, коли прочитав, скільки днів читав) ---------- */
@@ -6655,50 +6784,113 @@ const BOOK_WIDGET_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentCo
 const BOOK_WIDGET_COVER_PLACEHOLDER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>`;
 const BOOK_WIDGET_SEGMENTS = 8;
 
-// Картка-віджет книги (шаблон з фото: іконка + обкладинка справа зверху, назва, метадані, сегментований прогрес-бар).
+// Картка-віджет книги (шаблон з фото: іконка + обкладинка справа зверху, назва, метадані, суцільна шкала сторінок).
 function bookWidgetProgressHtml(book){
   const total = book.totalPages || 0;
   const current = book.status === 'read' ? total : Math.min(book.currentPage || 0, total);
   const fraction = total > 0 ? current / total : 0;
-  const filledExact = fraction * BOOK_WIDGET_SEGMENTS;
-  const filledFull = Math.min(BOOK_WIDGET_SEGMENTS, Math.floor(filledExact + 1e-6));
-  const partialFrac = filledExact - filledFull;
 
-  const segs = Array.from({ length: BOOK_WIDGET_SEGMENTS }, (_, i) => {
-    if (i < filledFull) return `<div class="book-widget-seg filled"></div>`;
-    if (i === filledFull && partialFrac > 0.03){
-      return `<div class="book-widget-seg partial" style="--p:${(partialFrac * 100).toFixed(1)}%"><span class="book-widget-seg-line"></span></div>`;
-    }
-    return `<div class="book-widget-seg"></div>`;
+  const dividers = Array.from({ length: BOOK_WIDGET_SEGMENTS - 1 }, (_, i) => {
+    const pos = ((i + 1) / BOOK_WIDGET_SEGMENTS * 100).toFixed(3);
+    return `<div class="book-widget-bar-divider" style="left:${pos}%"></div>`;
   }).join('');
+
+  const barHtml = `
+    <div class="book-widget-bar">
+      <div class="book-widget-bar-fill" style="width:${(fraction * 100).toFixed(2)}%"></div>
+      ${dividers}
+      ${fraction > 0 ? `<div class="book-widget-bar-marker" style="left:${(fraction * 100).toFixed(2)}%"></div>` : ''}
+    </div>`;
 
   const left = Math.max(0, total - current);
   const leftLabel = total > 0 ? `${left} залишилось` : '—';
+  const isOpen = bookQuickLogOpenId === book.id;
+  const canQuickLog = total > 0 && book.status !== 'read';
+
+  const tailHtml = isOpen ? `
+    <div class="book-widget-quicklog" data-book-id="${book.id}">
+      <input class="book-widget-quicklog-input" type="number" min="1" max="${total}" placeholder="0">
+      <button class="book-widget-quicklog-btn confirm" type="button" data-action="confirm" title="Додати">✓</button>
+      <button class="book-widget-quicklog-btn cancel" type="button" data-action="cancel" title="Скасувати">✕</button>
+    </div>` : `
+    <div class="book-widget-left-label">${leftLabel}</div>
+    ${canQuickLog ? `<button class="book-widget-add-btn" type="button" data-book-id="${book.id}" title="Додати сторінки сьогодні">+</button>` : ''}
+  `;
 
   return `
     <div class="book-widget-progress">
-      <div class="book-widget-bar">${segs}</div>
-      <div class="book-widget-left-label">${leftLabel}</div>
+      ${barHtml}
+      ${tailHtml}
     </div>`;
 }
 
+// Навішує обробники на кнопку "+" та інлайн-форму додавання сторінок сьогодні в межах заданого контейнера
+// (список книг або картка деталей — обидва використовують bookWidgetProgressHtml).
+function wireBookQuickLog(container){
+  container.querySelectorAll('.book-widget-add-btn[data-book-id]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      bookQuickLogOpenId = btn.dataset.bookId;
+      renderBookScreenAndCard();
+    });
+  });
+  container.querySelectorAll('.book-widget-quicklog[data-book-id]').forEach(wrap => {
+    const bookId = wrap.dataset.bookId;
+    wrap.addEventListener('click', (e) => e.stopPropagation());
+    const input = wrap.querySelector('.book-widget-quicklog-input');
+    if (input) setTimeout(() => input.focus(), 30);
+    const doConfirm = () => {
+      const book = bookshelfBooks.find(b => b.id === bookId);
+      const add = input ? parseInt(input.value, 10) : NaN;
+      bookQuickLogOpenId = null;
+      if (book && Number.isFinite(add) && add > 0){
+        const total = book.totalPages || 0;
+        book.currentPage = Math.min(total, (book.currentPage || 0) + add);
+        if (total > 0 && book.currentPage >= total){
+          book.status = 'read';
+          if (!book.finishedAt) book.finishedAt = bookTodayKey();
+        }
+        saveState();
+      }
+      renderBookScreenAndCard();
+    };
+    const doCancel = () => { bookQuickLogOpenId = null; renderBookScreenAndCard(); };
+    const confirmBtn = wrap.querySelector('[data-action="confirm"]');
+    const cancelBtn = wrap.querySelector('[data-action="cancel"]');
+    if (confirmBtn) confirmBtn.addEventListener('click', doConfirm);
+    if (cancelBtn) cancelBtn.addEventListener('click', doCancel);
+    if (input){
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') doConfirm();
+        if (e.key === 'Escape') doCancel();
+      });
+    }
+  });
+}
+function renderBookScreenAndCard(){
+  if (listsView.screen === 'bookshelf') renderBookScreen();
+  if (viewingBookId) renderBookCardBody();
+}
+
 function bookWidgetCardHtml(book){
+  ensureBookGlowColor(book);
   const coverInner = book.cover
     ? `<img src="${book.cover}" alt="">`
     : `<div class="book-widget-cover-placeholder">${BOOK_WIDGET_COVER_PLACEHOLDER}</div>`;
+  const coverClass = book.cover ? 'book-widget-cover' : 'book-widget-cover book-widget-cover-empty';
 
   const metaParts = [book.author, book.genre, book.year].filter(Boolean).map(escapeHtml);
   const metaLine = metaParts.length ? metaParts.join(' • ') : (book.status === 'read' ? 'Прочитано' : 'Читаю');
 
   return `
-    <div class="book-widget-card" data-book-id="${book.id}">
+    <div class="book-widget-card" data-book-id="${book.id}" style="background:${bookWidgetCardBackground(book)}">
       <div class="book-widget-row">
         <div class="book-widget-left">
           <div class="book-widget-icon">${BOOK_WIDGET_ICON}</div>
           <div class="book-widget-title">${escapeHtml(book.title || '')}</div>
           <div class="book-widget-meta">${metaLine}</div>
         </div>
-        <div class="book-widget-cover">${coverInner}</div>
+        <div class="${coverClass}">${coverInner}</div>
       </div>
       ${bookWidgetProgressHtml(book)}
     </div>`;
@@ -6754,6 +6946,7 @@ function renderBookListDetail(){
   body.querySelectorAll('.book-widget-card[data-book-id]').forEach(el => {
     el.addEventListener('click', () => openBookCard(el.dataset.bookId));
   });
+  wireBookQuickLog(body);
 }
 
 function renderBookshelfDetail(){
@@ -6971,7 +7164,12 @@ function saveBookForm(){
       book.totalPages = totalPages;
       book.currentPage = currentPage;
       book.notes = notes;
+      const coverChanged = book.cover !== bookCoverDataUrl;
       book.cover = bookCoverDataUrl;
+      if (coverChanged){
+        book.glowColor = null;
+        if (bookCoverDataUrl) scheduleBookGlowColor(book);
+      }
       book.status = bookFormStatus;
       book.startedAt = startedAt;
       book.finishedAt = finishedAt;
@@ -7006,6 +7204,7 @@ function saveBookForm(){
       author, genre, year,
       totalPages, currentPage,
       cover: bookCoverDataUrl,
+      glowColor: null,
       status: bookFormStatus,
       rating: 0,
       color: pickBookColor(),
@@ -7015,6 +7214,7 @@ function saveBookForm(){
       finishedAt
     };
     bookshelfBooks.push(book);
+    if (bookCoverDataUrl) scheduleBookGlowColor(book);
     justPlacedBookId = book.id;
     saveState();
     closeBookForm();
@@ -7053,9 +7253,13 @@ function renderBookCardBody(){
   const book = bookshelfBooks.find(b => b.id === viewingBookId);
   const container = document.getElementById('bookCardBody');
   if (!book){ container.innerHTML = ''; return; }
+  const progressSectionHtml = book.totalPages > 0 ? `<div class="book-card-progress">${bookWidgetProgressHtml(book)}</div>` : '';
+
   container.innerHTML = `
-    <div class="book-card-cover" style="${book.cover ? '' : `background:${book.color};`}">
-      ${book.cover ? `<img src="${book.cover}" alt="">` : `<span class="book-card-cover-fallback">📖</span>`}
+    <div class="book-card-cover">
+      ${book.cover
+        ? `<img src="${book.cover}" alt="">`
+        : `<div class="book-card-cover-fallback-box" style="background:${book.color};"><span class="book-card-cover-fallback">📖</span></div>`}
     </div>
     <div class="book-card-title">${escapeHtml(book.title)}</div>
     <div class="book-card-status-wrap">
@@ -7068,6 +7272,7 @@ function renderBookCardBody(){
         <span class="book-status-badge ${book.status}" id="bookCardStatusBadge" title="Тицьни, щоб обрати статус">${book.status === 'read' ? '✓ Прочитано' : '📖 Читаю'}</span>
       `}
     </div>
+    ${progressSectionHtml}
     ${bookDatesHtml(book)}
     ${book.status === 'read' ? bookRatingHtml(book.rating || 0) : ''}
     ${book.notes ? `<div class="book-card-notes">${escapeHtml(book.notes)}</div>` : ''}
@@ -7110,6 +7315,8 @@ function renderBookCardBody(){
       });
     });
   }
+
+  wireBookQuickLog(container);
 
   document.getElementById('bookCardEditBtn').addEventListener('click', () => {
     closeBookCard();
