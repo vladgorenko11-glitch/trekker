@@ -2469,7 +2469,7 @@
   }
   .book-widget-meta {
     font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 7px;
-    line-height: 1.4; white-space: normal; overflow-wrap: anywhere;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .book-widget-status { margin-top: 10px; }
   .book-widget-cover {
@@ -6986,7 +6986,30 @@ function renderBookListDetail(){
     el.addEventListener('click', () => openBookCard(el.dataset.bookId));
   });
   wireBookQuickLog(body);
+  fitBookMeta(body);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitBookMeta(body));
 }
+
+// Рядок «автор • жанр • рік» завжди в один рядок: якщо не влазить — зменшуємо шрифт,
+// доки весь текст не поміститься (нижня межа 8px, далі вже обрізається трьома крапками).
+function fitBookMeta(container){
+  if (!container) return;
+  container.querySelectorAll('.book-widget-meta').forEach(el => {
+    el.style.fontSize = '';
+    if (!el.clientWidth) return;
+    let size = parseFloat(getComputedStyle(el).fontSize) || 13;
+    while (el.scrollWidth > el.clientWidth + 0.5 && size > 8){
+      size -= 0.5;
+      el.style.fontSize = size + 'px';
+    }
+  });
+}
+window.addEventListener('resize', () => {
+  if (typeof listsView !== 'undefined' && listsView.screen === 'bookshelf'){
+    const b = document.getElementById('listsBody');
+    if (b) fitBookMeta(b);
+  }
+});
 
 function renderBookshelfDetail(){
   const body = document.getElementById('listsBody');
