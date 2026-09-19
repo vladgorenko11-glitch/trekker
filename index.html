@@ -826,6 +826,28 @@
     border-radius: 20px; padding: 7px 14px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.22);
   }
+  /* ---------- Анімація нового рівня: стара форма → спалах → нова форма ---------- */
+  .lu-flash {
+    position: absolute; inset: 0; border-radius: 50%; opacity: 0; transform: scale(.2);
+    pointer-events: none; z-index: 2;
+    background: radial-gradient(circle, #fff 0%, rgba(255,240,170,0.9) 25%, rgba(140,233,154,0) 70%);
+  }
+  .sprout-hero.lu-charge .sprout-hero-emoji { transform-origin: 50% 88%; animation: srdCharge 1s ease-in forwards; }
+  .sprout-hero.lu-charge::before { animation: luGlowUp 1s ease-in forwards; }
+  .sprout-hero.lu-burst .sprout-hero-emoji { transform-origin: 50% 88%; animation: srdBurstOut .4s ease-out forwards; }
+  .sprout-hero.lu-burst .lu-flash { animation: srdFlash .5s ease-out forwards; }
+  .sprout-hero.lu-burst::before { animation: luGlowBurst .4s ease-out forwards; }
+  .sprout-hero.lu-new .sprout-hero-emoji { transform-origin: 50% 88%; animation: srdSproutIn .95s cubic-bezier(.22,1,.36,1) both; }
+  .sprout-hero.lu-new::before { animation: luGlowSettle 1.4s ease-out both; }
+  @keyframes luGlowUp { from { transform: translate(-50%,-50%) scale(.9); opacity: .55; } to { transform: translate(-50%,-50%) scale(1.6); opacity: 1; } }
+  @keyframes luGlowBurst { from { transform: translate(-50%,-50%) scale(1.6); opacity: 1; } to { transform: translate(-50%,-50%) scale(2.1); opacity: .3; } }
+  @keyframes luGlowSettle { from { transform: translate(-50%,-50%) scale(1.7); opacity: .9; } to { transform: translate(-50%,-50%) scale(1); opacity: 1; } }
+  .sprout-level-chip.lu-chip-pop { animation: luChipPop .8s cubic-bezier(.22,1,.36,1) both; }
+  @keyframes luChipPop {
+    0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,220,90,0.7), 0 4px 12px rgba(0,0,0,0.22); }
+    35%  { transform: scale(1.16); box-shadow: 0 0 0 10px rgba(255,220,90,0), 0 0 22px rgba(255,220,90,0.8); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,220,90,0), 0 4px 12px rgba(0,0,0,0.22); }
+  }
   /* Золота позначка «Рідкісний» — окремо від чіпа рівня */
   .sprout-rare-badge {
     position: relative; overflow: hidden;
@@ -12485,9 +12507,52 @@ function renderSproutBtn(){
   }
 }
 
+// Анімація нового рівня: заходиш після 🎁 — бачиш стару форму, вона «заряджається»,
+// спалахує й перетворюється на нову. Відтворюється один раз (доки рівень не переглянуто).
+function playSproutLevelUp(fromStage, toStage){
+  const hero = document.querySelector('#sproutModalWrap .sprout-hero');
+  const img = document.getElementById('sproutHeroImg');
+  if (!hero || !img) return;
+  const chip = document.querySelector('#sproutModalWrap .sprout-level-chip');
+  const newUrl = makeFreshSproutUrl(toStage);
+  const pre = new Image();      // заздалегідь декодуємо нову форму, щоб вона з'явилась без затримки
+  pre.src = newUrl;
+  if (pre.decode) pre.decode().catch(() => {});
+  const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (reduce) return; // уже показана нова форма
+  img.src = makeFreshSproutUrl(fromStage);
+  const flash = document.createElement('div'); flash.className = 'lu-flash';
+  const fx = document.createElement('div'); fx.className = 'srd-fx';
+  hero.appendChild(flash); hero.appendChild(fx);
+  setTimeout(() => {                         // 1) стара форма «заряджається»
+    hero.classList.add('lu-charge');
+    srdBurst(fx, 8, 40, 85);
+  }, 500);
+  setTimeout(() => {                         // 2) спалах — стара форма розчиняється
+    hero.classList.remove('lu-charge');
+    hero.classList.add('lu-burst');
+    srdBurst(fx, 18, 55, 95);
+  }, 1500);
+  setTimeout(() => {                         // 3) з'являється нова форма
+    img.src = newUrl;
+    hero.classList.remove('lu-burst');
+    hero.classList.add('lu-new');
+    srdBurst(fx, 14, 40, 85);
+    if (chip){ chip.classList.remove('lu-chip-pop'); void chip.offsetWidth; chip.classList.add('lu-chip-pop'); }
+  }, 1900);
+  setTimeout(() => {                         // прибираємо службові елементи
+    hero.classList.remove('lu-new');
+    flash.remove(); fx.remove();
+    if (chip) chip.classList.remove('lu-chip-pop');
+  }, 3400);
+}
+
 function openSproutOverlay(){
+  const stage = sproutStageIndex(sproutProgress());
+  const seen = typeof sprout.lastSeenStage === 'number' ? sprout.lastSeenStage : stage;
   renderSproutOverlay();
   document.getElementById('sproutOverlay').classList.add('open');
+  if (stage > seen) playSproutLevelUp(seen, stage);
 }
 
 function closeSproutOverlay(){
