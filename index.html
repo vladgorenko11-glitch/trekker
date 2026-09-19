@@ -826,6 +826,24 @@
     border-radius: 20px; padding: 7px 14px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.22);
   }
+  /* Золота позначка «Рідкісний» — окремо від чіпа рівня */
+  .sprout-rare-badge {
+    position: relative; overflow: hidden;
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: 'Rubik', sans-serif;
+    font-size: 11.5px; font-weight: 700; letter-spacing: .02em;
+    color: #4A3200;
+    background: linear-gradient(90deg, #FFF0B0 0%, #FFD54A 50%, #F5B400 100%);
+    border: 1px solid rgba(255,236,150,0.7);
+    border-radius: 20px; padding: 6px 13px;
+    box-shadow: 0 0 14px rgba(255,200,40,0.45), 0 4px 12px rgba(0,0,0,0.22);
+  }
+  .sprout-rare-badge::after {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.65), transparent);
+    animation: sproutRareShine 3.2s ease-in-out infinite;
+  }
+  @keyframes sproutRareShine { 0%, 55% { left: -60%; } 100% { left: 130%; } }
   /* Рядок: чіп рівня + кнопка «Оновити цикл» (праворуч від чіпа, ліворуч від дерева) */
   .sprout-level-row {
     display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
@@ -962,6 +980,8 @@
   .sprout-quest-icon.icon-medal { background: rgba(255,196,60,0.22); }
   .sprout-quest-icon.icon-calendar { background: rgba(110,180,255,0.22); }
   .sprout-quest-icon.icon-freeze { background: rgba(150,215,255,0.22); }
+  .sprout-quest-icon.icon-water { background: rgba(80,170,255,0.24); }
+  .sprout-quest-icon.icon-food { background: rgba(255,150,90,0.24); }
   .sprout-quest-row.sprout-quest-negative .sprout-quest-icon { background: rgba(150,215,255,0.22); }
   .sprout-quest-text { flex: 1; font-size: 13.5px; color: #fff; line-height: 1.3; }
   .sprout-quest-points {
@@ -983,6 +1003,51 @@
     -webkit-tap-highlight-color: transparent;
   }
   .sprout-reset-btn:active { transform: scale(0.97); }
+
+  /* ---------- Інфо-вікно «Про росток» ---------- */
+  .sif-card {
+    position: relative; width: min(360px, 100%);
+    max-height: calc(100dvh - 32px); overflow: hidden auto;
+    padding: 22px 18px 18px; border-radius: 28px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background:
+      radial-gradient(circle at 50% 0%, rgba(120,255,180,0.18) 0%, transparent 60%),
+      linear-gradient(180deg, #13492E 0%, #0C3122 55%, #071C13 100%);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    animation: sifIn .35s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes sifIn { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+  .sif-hero { text-align: center; margin-bottom: 16px; }
+  .sif-hero-emoji {
+    width: 68px; height: 68px; margin: 0 auto 10px; border-radius: 22px;
+    display: flex; align-items: center; justify-content: center; font-size: 36px;
+    background: rgba(120,255,180,0.14); border: 1px solid rgba(160,255,200,0.22);
+    box-shadow: 0 0 28px rgba(90,220,140,0.28);
+  }
+  .sif-title { font-family: 'Playfair Display','Rubik',serif; font-size: 22px; font-weight: 600; color: #fff; }
+  .sif-sub { margin-top: 6px; font-size: 13px; line-height: 1.4; color: rgba(215,255,230,0.65); }
+  .sif-list { display: flex; flex-direction: column; gap: 8px; }
+  .sif-item {
+    display: flex; gap: 12px; align-items: flex-start; padding: 12px;
+    border-radius: 18px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.07);
+  }
+  .sif-ico {
+    flex: 0 0 auto; width: 38px; height: 38px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 19px;
+  }
+  .sif-ico.i-green { background: rgba(90,220,140,0.22); }
+  .sif-ico.i-gold { background: rgba(255,196,60,0.22); }
+  .sif-ico.i-blue { background: rgba(150,215,255,0.22); }
+  .sif-ico.i-violet { background: rgba(190,150,255,0.22); }
+  .sif-item-title { font-size: 14px; font-weight: 600; color: #fff; }
+  .sif-item-text { margin-top: 2px; font-size: 12.5px; line-height: 1.4; color: rgba(215,255,230,0.62); }
+  .sif-btn {
+    width: 100%; margin-top: 14px; padding: 13px; border: none; border-radius: 16px;
+    font-family: inherit; font-size: 14.5px; font-weight: 600; color: #0A2A1B; cursor: pointer;
+    background: linear-gradient(180deg, #9FEBA9 0%, #5FCB86 100%);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sif-btn:active { transform: scale(0.97); }
 
   /* ---------- Діалог «Оновити цикл»: пояснення → анімація перетворення на 1 рівень ---------- */
   .sprout-reset-overlay { align-items: center; z-index: 60; padding: 16px; }
@@ -4513,6 +4578,7 @@
   <div class="detail-modal-wrap" id="sproutModalWrap"></div>
 </div>
 <div class="overlay sprout-reset-overlay" id="sproutResetOverlay"></div>
+<div class="overlay sprout-reset-overlay" id="sproutInfoOverlay"></div>
 
 <script>
 /* ================= ІКОНКИ ================= */
@@ -4657,6 +4723,8 @@ let sprout = {
     flame: {},  // { habitId: 'y-m-d' } — за який день вже нараховано +1 за "продовжив вогник"
     weekly: {}, // { habitId: 'y-m-d' } — за який день вже нараховано +10 за тижневе завдання
     tier: {},   // { habitId: ['red','purple','blue'] } — які нові форми вогника вже нараховані
+    water: null, // 'y-m-d' — за який день вже нараховано +2 за "закрий день води"
+    meal: null,  // 'y-m-d' — за який день вже нараховано +2 за "закрий день їжі"
   },
   quests: [
     { id: 'q1', text: 'Продовж 1 вогник', points: 1 },
@@ -4664,6 +4732,8 @@ let sprout = {
     { id: 'q3', text: 'Відкрий нову форму вогника', points: 5 },
     { id: 'q4', text: 'Виконай тижневе завдання', points: 10 },
     { id: 'q5', text: 'Заморозь вогник', points: -3 },
+    { id: 'q6', text: 'Закрий день води', points: 2 },
+    { id: 'q7', text: 'Закрий день їжі', points: 2 },
   ],
 };
 
@@ -4733,6 +4803,42 @@ function revertSproutForHabitCompletion(h){
     sprout.points = Math.max(0, (sprout.points || 0) - 5);
   }
 }
+// +2 — закрив день води (ціль по воді виконана). Раз на день; якщо прогрес
+// води скасували нижче цілі — бали відкочуються (як і в звичок).
+function awardSproutForWaterDay(){
+  const tk = todayDateKeyStr();
+  if (!sprout.awarded) sprout.awarded = { flame: {}, weekly: {}, tier: {}, water: null, meal: null };
+  if (sprout.awarded.water === tk) return;
+  sprout.awarded.water = tk;
+  sprout.points = (sprout.points || 0) + 2;
+  renderSproutBtn();
+}
+function revertSproutForWaterDay(){
+  const tk = todayDateKeyStr();
+  if (!sprout.awarded || sprout.awarded.water !== tk) return;
+  sprout.awarded.water = null;
+  sprout.points = Math.max(0, (sprout.points || 0) - 2);
+  renderSproutBtn();
+}
+
+// +2 — закрив день їжі (відмічені всі 3 прийоми). Раз на день; знімаєш
+// відмітку — бали відкочуються.
+function awardSproutForMealDay(){
+  const tk = todayDateKeyStr();
+  if (!sprout.awarded) sprout.awarded = { flame: {}, weekly: {}, tier: {}, water: null, meal: null };
+  if (sprout.awarded.meal === tk) return;
+  sprout.awarded.meal = tk;
+  sprout.points = (sprout.points || 0) + 2;
+  renderSproutBtn();
+}
+function revertSproutForMealDay(){
+  const tk = todayDateKeyStr();
+  if (!sprout.awarded || sprout.awarded.meal !== tk) return;
+  sprout.awarded.meal = null;
+  sprout.points = Math.max(0, (sprout.points || 0) - 2);
+  renderSproutBtn();
+}
+
 const STORAGE_KEY = 'habits-state-v1';
 let storageAvailable = false;
 
@@ -4887,6 +4993,8 @@ function loadState(){
             flame: parsed.sprout.awarded.flame || {},
             weekly: parsed.sprout.awarded.weekly || {},
             tier: parsed.sprout.awarded.tier || {},
+            water: typeof parsed.sprout.awarded.water === 'string' ? parsed.sprout.awarded.water : null,
+            meal: typeof parsed.sprout.awarded.meal === 'string' ? parsed.sprout.awarded.meal : null,
           };
         }
       }
@@ -10917,6 +11025,7 @@ function renderMealTracker(){
         const arr = getMealDay(key).slice();
         arr[idx] = !arr[idx];
         mealLog[key] = arr;
+        if (arr.every(Boolean)) awardSproutForMealDay(); else revertSproutForMealDay();
         renderMealTracker();
         saveState();
         const bannerInner = document.getElementById('mealTrackerBannerInner');
@@ -11182,6 +11291,7 @@ function renderWaterWidget(){
       // Дотик по вже заповненій крапельці — скасовує її і всі наступні (виправлення помилки)
       const current = Math.min(waterLog[tk] || 0, waterGoal);
       waterLog[tk] = idx < current ? idx : current;
+      if (waterLog[tk] < waterGoal) revertSproutForWaterDay();
       saveState();
       renderWaterWidget();
     });
@@ -11203,8 +11313,9 @@ function addWaterGlass(){
   const current = Math.min(waterLog[tk] || 0, waterGoal);
   if (current >= waterGoal) return;
   waterLog[tk] = current + 1;
-  if (waterLog[tk] >= waterGoal && !waterGoalReachedDays.includes(tk)){
-    waterGoalReachedDays.push(tk);
+  if (waterLog[tk] >= waterGoal){
+    if (!waterGoalReachedDays.includes(tk)) waterGoalReachedDays.push(tk);
+    awardSproutForWaterDay();
   }
   saveState();
   const grid = document.getElementById('waterDropsGrid');
@@ -11847,8 +11958,11 @@ function sproutStageEmoji(stage){
   return (SPROUT_FORMS[sprout.finalForm] || SPROUT_FORMS.oak).emoji;
 }
 function sproutLevelChipText(stage){
-  const tag = (stage === 2 && sprout.cloverRare) ? ' · Рідкісний' : '';
-  return `${sproutStageEmoji(stage)} Рівень ${stage + 1}${tag}`;
+  return `${sproutStageEmoji(stage)} Рівень ${stage + 1}`;
+}
+// Окрема золота позначка для рідкісної конюшини (3-й рівень)
+function sproutRareBadgeHtml(stage){
+  return (stage === 2 && sprout.cloverRare) ? '<div class="sprout-rare-badge">✨ Рідкісний</div>' : '';
 }
 
 // Текст під прогрес-баром: скільки очок потрібно до наступного рівня.
@@ -12173,12 +12287,47 @@ function makeFreshSproutUrl(stage){
 
 // Різні емодзі-іконки та кольори фону для кожної умови нарахування балів ростка (за id з sprout.quests)
 const SPROUT_QUEST_ICONS = {
+  q6: { emoji: '💧', cls: 'icon-water' },    // закрий день води
+  q7: { emoji: '🍽️', cls: 'icon-food' },     // закрий день їжі
   q1: { emoji: '🔥', cls: 'icon-flame' },     // продовж 1 вогник
   q2: { emoji: '⚡', cls: 'icon-bolt' },       // продовж всі вогники, що є
   q3: { emoji: '🏅', cls: 'icon-medal' },      // відкрий нову форму вогника
   q4: { emoji: '📅', cls: 'icon-calendar' },   // виконай тижневе завдання
   q5: { emoji: '❄️', cls: 'icon-freeze' },     // заморозь вогник (мінус бали)
 };
+
+function openSproutInfo(){
+  const ov = document.getElementById('sproutInfoOverlay');
+  const items = [
+    ['i-green', '🔥', 'Бали — автоматично', 'Продовжуй вогники звичок — і росток сам отримує бали. Вручну їх змінити не можна, усе чесно.'],
+    ['i-gold', '🎁', 'Ріст і сюрпризи', 'Набирай бали, щоб піднімати рівень. На кожному новому рівні на тебе чекає щось цікаве.'],
+    ['i-violet', '💧', 'Не лише звички', 'Закривай день води й день їжі — це теж приносить бали. Повний список — нижче на сторінці.'],
+    ['i-blue', '❄️', 'Заморозка коштує', 'Заморозка вогника забирає 3 бали, але повертає їх, якщо скасувати заморозку.'],
+  ];
+  ov.innerHTML = `
+    <div class="sif-card">
+      <div class="sif-hero">
+        <div class="sif-hero-emoji">🌱</div>
+        <div class="sif-title">Про Росток</div>
+        <div class="sif-sub">Твій маленький друг, що росте разом із твоїми звичками.</div>
+      </div>
+      <div class="sif-list">
+        ${items.map(([cls, emoji, title, text]) => `
+          <div class="sif-item">
+            <div class="sif-ico ${cls}">${emoji}</div>
+            <div>
+              <div class="sif-item-title">${title}</div>
+              <div class="sif-item-text">${text}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <button class="sif-btn" id="sproutInfoOk">Зрозуміло</button>
+    </div>`;
+  const close = () => { ov.classList.remove('open'); ov.innerHTML = ''; };
+  document.getElementById('sproutInfoOk').addEventListener('click', close);
+  ov.onclick = (e) => { if (e.target === ov) close(); };
+  ov.classList.add('open');
+}
 
 function renderSproutOverlay(){
   ensureSproutCycleStartDate();
@@ -12209,6 +12358,7 @@ function renderSproutOverlay(){
         <div class="sprout-hero-sub">Продовжуй звички щодня, і твій росток набиратиме бали та ростиме.</div>
         <div class="sprout-level-row">
           <div class="sprout-level-chip">${sproutLevelChipText(stage)}</div>
+          ${sproutRareBadgeHtml(stage)}
           ${sproutCanResetCycle() ? `<button class="sprout-reset-btn" id="sproutResetBtn">🔄 Оновити цикл</button>` : (needsChoice ? `<button class="sprout-reset-btn sprout-choose-btn" id="sproutChooseBtn">🌳 Обрати шлях</button>` : '')}
         </div>
         <div class="sprout-hero">
@@ -12283,9 +12433,7 @@ function renderSproutOverlay(){
     renderSproutOverlay();
   });
   document.getElementById('sproutNameEditIcon').addEventListener('click', () => { nameInput.focus(); nameInput.select(); });
-  document.getElementById('sproutInfoBtn').addEventListener('click', () => {
-    alert('Продовжуйте вогники звичок, щоб ваш росток набирав бали та ріс. Бали нараховуються автоматично, їх не можна змінити вручну. Заморозка вогника коштує 3 бали. Росток має 5 рівнів: насінина → 🌱 → ☘️ (іноді рідкісна 🍀) → 🌿 → 🌳/🌲/🌴 на твій вибір. Прогрес зберігається автоматично.');
-  });
+  document.getElementById('sproutInfoBtn').addEventListener('click', openSproutInfo);
   document.getElementById('sproutCloseBtn').addEventListener('click', closeSproutOverlay);
   document.getElementById('sproutHeroImg').addEventListener('click', restartSproutAnim);
   const resetBtn = document.getElementById('sproutResetBtn');
