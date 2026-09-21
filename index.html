@@ -5241,6 +5241,23 @@ function loadState(){
           }
         }
         sprout.history = Array.isArray(parsed.sprout.history) ? parsed.sprout.history : [];
+        // Той самий баг заднім числом: записи в історії, які вже встигли завершитись
+        // "1 днем", бо стартова дата циклу була підставлена як "зараз" 19.09.2026
+        // (день релізу фічі), до того як з'явилась міграція вище. Підправляємо
+        // startDate у вже збережених записах історії тим самим наближенням.
+        if (sprout.history.length){
+          const createdDates = habits.map(h => h.createdAt).filter(Boolean);
+          if (createdDates.length){
+            const earliestKey = createdDates.reduce((min, k) => keyToDate(k) < keyToDate(min) ? k : min, createdDates[0]);
+            const ed = keyToDate(earliestKey);
+            const earliestIso = new Date(ed.getFullYear(), ed.getMonth(), ed.getDate()).toISOString();
+            sprout.history.forEach(h => {
+              const sd = new Date(h.startDate);
+              const isReleaseDay = !isNaN(sd) && sd.getFullYear() === 2026 && sd.getMonth() === 8 && sd.getDate() === 19;
+              if (isReleaseDay && ed < sd) h.startDate = earliestIso;
+            });
+          }
+        }
         if (parsed.sprout.awarded && typeof parsed.sprout.awarded === 'object'){
           sprout.awarded = {
             flame: parsed.sprout.awarded.flame || {},
