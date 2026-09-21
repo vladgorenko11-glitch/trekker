@@ -1259,23 +1259,39 @@
     .srd-spark, .srd-leaf { display: none; }
   }
   .sprout-history-title { font-family: 'Rubik', sans-serif; font-size: 15px; font-weight: 600; color: #fff; margin: 22px 2px 10px; }
-  .sprout-history-list { display: flex; flex-direction: column; gap: 8px; }
-  .sprout-history-row {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 12px;
-    background: rgba(255,255,255,0.045);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px;
+  .sprout-history-count { margin-left: 6px; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; color: rgba(210,255,225,0.75); background: rgba(255,255,255,0.08); vertical-align: 1px; }
+  /* Архів ростків — колекційні картки: кожен виріс у свою форму, рідкісні — із золотою рамкою */
+  .sprout-history-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .sh-card {
+    --c1: 140,233,154;
+    position: relative; overflow: hidden; min-width: 0;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: 10px 8px 12px; border-radius: 20px;
+    background: linear-gradient(165deg, rgba(var(--c1),0.22), rgba(255,255,255,0.03) 62%);
+    border: 1px solid rgba(var(--c1),0.38);
   }
-  .sprout-history-icon {
-    width: 34px; height: 34px; border-radius: 11px; flex: 0 0 auto;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 15px;
-    background: rgba(140,233,154,0.2);
+  .sh-card[data-form="pine"] { --c1: 110,205,225; }
+  .sh-card[data-form="palm"] { --c1: 255,160,120; }
+  .sh-card.rare { border-color: rgba(255,208,102,0.75); box-shadow: 0 0 0 1px rgba(255,208,102,0.12), 0 6px 18px rgba(255,190,60,0.16); }
+  .sh-card.rare::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(115deg, transparent 38%, rgba(255,240,190,0.2) 50%, transparent 62%);
+    background-size: 260% 100%; animation: shSheen 3.6s ease-in-out infinite;
   }
-  .sprout-history-body { flex: 1; min-width: 0; }
-  .sprout-history-name { font-size: 13.5px; font-weight: 700; color: #fff; }
-  .sprout-history-dates { font-size: 11px; color: rgba(210,255,225,0.5); margin-top: 2px; }
+  @keyframes shSheen { 0% { background-position: 130% 0; } 60%, 100% { background-position: -30% 0; } }
+  @media (prefers-reduced-motion: reduce) { .sh-card.rare::after { animation: none; } }
+  .sh-num { align-self: flex-start; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; color: rgba(255,255,255,0.5); line-height: 1; }
+  .sh-rare {
+    position: absolute; top: 8px; right: 8px; padding: 2px 7px; border-radius: 10px;
+    font-size: 10px; font-weight: 700; color: #123F27; background: linear-gradient(90deg, #FFE9A8, #FFD066);
+  }
+  .sh-stage { position: relative; width: 92px; height: 92px; margin-top: 2px; }
+  .sh-glow { position: absolute; inset: 6px; border-radius: 50%; background: radial-gradient(circle, rgba(var(--c1),0.5), rgba(var(--c1),0) 70%); }
+  .sh-img { position: relative; width: 100%; height: 100%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.35)); }
+  .sh-name { max-width: 100%; margin-top: 4px; font-size: 14px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sh-form { margin-top: 5px; padding: 2px 10px; border-radius: 10px; font-size: 10.5px; font-weight: 600; color: rgb(var(--c1)); background: rgba(var(--c1),0.14); }
+  .sh-dates { margin-top: 8px; font-size: 10.5px; line-height: 1.3; color: rgba(210,255,225,0.5); }
+  .sh-days { margin-top: 2px; font-size: 11px; font-weight: 600; color: rgba(225,255,235,0.85); }
 
   /* ---------- Швидкі завдання на день (без вогника, окремо від звичок) ---------- */
   .quick-tasks { margin: 0 2px 4px; }
@@ -4133,15 +4149,15 @@
 
   /* Рядок «Щоденний бонус» усередині меню ростка */
   .db-entry {
-    display: flex; align-items: center; gap: 8px; margin: 12px 16px 0; padding: 7px 10px 7px 12px; border-radius: 14px; cursor: pointer; min-width: 0;
+    display: flex; align-items: center; gap: 10px; margin: 14px 16px 0; padding: 10px 12px 10px 10px; border-radius: 18px; cursor: pointer; min-width: 0;
     background: rgba(120,255,80,0.10); border: 1px solid rgba(120,255,80,0.28); color: #fff;
   }
   .db-entry:active { transform: scale(.98); }
-  .db-entry-ico { font-size: 16px; flex: 0 0 auto; }
+  .db-entry-ico { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 19px; background: rgba(120,255,80,0.16); }
   .db-entry-txt { flex: 1; min-width: 0; font-size: 12px; line-height: 1.25; }
-  .db-entry-txt b { display: block; font-size: 12.5px; }
+  .db-entry-txt b { display: block; font-size: 13.5px; }
   .db-entry-txt span { display: block; color: rgba(210,255,225,0.6); font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .db-entry-go { flex: 0 0 auto; font-size: 11px; font-weight: 700; color: #0a2b10; background: #8dff5a; padding: 4px 9px; border-radius: 10px; }
+  .db-entry-go { flex: 0 0 auto; display: flex; align-items: center; height: 34px; font-size: 12px; font-weight: 700; color: #0a2b10; background: #8dff5a; padding: 0 12px; border-radius: 12px; }
   .db-entry.done .db-entry-go { background: rgba(255,255,255,0.12); color: rgba(220,255,220,0.7); }
 
   /* ---------- Щаслива година: банер над звичками ---------- */
@@ -12219,6 +12235,25 @@ function formatSproutDate(iso){
   try { return new Date(iso).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short', year: 'numeric' }); }
   catch(e){ return ''; }
 }
+// Компактний діапазон дат для картки: «1 черв. — 14 вер. 2026» (рік один раз, якщо той самий)
+function sproutDateRange(startIso, endIso){
+  const a = new Date(startIso), b = new Date(endIso);
+  if (isNaN(a) || isNaN(b)) return '';
+  const opt = { day: 'numeric', month: 'short' };
+  const fmt = d => d.toLocaleDateString('uk-UA', opt);
+  return a.getFullYear() === b.getFullYear()
+    ? `${fmt(a)} — ${fmt(b)} ${b.getFullYear()}`
+    : `${fmt(a)} ${a.getFullYear()} — ${fmt(b)} ${b.getFullYear()}`;
+}
+// Скільки жив росток: «1 день», «3 дні», «12 днів» (порожньо, якщо дат нема)
+function sproutDaysLabel(startIso, endIso){
+  const a = Date.parse(startIso), b = Date.parse(endIso);
+  if (isNaN(a) || isNaN(b)) return '';
+  const n = Math.max(1, Math.round((b - a) / 86400000));
+  const m10 = n % 10, m100 = n % 100;
+  const w = (m10 === 1 && m100 !== 11) ? 'день' : ((m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) ? 'дні' : 'днів');
+  return `${n} ${w}`;
+}
 // Завершує поточний цикл росту ростка: зберігає його (ім'я, дата початку, дата
 // завершення) в історію та починає новий цикл з нульовими балами.
 function sproutApplyCycleReset(){
@@ -12637,16 +12672,26 @@ function renderSproutOverlay(){
           }).join('')}
         </div>
         ${(sprout.history && sprout.history.length) ? `
-        <div class="sprout-history-title">Історія ростків</div>
+        <div class="sprout-history-title">Історія ростків<span class="sprout-history-count">${sprout.history.length}</span></div>
         <div class="sprout-history-list">
-          ${sprout.history.map(h => `
-            <div class="sprout-history-row">
-              <div class="sprout-history-icon">${(SPROUT_FORMS[h.form] || SPROUT_FORMS.oak).emoji}</div>
-              <div class="sprout-history-body">
-                <div class="sprout-history-name">${escapeHtml(h.name || 'РОСТОК')}${h.rare ? ' <span class="sprout-rare-tag">🍀 рідкісний</span>' : ''}</div>
-                <div class="sprout-history-dates">${formatSproutDate(h.startDate)} — ${formatSproutDate(h.endDate)}</div>
+          ${sprout.history.map((h, i) => {
+            const kind = SPROUT_FORMS[h.form] ? h.form : 'oak';
+            const f = SPROUT_FORMS[kind];
+            const days = sproutDaysLabel(h.startDate, h.endDate);
+            return `
+            <div class="sh-card${h.rare ? ' rare' : ''}" data-form="${kind}">
+              <div class="sh-num">№${sprout.history.length - i}</div>
+              ${h.rare ? '<div class="sh-rare">🍀 Рідкісний</div>' : ''}
+              <div class="sh-stage">
+                <div class="sh-glow"></div>
+                <img class="sh-img" src="${sproutImageByKind(kind)}" alt="" draggable="false" />
               </div>
-            </div>`).join('')}
+              <div class="sh-name">${escapeHtml(h.name || 'РОСТОК')}</div>
+              <div class="sh-form">${f.emoji} ${f.title}</div>
+              <div class="sh-dates">${sproutDateRange(h.startDate, h.endDate)}</div>
+              ${days ? `<div class="sh-days">${days}</div>` : ''}
+            </div>`;
+          }).join('')}
         </div>` : ''}
       </div>
     </div>`;
