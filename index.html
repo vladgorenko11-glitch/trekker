@@ -999,7 +999,11 @@
   .sprout-name-row input:focus { outline: none; border-bottom: 1px dashed rgba(255,255,255,0.3); }
   .sprout-name-edit-icon { width: 15px; height: 15px; color: rgba(255,255,255,0.45); cursor: pointer; flex: 0 0 auto; }
   .sprout-name-sub { font-size: 11.5px; color: rgba(210,255,225,0.45); margin-top: 2px; }
-  .sprout-quests-title { font-family: 'Rubik', sans-serif; font-size: 15px; font-weight: 600; color: #fff; margin: 22px 2px 10px; }
+  .sprout-quests-title { font-family: 'Rubik', sans-serif; font-size: 15px; font-weight: 600; color: #fff; margin: 22px 2px 10px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+  .sprout-quests-chevron { width: 16px; height: 16px; flex: 0 0 auto; color: rgba(255,255,255,0.55); transition: transform 0.2s ease; }
+  .sprout-quests-chevron.open { transform: rotate(180deg); }
+  .sprout-quest-more { text-align: center; font-size: 12.5px; font-weight: 600; color: #9FEBA9; padding: 10px 0 2px; cursor: pointer; user-select: none; }
+  .sprout-quest-more:active { opacity: 0.7; }
   .sprout-quest-list { display: flex; flex-direction: column; gap: 8px; }
   .sprout-quest-row {
     display: flex; align-items: center; gap: 12px;
@@ -5219,7 +5223,23 @@ function loadState(){
         sprout.lastSeenStage = typeof parsed.sprout.lastSeenStage === 'number'
           ? parsed.sprout.lastSeenStage
           : sproutStageIndex(sprout.points); // старі збереження: вважаємо поточний рівень уже переглянутим
-        sprout.cycleStartDate = typeof parsed.sprout.cycleStartDate === 'string' ? parsed.sprout.cycleStartDate : null;
+        if (typeof parsed.sprout.cycleStartDate === 'string'){
+          sprout.cycleStartDate = parsed.sprout.cycleStartDate;
+        } else {
+          // Міграція старих збережень без дати початку циклу (поле додане 19.09.2026):
+          // без цього ensureSproutCycleStartDate() підставляла б "зараз", і росток,
+          // що ріс уже тижнями, в архіві виглядав би так, ніби виріс за 1 день.
+          // Замість цього беремо найранішу дату створення серед звичок як наближення
+          // реального старту поточного ростка.
+          const createdDates = habits.map(h => h.createdAt).filter(Boolean);
+          if (createdDates.length){
+            const earliestKey = createdDates.reduce((min, k) => keyToDate(k) < keyToDate(min) ? k : min, createdDates[0]);
+            const ed = keyToDate(earliestKey);
+            sprout.cycleStartDate = new Date(ed.getFullYear(), ed.getMonth(), ed.getDate()).toISOString();
+          } else {
+            sprout.cycleStartDate = null;
+          }
+        }
         sprout.history = Array.isArray(parsed.sprout.history) ? parsed.sprout.history : [];
         if (parsed.sprout.awarded && typeof parsed.sprout.awarded === 'object'){
           sprout.awarded = {
@@ -12589,6 +12609,9 @@ function openSproutInfo(){
   ov.classList.add('open');
 }
 
+const SPROUT_QUEST_COLLAPSED_COUNT = 3; // скільки пунктів показувати у згорнутому списку балів
+let sproutQuestListExpanded = false; // чи розгорнутий список "за що нараховуються бали" (скидається при закритті/відкритті)
+
 function renderSproutOverlay(){
   ensureSproutCycleStartDate();
   const wrap = document.getElementById('sproutModalWrap');
@@ -12659,9 +12682,12 @@ function renderSproutOverlay(){
             <div class="sprout-name-sub">ім'я вашого паростка</div>
           </div>
         </div>
-        <div class="sprout-quests-title">Бали нараховуються автоматично за:</div>
+        <div class="sprout-quests-title" id="sproutQuestsToggle">
+          <span>Бали нараховуються автоматично за:</span>
+          <svg class="sprout-quests-chevron${sproutQuestListExpanded ? ' open' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
         <div class="sprout-quest-list">
-          ${sprout.quests.map(q => {
+          ${(sproutQuestListExpanded ? sprout.quests : sprout.quests.slice(0, SPROUT_QUEST_COLLAPSED_COUNT)).map(q => {
             const icon = SPROUT_QUEST_ICONS[q.id] || { emoji: (q.points < 0 ? '❄️' : '🌿'), cls: '' };
             return `
             <div class="sprout-quest-row sprout-quest-auto${q.points < 0 ? ' sprout-quest-negative' : ''}" data-id="${q.id}">
@@ -12671,6 +12697,8 @@ function renderSproutOverlay(){
             </div>`;
           }).join('')}
         </div>
+        ${sprout.quests.length > SPROUT_QUEST_COLLAPSED_COUNT ? `
+        <div class="sprout-quest-more" id="sproutQuestsMoreBtn">${sproutQuestListExpanded ? 'Згорнути' : `Показати ще ${sprout.quests.length - SPROUT_QUEST_COLLAPSED_COUNT}`}</div>` : ''}
         ${(sprout.history && sprout.history.length) ? `
         <div class="sprout-history-title">Історія ростків<span class="sprout-history-count">${sprout.history.length}</span></div>
         <div class="sprout-history-list">
@@ -12713,6 +12741,13 @@ function renderSproutOverlay(){
   if (chooseBtn) chooseBtn.addEventListener('click', openSproutChoiceDialog);
   const dbEntry = document.getElementById('dbEntryBtn');
   if (dbEntry) dbEntry.addEventListener('click', openDailyBonus);
+  const questsToggle = document.getElementById('sproutQuestsToggle');
+  const questsMoreBtn = document.getElementById('sproutQuestsMoreBtn');
+  const toggleQuestList = () => { sproutQuestListExpanded = !sproutQuestListExpanded; renderSproutOverlay(); };
+  if (sprout.quests.length > SPROUT_QUEST_COLLAPSED_COUNT){
+    if (questsToggle) questsToggle.addEventListener('click', toggleQuestList);
+    if (questsMoreBtn) questsMoreBtn.addEventListener('click', toggleQuestList);
+  }
 }
 
 // Примусово перезапускає анімацію картинки ростка з першого кадру
@@ -12809,6 +12844,7 @@ function openSproutOverlay(){
 
 function closeSproutOverlay(){
   document.getElementById('sproutOverlay').classList.remove('open');
+  sproutQuestListExpanded = false; // наступного разу список знову відкриється згорнутим
   // Після перегляду нового ростка й закриття меню — індикатор зникає і більше не з'являється для цього рівня
   if (sproutHasNewLevel()){
     sprout.lastSeenStage = sproutStageIndex(sproutProgress());
