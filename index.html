@@ -7622,7 +7622,7 @@ function evReminderCandidates(){
   });
   out.forEach(o => { o.key = o.allDay ? Math.max(o.start, now) : o.start; o.rank = o.ev.holiday ? 1 : 0; });
   out.sort((a, b) => a.rank - b.rank || a.key - b.key);
-  return out.filter(o => !evrDismissed.includes(evrKey(o.ev)));
+  return out.filter(o => !evrDismissed.includes(evrKey(o.ev) + '@@' + todayKey));
 }
 
 function evrWhenText(o){
@@ -7684,7 +7684,7 @@ function openEventReminder(list){
         ${lower}
         ${detail}
         ${more}
-        <div class="evr-mute" id="evrMute" role="checkbox" aria-checked="false"><span class="evr-ring"><svg viewBox="0 0 24 24" fill="none" stroke="#14102E" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>Більше не нагадувати</span></div>
+        <div class="evr-mute" id="evrMute" role="checkbox" aria-checked="false"><span class="evr-ring"><svg viewBox="0 0 24 24" fill="none" stroke="#14102E" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>Не нагадувати сьогодні</span></div>
         <div class="evr-btns">
           <div class="evr-btn main" id="evrOk" style="background:${col.bg};">Зрозуміло</div>
           <div class="evr-btn ghost" id="evrOpen">Календар</div>
@@ -7721,10 +7721,11 @@ function openEventReminder(list){
 function closeEventReminder(){
   if (evrMuteChecked && evrCurrentList){
     // галочка «Більше не нагадувати» — вимикаємо банер для всіх подій у ньому
-    evrCurrentList.forEach(o => { const k = evrKey(o.ev); if (!evrDismissed.includes(k)) evrDismissed.push(k); });
-    if (evrDismissed.length > 300) evrDismissed = evrDismissed.slice(-300);
+    const tk = evDateKey(new Date());
+    evrDismissed = evrDismissed.filter(x => x.endsWith('@@' + tk)); // прибираємо вимкнення за минулі дні
+    evrCurrentList.forEach(o => { const k = evrKey(o.ev) + '@@' + tk; if (!evrDismissed.includes(k)) evrDismissed.push(k); });
     saveState();
-    showMilestoneToast('Більше не нагадуватиму про ці події');
+    showMilestoneToast('Сьогодні більше не нагадуватиму, завтра — знову');
   }
   evrMuteChecked = false; evrCurrentList = null;
   document.getElementById('eventReminderOverlay').classList.remove('open');
