@@ -16139,6 +16139,21 @@ loadState();
   if (changed) saveState();
   try{ localStorage.setItem(FLAG, '1'); }catch(e){}
 })();
+/* ОДНОРАЗОВО: +1 склянка води за вчора (2026-9-1 = 1 жовтня). Не перевищує ціль; якщо ціль досягнуто — день
+   додається у waterGoalReachedDays. Бали ростка не нараховує. Прапорець не дає спрацювати вдруге. */
+(function backfillWaterOnce(){
+  const FLAG = 'backfillWater_2026-9-1_v1';
+  try{ if (localStorage.getItem(FLAG)) return; }catch(e){ return; }
+  if (new Date() < new Date(2026, 9, 2)) return;
+  const k = dayKey(2026, 9, 1);
+  const cur = waterLog[k] || 0;
+  if (cur < waterGoal){
+    waterLog[k] = cur + 1;
+    if (waterLog[k] >= waterGoal && !waterGoalReachedDays.includes(k)) waterGoalReachedDays.push(k);
+    saveState();
+  }
+  try{ localStorage.setItem(FLAG, '1'); }catch(e){}
+})();
 ensureDefaultLists();
 checkDayRollover();
 renderAll();
