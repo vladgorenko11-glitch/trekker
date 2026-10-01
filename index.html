@@ -2882,8 +2882,11 @@
   .evr-btn.main { flex: 1.5; color: #14102E; }
   .evr-btn.ghost { flex: 1; border: 1.5px solid rgba(255,255,255,.3); color: #fff; }
   /* Кружок «Не показувати більше це нагадування» */
-  .evr-btns { flex-wrap: wrap; }
-  .evr-btn.mute { flex: 1 1 100%; border: 1.5px solid rgba(255,255,255,.3); color: #fff; }
+  .evr-mute { display: flex; align-items: center; gap: 14px; margin-top: 16px; padding: 2px 4px; cursor: pointer; font-family: 'Montserrat','Rubik',sans-serif; font-size: 14.5px; font-weight: 800; color: #fff; -webkit-tap-highlight-color: transparent; user-select: none; }
+  .evr-ring { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(255,255,255,.55); display: flex; align-items: center; justify-content: center; transition: background .15s ease, border-color .15s ease; }
+  .evr-ring svg { width: 14px; height: 14px; opacity: 0; transform: scale(.6); transition: opacity .15s ease, transform .15s ease; }
+  .evr-mute.on .evr-ring { background: #fff; border-color: #fff; }
+  .evr-mute.on .evr-ring svg { opacity: 1; transform: none; }
   @keyframes evrPop { 0% { transform: translateY(50px) scale(.8) rotate(-4deg); opacity: 0; } 60% { transform: translateY(-6px) scale(1.03) rotate(1deg); opacity: 1; } 100% { transform: none; opacity: 1; } }
   @keyframes evrBob { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-7px) rotate(-1deg); } }
   @keyframes evrRing { 0%,55%,100% { transform: rotate(0); } 8% { transform: rotate(18deg); } 18% { transform: rotate(-16deg); } 28% { transform: rotate(12deg); } 38% { transform: rotate(-8deg); } 46% { transform: rotate(4deg); } }
@@ -7321,7 +7324,11 @@ function evrWhenText(o){
   return o.allDay ? `${day} · весь день` : `${day} о ${o.ev.time}`;
 }
 
+let evrMuteChecked = false;
+let evrCurrentList = null;
 function openEventReminder(list){
+  evrMuteChecked = false;
+  evrCurrentList = list;
   const hero = list[0], others = list.slice(1);
   const ev = hero.ev;
   const colIdx = ev.holiday ? (EV_HOL_COLOR[ev.icon] ?? 3) : ((ev.colorIdx || 0) % EV_COLORS.length);
@@ -7368,10 +7375,10 @@ function openEventReminder(list){
         ${lower}
         ${detail}
         ${more}
+        <div class="evr-mute" id="evrMute" role="checkbox" aria-checked="false"><span class="evr-ring"><svg viewBox="0 0 24 24" fill="none" stroke="#14102E" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>Більше не нагадувати</span></div>
         <div class="evr-btns">
           <div class="evr-btn main" id="evrOk" style="background:${col.bg};">Зрозуміло</div>
           <div class="evr-btn ghost" id="evrOpen">Календар</div>
-          <div class="evr-btn mute" id="evrMute">Не нагадувати більше</div>
         </div>
       </div>
     </div>`;
@@ -7393,19 +7400,24 @@ function openEventReminder(list){
   document.getElementById('evrClose').addEventListener('click', closeEventReminder);
   document.getElementById('evrOk').addEventListener('click', closeEventReminder);
   document.getElementById('evrOpen').addEventListener('click', () => { closeEventReminder(); openListsModal(); openEventsCalendar(); });
-  document.getElementById('evrMute').addEventListener('click', () => {
-    // вимикаємо банер для всіх подій, що зараз у нагадуванні
-    list.forEach(o => { const k = evrKey(o.ev); if (!evrDismissed.includes(k)) evrDismissed.push(k); });
-    if (evrDismissed.length > 300) evrDismissed = evrDismissed.slice(-300);
-    saveState();
-    closeEventReminder();
-    showMilestoneToast('Більше не нагадуватиму про ці події');
+  document.getElementById('evrMute').addEventListener('click', (e) => {
+    evrMuteChecked = !evrMuteChecked;
+    e.currentTarget.classList.toggle('on', evrMuteChecked);
+    e.currentTarget.setAttribute('aria-checked', evrMuteChecked ? 'true' : 'false');
   });
   ov.onclick = (e) => { if (e.target === ov) closeEventReminder(); };
   ov.classList.add('open');
 }
 
 function closeEventReminder(){
+  if (evrMuteChecked && evrCurrentList){
+    // галочка «Більше не нагадувати» — вимикаємо банер для всіх подій у ньому
+    evrCurrentList.forEach(o => { const k = evrKey(o.ev); if (!evrDismissed.includes(k)) evrDismissed.push(k); });
+    if (evrDismissed.length > 300) evrDismissed = evrDismissed.slice(-300);
+    saveState();
+    showMilestoneToast('Більше не нагадуватиму про ці події');
+  }
+  evrMuteChecked = false; evrCurrentList = null;
   document.getElementById('eventReminderOverlay').classList.remove('open');
   if (evrTimer){ clearInterval(evrTimer); evrTimer = null; }
 }
@@ -15151,7 +15163,8 @@ function computeMonthlyStatsSnapshot(year, month){
   for (let d = 1; d <= daysInMonth; d++) dates.push(new Date(year, month, d));
   const monthEnd = dates[dates.length - 1];
 
-  const relevantHabits = habits.filter(h => keyToDate(h.createdAt) <= monthEnd);
+  // Архівні звички не рахуємо (як і в решті статистики) — інакше вони «ламають» ідеальні дні
+  const relevantHabits = habits.filter(h => !h.archived && keyToDate(h.createdAt) <= monthEnd);
 
   let due = 0, done = 0, frozen = 0, perfectDays = 0;
   const perHabit = new Map();
