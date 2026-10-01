@@ -2881,6 +2881,9 @@
   .evr-btn:active { transform: scale(.96); }
   .evr-btn.main { flex: 1.5; color: #14102E; }
   .evr-btn.ghost { flex: 1; border: 1.5px solid rgba(255,255,255,.3); color: #fff; }
+  /* Кружок «Не показувати більше це нагадування» */
+  .evr-btns { flex-wrap: wrap; }
+  .evr-btn.mute { flex: 1 1 100%; border: 1.5px solid rgba(255,255,255,.3); color: #fff; }
   @keyframes evrPop { 0% { transform: translateY(50px) scale(.8) rotate(-4deg); opacity: 0; } 60% { transform: translateY(-6px) scale(1.03) rotate(1deg); opacity: 1; } 100% { transform: none; opacity: 1; } }
   @keyframes evrBob { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-7px) rotate(-1deg); } }
   @keyframes evrRing { 0%,55%,100% { transform: rotate(0); } 8% { transform: rotate(18deg); } 18% { transform: rotate(-16deg); } 28% { transform: rotate(12deg); } 38% { transform: rotate(-8deg); } 46% { transform: rotate(4deg); } }
@@ -4683,6 +4686,23 @@
   .hh-timer-lbl { display: block; margin-top: 3px; font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: rgba(210,255,225,0.55); }
   .hh-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,0.08); }
   .hh-bar > i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #8dff5a, #e9ff86); border-radius: 0 2px 2px 0; transition: width 1s linear; }
+  /* Прибанер: за годину до початку щасливої години (бурштиновий, «скоро») */
+  .hh-banner.hh-pre {
+    background: linear-gradient(135deg, rgba(255,196,60,0.17), rgba(255,140,60,0.08) 70%, rgba(255,196,60,0.06));
+    border-color: rgba(255,196,70,0.5);
+    animation: hhIn .45s cubic-bezier(.22,1.25,.36,1), hhAuraPre 2.6s ease-in-out infinite;
+  }
+  @keyframes hhAuraPre {
+    0%, 100% { box-shadow: 0 0 8px rgba(255,190,70,0.18); }
+    50%      { box-shadow: 0 0 18px rgba(255,190,70,0.42); }
+  }
+  .hh-pre .hh-ico { filter: drop-shadow(0 0 7px rgba(255,200,80,0.85)); }
+  .hh-pre .hh-title { color: #fff1cf; }
+  .hh-pre .hh-title em { color: #ffd45e; }
+  .hh-pre .hh-sub { color: rgba(255,236,200,0.72); }
+  .hh-pre .hh-timer-val { color: #3a2400; background: linear-gradient(90deg, #ffe7a0, #ffc247); box-shadow: 0 2px 10px rgba(255,190,70,0.3); }
+  .hh-pre .hh-timer-lbl { color: rgba(255,236,200,0.6); }
+  .hh-pre .hh-bar > i { background: linear-gradient(90deg, #ffc247, #ffe9a3); }
   /* Бонус щасливої години: копія блискавки з банера летить у росток */
   .hh-fly-bolt { position: fixed; left: 0; top: 0; z-index: 9999; pointer-events: none; will-change: transform, opacity; filter: drop-shadow(0 0 9px rgba(150,255,80,0.95)); -webkit-user-drag: none; }
   .hh-plus { position: fixed; left: 0; top: 0; z-index: 9999; pointer-events: none; will-change: transform, opacity; font-family: 'Rubik', sans-serif; font-size: 16px; font-weight: 800; color: #e4ff9a; text-shadow: 0 0 8px rgba(120,255,80,0.95), 0 1px 2px rgba(0,0,0,0.4); }
@@ -5376,6 +5396,7 @@ let calEvents = []; // { id, title, date:'YYYY-MM-DD', time:'HH:MM'|'', desc, pl
 let eventsViewMode = 'banner'; // 'banner' — банер зі списком подій, 'calendar' — сітка місяця
 let eventsCalMonth = null; // { y, m } — місяць, що відкритий у режимі календаря
 let eventsCalSelected = null; // 'YYYY-MM-DD' — обраний день у календарі
+let evrDismissed = []; // id подій, для яких користувач вимкнув банер-нагадування (< 24 год)
 let editingEventId = null;
 let countdowns = []; // { id, title, subtitle, targetAt (ms), createdAt (ms) } — відрахунки до подій
 let editingCountdownId = null; // id відрахунку, який зараз редагуємо у формі (null — додаємо новий)
@@ -5505,6 +5526,16 @@ function happyHourNow(){
   return { start: w.start, end: w.end, msLeft: w.end.getTime() - t };
 }
 function happyHourActive(){ return !!happyHourNow(); }
+// За годину до початку щасливої години — { start, msUntil }, інакше null
+const HH_PRE_MS = 60 * 60 * 1000;
+function happyHourUpcoming(){
+  const now = new Date();
+  const w = happyHourWindowForDate(now);
+  if (!w) return null;
+  const t = now.getTime(), until = w.start.getTime() - t;
+  if (until <= 0 || until > HH_PRE_MS) return null;
+  return { start: w.start, msUntil: until };
+}
 // Скільки додаткових балів дати зверху до base (під час щасливої години — ще стільки ж, тобто ×2)
 function hhX(base){ return happyHourActive() ? base : 0; }
 // Скільки саме «зайвих» балів було видано за кожне нарахування — щоб при скасуванні відкотити рівно стільки
@@ -5676,7 +5707,7 @@ function renderStorageBanner(){
 function saveState(){
   if (!storageAvailable) { showSaveStatus('Не збережено — сховище недоступне', true); return; }
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, lateFinishDays, earlyFinishDays, seenBadgeIds, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, bookViewMode, countdowns, calEvents, eventsViewMode, weeklyCardsHidden, waterGoal, waterLog, waterGoalReachedDays, stopwatchState, quickNoteText, tallyCounter, monthlyStatsShownKey, monthlyStatsLastPeriod, monthlyStatsExpiresAt, mealLog, customTags, tagFilter }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, lateFinishDays, earlyFinishDays, seenBadgeIds, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, bookViewMode, countdowns, calEvents, eventsViewMode, weeklyCardsHidden, waterGoal, waterLog, waterGoalReachedDays, stopwatchState, quickNoteText, tallyCounter, monthlyStatsShownKey, monthlyStatsLastPeriod, monthlyStatsExpiresAt, mealLog, customTags, tagFilter, evrDismissed }));
     showSaveStatus('Збережено');
   }catch(e){
     console.error('Не вдалося зберегти дані:', e);
@@ -5732,6 +5763,7 @@ function loadState(){
       bookViewMode = (parsed.bookViewMode === 'shelf') ? 'shelf' : 'list';
       calEvents = Array.isArray(parsed.calEvents) ? parsed.calEvents.filter(e => e && typeof e.id === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(e.date || '')) : [];
       eventsViewMode = parsed.eventsViewMode === 'calendar' ? 'calendar' : 'banner';
+      evrDismissed = Array.isArray(parsed.evrDismissed) ? parsed.evrDismissed.filter(x => typeof x === 'string') : [];
       countdowns = Array.isArray(parsed.countdowns) ? parsed.countdowns.filter(c => c && typeof c.id === 'string') : [];
       // Міграція для книг, доданих до появи дат читання: якщо дата початку ще не збережена,
       // беремо її з id книги (book_<часова мітка>_...) — там закодовано реальний момент
@@ -7256,6 +7288,7 @@ const EV_ICON_BELL = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 
 let evrTimer = null;
 let evrHiddenAt = 0;
 
+function evrKey(e){ return e.id || (e.date + '|' + e.title); }
 function evReminderCandidates(){
   const now = Date.now(), t = new Date();
   const todayKey = evDateKey(t);
@@ -7277,7 +7310,7 @@ function evReminderCandidates(){
   });
   out.forEach(o => { o.key = o.allDay ? Math.max(o.start, now) : o.start; o.rank = o.ev.holiday ? 1 : 0; });
   out.sort((a, b) => a.rank - b.rank || a.key - b.key);
-  return out;
+  return out.filter(o => !evrDismissed.includes(evrKey(o.ev)));
 }
 
 function evrWhenText(o){
@@ -7338,6 +7371,7 @@ function openEventReminder(list){
         <div class="evr-btns">
           <div class="evr-btn main" id="evrOk" style="background:${col.bg};">Зрозуміло</div>
           <div class="evr-btn ghost" id="evrOpen">Календар</div>
+          <div class="evr-btn mute" id="evrMute">Не нагадувати більше</div>
         </div>
       </div>
     </div>`;
@@ -7359,6 +7393,14 @@ function openEventReminder(list){
   document.getElementById('evrClose').addEventListener('click', closeEventReminder);
   document.getElementById('evrOk').addEventListener('click', closeEventReminder);
   document.getElementById('evrOpen').addEventListener('click', () => { closeEventReminder(); openListsModal(); openEventsCalendar(); });
+  document.getElementById('evrMute').addEventListener('click', () => {
+    // вимикаємо банер для всіх подій, що зараз у нагадуванні
+    list.forEach(o => { const k = evrKey(o.ev); if (!evrDismissed.includes(k)) evrDismissed.push(k); });
+    if (evrDismissed.length > 300) evrDismissed = evrDismissed.slice(-300);
+    saveState();
+    closeEventReminder();
+    showMilestoneToast('Більше не нагадуватиму про ці події');
+  });
   ov.onclick = (e) => { if (e.target === ov) closeEventReminder(); };
   ov.classList.add('open');
 }
@@ -15029,11 +15071,38 @@ function hhRenderBanner(){
   if (!el) return;
   const hh = happyHourNow();
   if (!hh){
+    // Прибанер: ще не почалась, але стартує протягом години
+    const up = happyHourUpcoming();
+    if (up){
+      if (el.dataset.mode !== 'pre'){
+        const p2 = (n) => String(n).padStart(2, '0');
+        el.innerHTML = `<div class="hh-banner hh-pre">
+          ${sproutBoltImg('hh-ico')}
+          <div class="hh-txt">
+            <div class="hh-title">Скоро щаслива година!<em>×2</em></div>
+            <div class="hh-sub">О ${p2(up.start.getHours())}:00 бали за завдання будуть вдвічі більше</div>
+          </div>
+          <div class="hh-timer"><span class="hh-timer-val" id="hhTimerVal">00:00</span><span class="hh-timer-lbl">до початку</span></div>
+          <div class="hh-bar"><i id="hhBarFill"></i></div>
+        </div>`;
+        el.dataset.mode = 'pre';
+      }
+      const totalSec = Math.max(0, Math.ceil(up.msUntil / 1000));
+      const mm = String(Math.floor(totalSec / 60)).padStart(2, '0');
+      const ss = String(totalSec % 60).padStart(2, '0');
+      const val = document.getElementById('hhTimerVal');
+      if (val) val.textContent = mm + ':' + ss;
+      const fill = document.getElementById('hhBarFill');
+      if (fill) fill.style.width = Math.max(0, Math.min(100, (1 - up.msUntil / HH_PRE_MS) * 100)).toFixed(2) + '%';
+      hhWasActive = false; // щоб у момент старту (якщо додаток відкритий) показати сповіщення
+      return;
+    }
     if (el.firstChild) el.innerHTML = '';
+    delete el.dataset.mode;
     hhWasActive = false;
     return;
   }
-  if (!el.firstChild){
+  if (el.dataset.mode !== 'live'){
     el.innerHTML = `<div class="hh-banner">
       ${sproutBoltImg('hh-ico')}
       <div class="hh-txt">
@@ -15043,6 +15112,7 @@ function hhRenderBanner(){
       <div class="hh-timer"><span class="hh-timer-val" id="hhTimerVal">00:00</span><span class="hh-timer-lbl">до кінця</span></div>
       <div class="hh-bar"><i id="hhBarFill"></i></div>
     </div>`;
+    el.dataset.mode = 'live';
   }
   const totalSec = Math.max(0, Math.ceil(hh.msLeft / 1000));
   const mm = String(Math.floor(totalSec / 60)).padStart(2, '0');
