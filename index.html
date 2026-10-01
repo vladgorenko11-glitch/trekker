@@ -16113,6 +16113,32 @@ document.addEventListener('visibilitychange', () => {
 document.getElementById('mainArea').innerHTML = '<div class="loading-state">Завантаження…</div>';
 renderStorageBanner();
 loadState();
+/* ОДНОРАЗОВО: зараховуємо ВЧОРАШНІЙ день (1 жовтня 2026) для всіх звичок, які на нього випадали.
+   Ключ дня у форматі y-m-d з 0-індексованим місяцем: 2026-9-1 = 1 жовтня. Нічого не чіпає, якщо вже
+   виконано або заморожено; бали ростка не нараховує. Після виконання ставить прапорець і більше не спрацьовує. */
+(function backfillDayOnce(){
+  const FLAG = 'backfillDay_2026-9-1_v1';
+  const target = new Date(2026, 9, 1);
+  try{ if (localStorage.getItem(FLAG)) return; }catch(e){ return; }
+  if (new Date() < new Date(2026, 9, 2)) return;
+  const tKey = dayKey(2026, 9, 1);
+  let changed = 0;
+  habits.forEach(h => {
+    if (h.archived || !h.days) return;
+    if (!isDueOnDate(h, target)) return;
+    if (typeof h.createdAt === 'string' && keyToDate(h.createdAt) > target) return;
+    if (h.days[tKey] === true || h.days[tKey] === 'frozen') return;
+    if (isWindowHabit(h)){
+      if (isWindowInstanceDone(h, target)) return;
+      applyToWindowDays(h, target, k => { if (!h.days[k]) h.days[k] = true; });
+    } else {
+      h.days[tKey] = true;
+    }
+    changed++;
+  });
+  if (changed) saveState();
+  try{ localStorage.setItem(FLAG, '1'); }catch(e){}
+})();
 ensureDefaultLists();
 checkDayRollover();
 renderAll();
