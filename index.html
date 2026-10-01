@@ -1574,7 +1574,8 @@
     transition: background .12s ease, border-color .12s ease, color .12s ease;
   }
   .settings-btn:hover { border-color: var(--text-tertiary); color: var(--text-secondary); }
-  .settings-btn svg { width: 19px; height: 19px; }
+  .settings-btn svg { width: 21px; height: 21px; transition: transform .35s ease; }
+  .settings-btn:active svg { transform: rotate(60deg); }
   .task-archive-btn:hover { border-color: var(--text-tertiary); }
 
   /* ---------- Модалка налаштувань фону ---------- */
@@ -1918,6 +1919,54 @@
 
   .habit-chip.add { background: transparent; border: 2px dashed var(--card-border); }
   .habit-chip.add .fill { background: transparent; color: var(--text-tertiary); font-size: 30px; font-weight: 300; }
+
+
+  /* ---------- Режим відпустки ---------- */
+  .vac-banner { position: relative; overflow: hidden; margin: 0 0 12px; padding: 12px 14px 14px; border-radius: 18px;
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+    background: linear-gradient(135deg, rgba(45,212,191,0.20), rgba(255,176,86,0.16));
+    border: 1px solid rgba(45,212,191,0.38); box-shadow: 0 6px 22px rgba(45,212,191,0.12); }
+  .vac-banner:active { transform: scale(0.985); }
+  .vac-banner-ico { font-size: 26px; line-height: 1; flex: 0 0 auto; animation: vacSway 3.2s ease-in-out infinite; transform-origin: 50% 90%; }
+  @keyframes vacSway { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+  .vac-banner-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .vac-banner-txt b { font-family: 'Rubik', sans-serif; font-size: 14px; color: var(--text-primary); }
+  .vac-banner-txt span { font-size: 12px; color: var(--text-secondary); }
+  .vac-banner-num { font-family: 'Rubik', sans-serif; font-weight: 800; font-size: 18px; color: #2DD4BF; flex: 0 0 auto; }
+  .vac-banner-num small { font-size: 12px; color: var(--text-tertiary); font-weight: 600; }
+  .vac-bar { position: absolute; left: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, #2DD4BF, #FFB056); transition: width .4s ease; }
+  .streak-card.vac { outline: 1.5px solid rgba(45,212,191,0.55); outline-offset: -1.5px; }
+  .streak-flame .vac-badge { position: absolute; bottom: -4px; right: -5px; font-size: 14px; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
+  .vac-modal { text-align: center; padding: 26px 22px 28px; }
+  .vac-hero { font-size: 46px; line-height: 1; margin-bottom: 6px; }
+  .vac-title { font-family: 'Rubik', sans-serif; font-size: 20px; font-weight: 800; margin: 0 0 6px; }
+  .vac-sub { font-size: 13px; color: var(--text-tertiary); margin: 0 0 18px; line-height: 1.45; }
+  .vac-stepper { display: flex; align-items: center; justify-content: center; gap: 22px; margin-bottom: 14px; }
+  .vac-step-btn { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--card-border); background: var(--card); color: var(--text-primary); font-size: 22px; cursor: pointer; }
+  .vac-step-btn:active { transform: scale(0.92); }
+  .vac-days-num { display: flex; flex-direction: column; align-items: center; min-width: 84px; }
+  .vac-days-num b { font-family: 'Rubik', sans-serif; font-size: 44px; line-height: 1; color: var(--text-primary); }
+  .vac-days-num span { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+  .vac-chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .vac-chip { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--card-border); background: var(--card); color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; }
+  .vac-chip.active { border-color: #2DD4BF; color: #2DD4BF; background: rgba(45,212,191,0.12); }
+  .vac-range { font-size: 13px; color: var(--text-secondary); margin-bottom: 18px; }
+  .vac-primary { width: 100%; padding: 14px; border: 0; border-radius: 16px; font-weight: 700; font-size: 15px; cursor: pointer; color: #06231F; background: linear-gradient(135deg, #2DD4BF, #FFB056); }
+  .vac-primary:active { transform: scale(0.98); }
+  .vac-secondary { width: 100%; padding: 12px; margin-top: 8px; border: 0; background: transparent; color: var(--text-tertiary); font-size: 14px; cursor: pointer; }
+  .vac-label { font-size: 12.5px; color: var(--text-tertiary); margin: 16px 0 8px; }
+  .vac-set-card { margin: 0 0 20px; padding: 14px; border-radius: 18px; border: 1px solid var(--card-border); background: var(--card); text-align: left; }
+  .vac-set-card.on { border-color: rgba(45,212,191,0.45); background: linear-gradient(135deg, rgba(45,212,191,0.16), rgba(255,176,86,0.12)); }
+  .vac-set-top { display: flex; align-items: center; gap: 12px; }
+  .vac-set-ico { font-size: 26px; flex: 0 0 auto; }
+  .vac-set-txt { flex: 1; min-width: 0; }
+  .vac-set-txt b { display: block; font-family: 'Rubik', sans-serif; font-size: 14.5px; color: var(--text-primary); }
+  .vac-set-txt span { font-size: 12px; color: var(--text-tertiary); }
+  .vac-set-btn { padding: 9px 14px; border-radius: 12px; border: 0; font-weight: 700; font-size: 13px; cursor: pointer; color: #06231F; background: linear-gradient(135deg, #2DD4BF, #FFB056); flex: 0 0 auto; }
+  .vac-set-btns { display: flex; gap: 8px; margin-top: 12px; }
+  .vac-set-btns button { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid var(--card-border); background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; }
+  .vac-set-bar { height: 5px; border-radius: 5px; background: var(--track); margin-top: 12px; overflow: hidden; }
+  .vac-set-bar i { display: block; height: 100%; background: linear-gradient(90deg, #2DD4BF, #FFB056); }
 
   /* ---------- Streak board (вогники) ---------- */
   .streak-grid {
@@ -4759,6 +4808,7 @@
 
   <div class="weekly-today-cards" id="weeklyTodayCards"></div>
 
+  <div id="vacBanner"></div>
   <div class="streak-grid" id="streakGrid"></div>
 
   <div class="divider" style="margin: 4px 4px 0;"></div>
@@ -4782,10 +4832,7 @@
     <div class="task-archive-btn-count" id="taskArchiveCount"></div>
   </div>
   <div class="settings-btn" id="settingsBtn" title="Налаштування">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="3.2"/>
-      <path d="M19.4 13.5a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V19.5a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H4.5a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9.5a1.65 1.65 0 0 0 1-1.51V4.5a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9.5a1.65 1.65 0 0 0 1.51 1H19.5a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-    </svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
   </div>
   </div>
 
@@ -4893,6 +4940,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </div>
     </div>
+    <div id="vacSettingsBlock"></div>
     <div class="settings-modal-sub">Обери фон застосунку: зображення, кольорове підсвічення або без фону.</div>
     <div class="settings-section-label">Зображення</div>
     <div class="settings-bg-row" id="settingsBgRow"></div>
@@ -4905,6 +4953,11 @@
     </div>
     <div class="settings-reset-btn" id="settingsResetBtn">Скинути до стандартного</div>
   </div>
+</div>
+
+<!-- Оверлей режиму відпустки -->
+<div class="overlay" id="vacOverlay" style="z-index:80;">
+  <div class="modal vac-modal" id="vacModal"></div>
 </div>
 
 <!-- Оверлей вибору хештегів для звички (компактний поповер) -->
@@ -5710,7 +5763,7 @@ function renderStorageBanner(){
 function saveState(){
   if (!storageAvailable) { showSaveStatus('Не збережено — сховище недоступне', true); return; }
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, lateFinishDays, earlyFinishDays, seenBadgeIds, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, bookViewMode, countdowns, calEvents, eventsViewMode, weeklyCardsHidden, waterGoal, waterLog, waterGoalReachedDays, stopwatchState, quickNoteText, tallyCounter, monthlyStatsShownKey, monthlyStatsLastPeriod, monthlyStatsExpiresAt, mealLog, customTags, tagFilter, evrDismissed }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, activeHabitId, nextId, customIcons, lastActiveDateKey, celebratedAllDoneKey, lateFinishDays, earlyFinishDays, seenBadgeIds, quickTasks, quickTasksDateKey, taskArchive, sprout, lists, moodLog, bookshelfBooks, bookViewMode, countdowns, calEvents, eventsViewMode, weeklyCardsHidden, waterGoal, waterLog, waterGoalReachedDays, stopwatchState, quickNoteText, tallyCounter, monthlyStatsShownKey, monthlyStatsLastPeriod, monthlyStatsExpiresAt, mealLog, customTags, tagFilter, evrDismissed, vacations }));
     showSaveStatus('Збережено');
   }catch(e){
     console.error('Не вдалося зберегти дані:', e);
@@ -5767,6 +5820,7 @@ function loadState(){
       calEvents = Array.isArray(parsed.calEvents) ? parsed.calEvents.filter(e => e && typeof e.id === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(e.date || '')) : [];
       eventsViewMode = parsed.eventsViewMode === 'calendar' ? 'calendar' : 'banner';
       evrDismissed = Array.isArray(parsed.evrDismissed) ? parsed.evrDismissed.filter(x => typeof x === 'string') : [];
+      vacations = Array.isArray(parsed.vacations) ? parsed.vacations.filter(v => v && typeof v.s === 'string' && typeof v.e === 'string').map(v => ({ s: v.s, e: v.e, ended: !!v.ended })) : [];
       countdowns = Array.isArray(parsed.countdowns) ? parsed.countdowns.filter(c => c && typeof c.id === 'string') : [];
       // Міграція для книг, доданих до появи дат читання: якщо дата початку ще не збережена,
       // беремо її з id книги (book_<часова мітка>_...) — там закодовано реальний момент
@@ -5944,6 +5998,167 @@ let earlyFinishDays = []; // ключі днів, коли хоча б 1 зви�
 let seenBadgeIds = []; // id бейджів, які вже переглядали на екрані "Бейджи" — щоб знати, чи є НОВІ ще не переглянуті
 
 function dayKey(y, m, d){ return `${y}-${m}-${d}`; }
+
+/* ================= РЕЖИМ ВІДПУСТКИ =================
+   vacations: [{ s:'y-m-d', e:'y-m-d', ended:bool }]. Дні всередині відпустки без відмітки
+   не рвуть стрік (як заморожені), а відмічені — рахуються як звичайно. Минулі відпустки
+   лишаються в масиві, щоб стрік рахувався правильно й після її завершення. */
+let vacations = [];
+let vacDraft = 7;
+let vacMode = 'setup';
+let vacPromptShownKey = null;
+const VAC_MONTHS = ['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
+function vacMs(key){ const p = key.split('-').map(Number); return new Date(p[0], p[1], p[2]).getTime(); }
+function vacKey(ms){ const d = new Date(ms); return dayKey(d.getFullYear(), d.getMonth(), d.getDate()); }
+function vacTodayMs(){ return new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime(); }
+function vacAdd(ms, n){ const d = new Date(ms); return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n).getTime(); }
+function vacFmt(ms){ const d = new Date(ms); return d.getDate() + ' ' + VAC_MONTHS[d.getMonth()]; }
+function vacActive(){ for (let i = vacations.length - 1; i >= 0; i--) if (!vacations[i].ended) return vacations[i]; return null; }
+// Невідповідена відпустка діє до моменту відповіді "я вдома" (не діє лише після явного завершення).
+function vacEffEnd(v){ const e = vacMs(v.e); return v.ended ? e : Math.max(e, vacTodayMs()); }
+function isVacationMs(ms){ for (const v of vacations){ if (ms >= vacMs(v.s) && ms <= vacEffEnd(v)) return true; } return false; }
+function isVacationKey(key){ return vacations.length > 0 && isVacationMs(vacMs(key)); }
+function isVacationDate(d){ return vacations.length > 0 && isVacationMs(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()); }
+
+function vacAfterChange(){
+  if (vacations.length > 40) vacations = vacations.slice(-40);
+  saveState();
+  closeVacModal();
+  renderAll();
+  renderVacSettings();
+}
+function vacStart(days){
+  if (vacActive()) return;
+  const t = vacTodayMs();
+  vacations.push({ s: vacKey(t), e: vacKey(vacAdd(t, days - 1)), ended: false });
+  vacAfterChange();
+}
+function vacExtend(n){
+  const v = vacActive(); if (!v) return;
+  v.e = vacKey(vacAdd(Math.max(vacMs(v.e), vacTodayMs()), n));
+  vacAfterChange();
+}
+function vacEnd(){
+  const v = vacActive(); if (!v) return;
+  const t = vacTodayMs();
+  const newE = vacMs(v.e) === t ? t : vacAdd(t, -1);
+  if (newE < vacMs(v.s)) vacations = vacations.filter(x => x !== v);
+  else { v.e = vacKey(newE); v.ended = true; }
+  vacAfterChange();
+}
+function vacCheckPrompt(){
+  const v = vacActive(); if (!v) return;
+  const tk = vacKey(vacTodayMs());
+  if (vacMs(v.e) > vacTodayMs() || vacPromptShownKey === tk) return;
+  if (document.getElementById('vacOverlay').classList.contains('open')) return;
+  vacPromptShownKey = tk;
+  openVacModal('ask');
+}
+function vacExtendChips(){
+  return `<div class="vac-chips">${[1,3,7,14].map(n => `<div class="vac-chip" data-act="extend" data-n="${n}">+${n} ${pluralDays(n)}</div>`).join('')}</div>`;
+}
+function renderVacModal(){
+  const m = document.getElementById('vacModal');
+  const v = vacActive();
+  if (vacMode === 'setup'){
+    const t = vacTodayMs();
+    m.innerHTML = `
+      <div class="vac-hero">🌴</div>
+      <div class="vac-title">Режим відпустки</div>
+      <div class="vac-sub">Поки ти в дорозі, стріки не згорять. Звички можна відмічати як завжди — стрік продовжиться.</div>
+      <div class="vac-stepper">
+        <button class="vac-step-btn" data-act="step" data-n="-1">−</button>
+        <div class="vac-days-num"><b>${vacDraft}</b><span>${pluralDays(vacDraft)}</span></div>
+        <button class="vac-step-btn" data-act="step" data-n="1">+</button>
+      </div>
+      <div class="vac-chips">${[3,7,14,30].map(n => `<div class="vac-chip${vacDraft === n ? ' active' : ''}" data-act="set" data-n="${n}">${n}</div>`).join('')}</div>
+      <div class="vac-range">${vacFmt(t)} — ${vacFmt(vacAdd(t, vacDraft - 1))}</div>
+      <button class="vac-primary" data-act="start">Почати відпустку</button>
+      <button class="vac-secondary" data-act="close">Скасувати</button>`;
+  } else if (vacMode === 'extend' && v){
+    m.innerHTML = `
+      <div class="vac-hero">🌴</div>
+      <div class="vac-title">Продовжити відпустку</div>
+      <div class="vac-sub">Зараз вона триває до ${vacFmt(vacMs(v.e))}. На скільки додати?</div>
+      ${vacExtendChips()}
+      <button class="vac-secondary" data-act="close">Скасувати</button>`;
+  } else if (vacMode === 'ask' && v){
+    const e = vacMs(v.e), isLast = e === vacTodayMs();
+    m.innerHTML = `
+      <div class="vac-hero">🏠</div>
+      <div class="vac-title">Ти вже вдома?</div>
+      <div class="vac-sub">${isLast ? 'Сьогодні останній день твоєї відпустки.' : 'Відпустка мала закінчитись ' + vacFmt(e) + '.'} Стріки захищені, поки ти не відповіси.</div>
+      <button class="vac-primary" data-act="home">Так, я вдома</button>
+      <div class="vac-label">Ще в дорозі — продовжити:</div>
+      ${vacExtendChips()}`;
+  }
+}
+function openVacModal(mode){
+  vacMode = mode;
+  if (mode === 'setup' && vacActive()) vacMode = 'extend';
+  renderVacModal();
+  document.getElementById('vacOverlay').classList.add('open');
+}
+function closeVacModal(){ document.getElementById('vacOverlay').classList.remove('open'); }
+document.getElementById('vacModal').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-act]'); if (!t) return;
+  const act = t.dataset.act, n = Number(t.dataset.n) || 0;
+  if (act === 'step'){ vacDraft = Math.max(1, Math.min(90, vacDraft + n)); renderVacModal(); }
+  else if (act === 'set'){ vacDraft = n; renderVacModal(); }
+  else if (act === 'start') vacStart(vacDraft);
+  else if (act === 'extend') vacExtend(n);
+  else if (act === 'home') vacEnd();
+  else if (act === 'close') closeVacModal();
+});
+document.getElementById('vacOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'vacOverlay' && vacMode !== 'ask') closeVacModal();
+});
+
+function vacProgress(v){
+  const t = vacTodayMs(), s = vacMs(v.s), e = vacMs(v.e);
+  const total = Math.max(1, Math.round((e - s) / 86400000) + 1);
+  const day = Math.max(1, Math.min(total, Math.round((t - s) / 86400000) + 1));
+  const left = Math.max(0, Math.round((e - t) / 86400000));
+  return { total, day, left, e };
+}
+function renderVacBanner(){
+  const el = document.getElementById('vacBanner'); if (!el) return;
+  const v = vacActive();
+  if (!v){ el.innerHTML = ''; return; }
+  const p = vacProgress(v);
+  const sub = p.left > 0 ? `Ще ${p.left} ${pluralDays(p.left)} · до ${vacFmt(p.e)} · стріки захищені` : 'Останній день · стріки захищені';
+  el.innerHTML = `<div class="vac-banner" id="vacBannerCard">
+      <div class="vac-banner-ico">🌴</div>
+      <div class="vac-banner-txt"><b>Режим відпустки</b><span>${sub}</span></div>
+      <div class="vac-banner-num">${p.day}<small>/${p.total}</small></div>
+      <div class="vac-bar" style="width:${Math.round(p.day / p.total * 100)}%"></div>
+    </div>`;
+  document.getElementById('vacBannerCard').addEventListener('click', openSettingsModal);
+}
+function renderVacSettings(){
+  const el = document.getElementById('vacSettingsBlock'); if (!el) return;
+  const v = vacActive();
+  if (!v){
+    el.innerHTML = `<div class="vac-set-card"><div class="vac-set-top">
+      <div class="vac-set-ico">🌴</div>
+      <div class="vac-set-txt"><b>Режим відпустки</b><span>Збережи стріки на час подорожі</span></div>
+      <button class="vac-set-btn" data-vac="setup">Активувати</button></div></div>`;
+  } else {
+    const p = vacProgress(v);
+    el.innerHTML = `<div class="vac-set-card on"><div class="vac-set-top">
+      <div class="vac-set-ico">🌴</div>
+      <div class="vac-set-txt"><b>Відпустка: день ${p.day} з ${p.total}</b><span>До ${vacFmt(p.e)} · стріки захищені</span></div></div>
+      <div class="vac-set-bar"><i style="width:${Math.round(p.day / p.total * 100)}%"></i></div>
+      <div class="vac-set-btns"><button data-vac="extend">Продовжити</button><button data-vac="end">Я вже вдома</button></div></div>`;
+  }
+}
+document.getElementById('vacSettingsBlock').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-vac]'); if (!t) return;
+  if (t.dataset.vac === 'setup') openVacModal('setup');
+  else if (t.dataset.vac === 'extend') openVacModal('extend');
+  else if (t.dataset.vac === 'end') vacEnd();
+});
+
 
 /* ================= ЧАСТОТА ЗВИЧКИ (щодня / раз на тиждень у вибрані дні) ================= */
 /* Порядок днів тижня, що починається з понеділка — використовується, щоб визначити
@@ -6169,6 +6384,7 @@ function checkDayRollover(){
   } else {
     today = now;
   }
+  vacCheckPrompt();
 }
 
 /* ================= ЗВУК І ВІБРАЦІЯ ПРИ ВІДМІТЦІ ================= */
@@ -6578,7 +6794,12 @@ function longestEverStreak(h){
   let max = 1, cur = 1;
   for (let i = 1; i < trueDates.length; i++){
     const diffDays = Math.round((trueDates[i] - trueDates[i - 1]) / 86400000);
-    cur = diffDays === 1 ? cur + 1 : 1;
+    let gapOk = diffDays === 1;
+    if (!gapOk && diffDays > 1 && diffDays < 200){
+      gapOk = true;
+      for (let g = 1; g < diffDays; g++){ if (!isVacationDate(new Date(trueDates[i - 1].getFullYear(), trueDates[i - 1].getMonth(), trueDates[i - 1].getDate() + g))){ gapOk = false; break; } }
+    }
+    cur = gapOk ? cur + 1 : 1;
     if (cur > max) max = cur;
   }
   return max;
@@ -11168,6 +11389,9 @@ function renderCalendar(h){
       cell.classList.add('done');
       cell.style.borderColor = h.colors[0];
       cell.style.background = `linear-gradient(160deg, ${h.colors[0]}22, transparent)`;
+    } else if (isVacationKey(key)) {
+      cell.style.borderColor = 'rgba(45,212,191,0.55)';
+      cell.style.background = 'linear-gradient(160deg, rgba(45,212,191,0.16), transparent)';
     }
     if (isToday){
       cell.classList.add('today');
@@ -11253,8 +11477,8 @@ function computeStreak(h){
           cursor = windowInstanceStartDate(h, cursor);
           cursor.setDate(cursor.getDate() - 1);
           stepBackToDue();
-        } else if (val === 'frozen'){
-          // Заморожене вікно — стрік не зростає, але й не переривається.
+        } else if (val === 'frozen' || (!val && isVacationDate(cursor))){
+          // Заморожене вікно / день відпустки — стрік не зростає, але й не переривається.
           cursor = windowInstanceStartDate(h, cursor);
           cursor.setDate(cursor.getDate() - 1);
           stepBackToDue();
@@ -11277,8 +11501,8 @@ function computeStreak(h){
         streak++;
         cursor.setDate(cursor.getDate() - 1);
         stepBackToDue();
-      } else if (val === 'frozen'){
-        // Заморожений день — стрік не зростає, але й не переривається.
+      } else if (val === 'frozen' || (!val && isVacationKey(key))){
+        // Заморожений день / день відпустки — стрік не зростає, але й не переривається.
         cursor.setDate(cursor.getDate() - 1);
         stepBackToDue();
       } else break;
@@ -11300,7 +11524,7 @@ function computeStreak(h){
     const key = dayKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
     const val = h.days[key];
     if (val === true){ streak++; cursor.setDate(cursor.getDate() - 1); }
-    else if (val === 'frozen'){ cursor.setDate(cursor.getDate() - 1); } // збережено, але без +1
+    else if (val === 'frozen' || (!val && isVacationKey(key))){ cursor.setDate(cursor.getDate() - 1); } // збережено, але без +1
     else break;
   }
   return streak;
@@ -11556,6 +11780,7 @@ function progressRingSvg(pct, size, stroke){
 }
 
 function renderStreakBoard(){
+  renderVacBanner();
   const grid = document.getElementById('streakGrid');
   if (!habits.length){ grid.innerHTML = ''; return; }
   const todayKeyStr = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
@@ -11653,7 +11878,7 @@ function renderStreakBoard(){
       delete existingById[h.id];
     }
 
-    card.className = 'streak-card' + (isComplete ? ' lit' : '') + (isFrozen ? ' frozen' : '') + tierClass
+    card.className = 'streak-card' + (isComplete ? ' lit' : '') + (isFrozen ? ' frozen' : '') + (vacActive() ? ' vac' : '') + tierClass
       + (levelChanged ? ' flame-swap-glow' : '');
     if (levelChanged){
       const glowColors = {
@@ -11687,9 +11912,9 @@ function renderStreakBoard(){
     fillEl.classList.toggle('partial', bgPct > 0 && bgPct < 100);
 
     const flameEl = card.querySelector('.streak-flame');
-    flameEl.innerHTML = `<div class="flame-glint-wrap">${isFrozen ? freezeIconMarkup() : flameIcon(h.id, isComplete, streak)}</div>${isFrozen ? `<div class="frozen-badge">❄️</div>` : ''}`;
+    flameEl.innerHTML = `<div class="flame-glint-wrap">${isFrozen ? freezeIconMarkup() : flameIcon(h.id, isComplete, streak)}</div>${isFrozen ? `<div class="frozen-badge">❄️</div>` : (vacActive() ? `<div class="vac-badge">🌴</div>` : '')}`;
     card.querySelector('.streak-name').textContent = h.name;
-    card.querySelector('.streak-days').innerHTML = `<b>${streak}</b> ${pluralDays(streak)} поспіль${isFrozen ? ' · заморожено' : ''}`;
+    card.querySelector('.streak-days').innerHTML = `<b>${streak}</b> ${pluralDays(streak)} поспіль${isFrozen ? ' · заморожено' : (vacActive() ? ' · 🌴 відпустка' : '')}`;
 
     const ringWrap = card.querySelector('.streak-ring-wrap');
     const wantRing = hasSteps && !isComplete;
@@ -13373,6 +13598,7 @@ function renderSettingsSwatches(current){
   });
 }
 function openSettingsModal(){
+  renderVacSettings();
   const current = loadBgAccent();
   document.getElementById('settingsColorPicker').value = current.accent;
   renderSettingsSwatches(current);
