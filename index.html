@@ -5553,6 +5553,7 @@ let sprout = {
   cloverRare: rollCloverRare(), // чи випав на 3-му рівні рідкісний 🍀 (4 листки) замість ☘️ — розігрується на початку кожного циклу
   cycleStartDate: null, // ISO-дата початку поточного циклу росту (встановлюється при першому використанні)
   history: [], // завершені цикли росту: { name, startDate, endDate, form, rare }
+  maxLevelEver: 0, // найвищий рівень ростка, досягнутий за весь час (не падає при оновленні циклу) — для бейджів
   awarded: {
     flame: {},  // { habitId: 'y-m-d' } — за який день вже нараховано +1 за "продовжив вогник"
     weekly: {}, // { habitId: 'y-m-d' } — за який день вже нараховано +10 за тижневе завдання
@@ -5931,6 +5932,7 @@ function loadState(){
           }
         }
         sprout.history = Array.isArray(parsed.sprout.history) ? parsed.sprout.history : [];
+        if (typeof parsed.sprout.maxLevelEver === 'number') sprout.maxLevelEver = parsed.sprout.maxLevelEver;
         // Той самий баг заднім числом: записи в історії, які вже встигли завершитись
         // "1 днем", бо стартова дата циклу була підставлена як "зараз" 19.09.2026
         // (день релізу фічі), до того як з'явилась міграція вище. Підправляємо
@@ -8229,7 +8231,7 @@ function getBadgesState(){
   const perfectDays = countPerfectNoFreezeDays();
   const frozenTimes = countFrozenTimesActiveOnly();
   const lateFinishCount = lateFinishDays.length;
-  const sproutLevel = sproutStageIndex(sproutProgress()) + 1;
+  const sproutLevel = sproutMaxLevelEver(); // найвищий рівень за весь час, а не поточний — після скидання циклу бейдж не зникає
   const watchedMovies = countWatchedMovies();
   const readBooks = countReadBooks();
   const waterGoalDays = countWaterGoalDaysReached();
@@ -13984,7 +13986,16 @@ function sproutDaysLabel(startIso, endIso){
 }
 // Завершує поточний цикл росту ростка: зберігає його (ім'я, дата початку, дата
 // завершення) в історію та починає новий цикл з нульовими балами.
+// Найвищий рівень ростка за весь час: поточний, збережений максимум і завершені цикли
+// (оновити цикл можна лише з 5-го рівня, тож кожен запис історії = 5-й рівень).
+function sproutMaxLevelEver(){
+  let lvl = Math.max(sprout.maxLevelEver || 0, sproutStageIndex(sproutProgress()) + 1);
+  if (sprout.history && sprout.history.length) lvl = Math.max(lvl, SPROUT_MAX_STAGE + 1);
+  sprout.maxLevelEver = lvl; // збережеться при найближчому saveState()
+  return lvl;
+}
 function sproutApplyCycleReset(){
+  sproutMaxLevelEver(); // фіксуємо досягнутий рівень ДО скидання
   ensureSproutCycleStartDate();
   sprout.history = sprout.history || [];
   sprout.history.unshift({
