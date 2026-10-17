@@ -11649,10 +11649,10 @@ function renderListsOverview(){
 
   if (lists.length){
     html += `<div class="lists-section-label">Мої списки</div>`;
-    html += badgesCardHtml() + lists.map(listCardHtml).join('') + eventsCalendarCardHtml() + moodCardHtml() + statsCardHtml() + bookshelfCardHtml() + countdownCardHtml();
+    html += badgesCardHtml() + lists.map(listCardHtml).join('') + bookshelfCardHtml() + eventsCalendarCardHtml() + moodCardHtml() + statsCardHtml() + countdownCardHtml();
   } else if (!listsAdding){
     html += `<div class="lists-section-label">Мої списки</div>`;
-    html += badgesCardHtml() + eventsCalendarCardHtml() + moodCardHtml() + statsCardHtml() + bookshelfCardHtml() + countdownCardHtml();
+    html += badgesCardHtml() + bookshelfCardHtml() + eventsCalendarCardHtml() + moodCardHtml() + statsCardHtml() + countdownCardHtml();
   }
 
   body.innerHTML = html;
@@ -11918,9 +11918,27 @@ function renderWatchedDetail(list){
   wireListItemRowActions(body, list);
 }
 
+let lastListsScreen = null;
+function listsScrollTop(){
+  const body = document.getElementById('listsBody');
+  if (!body) return;
+  const modal = body.closest('.lists-modal');
+  body.scrollTop = 0;
+  if (modal) modal.scrollTop = 0;
+  const ov = document.getElementById('listsOverlay');
+  if (ov) ov.scrollTop = 0;
+}
 function renderListsBody(){
   const body = document.getElementById('listsBody');
   if (!body) return;
+  // Перехід на інший екран (напр. відкрили книжкову полицю з низу списку) — завжди починаємо зверху
+  const screenChanged = lastListsScreen !== listsView.screen;
+  lastListsScreen = listsView.screen;
+  if (screenChanged && listsView.screen !== 'overview'){
+    listsScrollTop();
+    requestAnimationFrame(listsScrollTop);
+    setTimeout(listsScrollTop, 80); // після того, як підтягнуться картинки/шрифти
+  }
   if (listsView.screen === 'watched'){
     const list = lists.find(l => l.id === listsView.listId);
     if (!list){ listsView = { screen: 'overview', listId: null }; renderListsOverview(); return; }
