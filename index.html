@@ -14613,13 +14613,21 @@ var WaterFluid = (function(){
     return !!(D && typeof D.requestPermission === 'function');
   }
 
+  // Відповідь на запит запам'ятовуємо: питаємо дозвіл лише один раз, надалі — тихо.
+  const ANSWER_KEY = 'waterSensorsAnswer';
+  function getAnswer(){ try { return localStorage.getItem(ANSWER_KEY); } catch (e) { return null; } }
+  function setAnswer(v){ try { localStorage.setItem(ANSWER_KEY, v); } catch (e) {} }
+
   function enableSensors(){
     if (listening || asked) return;
     if (!needsPermission()){ listen(); return; }
+    const prev = getAnswer();
+    if (prev === 'denied') return;                          // відмовив раніше — більше не турбуємо
+    if (prev === 'granted'){ asked = true; listen(); return; } // дозволив раніше — слухаємо без запиту
     asked = true;
     window.DeviceOrientationEvent.requestPermission()
-      .then(r => { if (r === 'granted') listen(); })
-      .catch(() => { asked = false; }); // не з жесту — спробуємо при наступному дотику
+      .then(r => { setAnswer(r === 'granted' ? 'granted' : 'denied'); if (r === 'granted') listen(); })
+      .catch(() => { asked = false; }); // не з жесту (запиту не було) — не зберігаємо, спробуємо при дотику
   }
 
   /* ----- симуляція ----- */
@@ -14635,7 +14643,7 @@ var WaterFluid = (function(){
 
   function stepWaves(){
     for (let i = 0; i < N; i++){
-      vel[i] += -0.025 * hgt[i] - 0.03 * vel[i];
+      vel[i] += -0.04 * hgt[i] - 0.02 * vel[i];
       vel[i] = clamp(vel[i], -6, 6);
       hgt[i] = clamp(hgt[i] + vel[i], -ch * 0.3, ch * 0.3);
     }
@@ -14670,19 +14678,27 @@ var WaterFluid = (function(){
     return (lo + hi) / 2;
   }
 
+  // плавна крива через точки поверхні (квадратичні сплайни по серединах відрізків)
+  function curveThrough(ys){
+    ctx.lineTo(0, ys[0]);
+    for (let i = 1; i < N - 1; i++){
+      const x = i / (N - 1) * cw, nx = (i + 1) / (N - 1) * cw;
+      ctx.quadraticCurveTo(x, ys[i], (x + nx) / 2, (ys[i] + ys[i + 1]) / 2);
+    }
+    ctx.lineTo(cw, ys[N - 1]);
+  }
+
   function strokeSurface(ys, style, width){
     ctx.beginPath();
-    for (let i = 0; i < N; i++){
-      const x = i / (N - 1) * cw;
-      if (i === 0) ctx.moveTo(x, ys[i]); else ctx.lineTo(x, ys[i]);
-    }
+    ctx.moveTo(0, ys[0]);
+    curveThrough(ys);
     ctx.strokeStyle = style; ctx.lineWidth = width; ctx.stroke();
   }
 
   function fillLayer(ys, style){
     ctx.beginPath();
     ctx.moveTo(0, ch + 2);
-    for (let i = 0; i < N; i++) ctx.lineTo(i / (N - 1) * cw, ys[i]);
+    curveThrough(ys);
     ctx.lineTo(cw, ch + 2);
     ctx.closePath();
     ctx.fillStyle = style; ctx.fill();
@@ -14691,7 +14707,7 @@ var WaterFluid = (function(){
   function tracePath(ys){
     ctx.beginPath();
     ctx.moveTo(0, ch + 2);
-    for (let i = 0; i < N; i++) ctx.lineTo(i / (N - 1) * cw, ys[i]);
+    curveThrough(ys);
     ctx.lineTo(cw, ch + 2);
     ctx.closePath();
   }
@@ -14714,10 +14730,10 @@ var WaterFluid = (function(){
       const slosh = -m1 * Math.cos(Math.PI * u) + m2 * Math.cos(2 * Math.PI * u);   // нульове середнє
       // плавні довгі хвилі + трохи середньої рябі, як на відео
       ysBack[i]  = line + 0.8 * slosh - 0.5 * hgt[i]
-                 + amb * (3.0 * Math.sin(x * 0.022 - t * 1.1 + 1.3) + 1.2 * Math.sin(x * 0.06 + t * 1.8));
+                 + amb * (3.0 * Math.sin(x * 0.022 - t * 1.9 + 1.3) + 1.2 * Math.sin(x * 0.06 + t * 2.9));
       ysFront[i] = line + slosh + hgt[i]
-                 + amb * (2.4 * Math.sin(x * 0.028 + t * 0.9) + 1.3 * Math.sin(x * 0.07 - t * 1.5 + 2.0)
-                        + 0.8 * Math.sin(x * 0.15 + t * 2.2));
+                 + amb * (2.4 * Math.sin(x * 0.028 + t * 1.6) + 1.3 * Math.sin(x * 0.07 - t * 2.6 + 2.0)
+                        + 0.5 * Math.sin(x * 0.13 + t * 3.6));
     }
 
     // задній шар — світліший, для глибини
@@ -14780,15 +14796,15 @@ var WaterFluid = (function(){
     lastDt = dt;
 
     // пружина нахилу з інерцією: вода трохи запізнюється і «перехльостує»
-    tiltVel += (42 * (tiltTarget - tilt) - 5.5 * tiltVel) * dt;
+    tiltVel += (70 * (tiltTarget - tilt) - 7 * tiltVel) * dt;
     tilt = clamp(tilt + tiltVel * dt, -MAX_TILT * 1.15, MAX_TILT * 1.15);
 
     // моди хлюпання: збуджуються швидкістю та прискоренням нахилу
     const tAcc = (tiltVel - prevTiltVel) / Math.max(dt, 0.001);
     prevTiltVel = tiltVel;
     tAccS += (tAcc - tAccS) * Math.min(1, dt * 12);
-    m1v += (-70 * m1 - 3.0 * m1v + tiltVel * ch * 4) * dt;
-    m2v += (-120 * m2 - 2.5 * m2v + tAccS * ch * 1.0) * dt;
+    m1v += (-150 * m1 - 2.5 * m1v + tiltVel * ch * 8.5) * dt;
+    m2v += (-260 * m2 - 2.2 * m2v + tAccS * ch * 2.2) * dt;
     m1 = clamp(m1 + m1v * dt, -ch * 0.06, ch * 0.06);
     m2 = clamp(m2 + m2v * dt, -ch * 0.06, ch * 0.06);
 
