@@ -14565,7 +14565,6 @@ var WaterFluid = (function(){
   // моди «хлюпання»: поверхня не лише нахиляється, а й вигинається та перекочується
   let m1 = 0, m1v = 0, m2 = 0, m2v = 0;
   let prevTiltVel = 0, tAccS = 0, nextKick = 0, lastDt = 0.016;
-  const bubbles = [];
   let raf = 0, lastT = 0;
   let listening = false, asked = false, lastSensorAt = -1e9;
 
@@ -14689,61 +14688,70 @@ var WaterFluid = (function(){
     ctx.fillStyle = style; ctx.fill();
   }
 
-  function updateBubbles(dt){
-    if (bubbles.length < 9 && level > 0.2 && Math.random() < dt * 1.6){
-      bubbles.push({ x: 8 + Math.random() * (cw - 16), y: ch - 2, r: 1.2 + Math.random() * 2.2,
-                     vy: 14 + Math.random() * 22, ph: Math.random() * 6.28 });
-    }
-    for (let i = bubbles.length - 1; i >= 0; i--){
-      const b = bubbles[i];
-      b.y -= b.vy * dt;
-      b.ph += dt * 3;
-      b.x += Math.sin(b.ph) * 9 * dt - tiltVel * 14 * dt;
-      const idx = clamp(Math.round(b.x / cw * (N - 1)), 0, N - 1);
-      if (b.y < ysFront[idx] + b.r + 1 || b.x < 0 || b.x > cw){
-        if (b.x >= 0 && b.x <= cw) vel[idx] -= 0.25;     // бульбашка лопає — легка рябь
-        bubbles.splice(i, 1);
-      }
-    }
+  function tracePath(ys){
+    ctx.beginPath();
+    ctx.moveTo(0, ch + 2);
+    for (let i = 0; i < N; i++) ctx.lineTo(i / (N - 1) * cw, ys[i]);
+    ctx.lineTo(cw, ch + 2);
+    ctx.closePath();
   }
 
   function draw(t){
     ctx.clearRect(0, 0, cw, ch);
     if (level <= 0.001) return;
-    const s = -Math.tan(clamp(tilt * 0.3, -0.2, 0.2));                       // майже рівна поверхня, без «купи» з одного боку
+
+    // Вода тримається рівно відносно землі (нахил телефона → поверхня нахиляється в інший бік),
+    // але з м'яким обмеженням: на широкому віджеті вона не збивається в куток.
+    const maxS = 0.4 * ch / cw;
+    const raw = -Math.tan(clamp(tilt, -1.2, 1.2)) * 0.9;
+    const s = maxS * Math.tanh(raw / maxS);
     const y0 = solveY0(s, level);
-    const amb = 1 + 0.5 * Math.sin(t * 0.45);             // амплітуда рябі «дихає»
+    const amb = 1 + 0.4 * Math.sin(t * 0.4);              // хвилі повільно «дихають»
+
     for (let i = 0; i < N; i++){
       const x = i / (N - 1) * cw, u = i / (N - 1);
       const line = y0 + s * (x - cw / 2);
-      // вигин поверхні (нульове середнє — об'єм води не змінюється)
-      const slosh = -m1 * Math.cos(Math.PI * u) + m2 * Math.cos(2 * Math.PI * u);
-      ysBack[i]  = line + 0.7 * slosh - 0.6 * hgt[i]
-                 + amb * (3.8 * Math.sin(x * 0.04 - t * 1.7 + 1.3) + 2.2 * Math.sin(x * 0.09 + t * 2.3));
-      ysMid[i]   = line + 0.9 * slosh - 0.2 * hgt[i]
-                 + amb * (1.8 * Math.sin(x * 0.055 + t * 1.4 + 0.6));
+      const slosh = -m1 * Math.cos(Math.PI * u) + m2 * Math.cos(2 * Math.PI * u);   // нульове середнє
+      // плавні довгі хвилі + трохи середньої рябі, як на відео
+      ysBack[i]  = line + 0.8 * slosh - 0.5 * hgt[i]
+                 + amb * (3.0 * Math.sin(x * 0.022 - t * 1.1 + 1.3) + 1.2 * Math.sin(x * 0.06 + t * 1.8));
       ysFront[i] = line + slosh + hgt[i]
-                 + amb * (3.0 * Math.sin(x * 0.05 + t * 1.2) + 1.9 * Math.sin(x * 0.11 - t * 1.9 + 2.0)
-                        + 1.4 * Math.sin(x * 0.023 + t * 0.7));
+                 + amb * (2.4 * Math.sin(x * 0.028 + t * 0.9) + 1.3 * Math.sin(x * 0.07 - t * 1.5 + 2.0)
+                        + 0.8 * Math.sin(x * 0.15 + t * 2.2));
     }
-    fillLayer(ysBack, 'rgba(56,189,248,0.22)');
-    fillLayer(ysMid, 'rgba(56,189,248,0.18)');
-    const g = ctx.createLinearGradient(0, 0, 0, ch);
-    g.addColorStop(0, 'rgba(56,189,248,0.50)');
-    g.addColorStop(1, 'rgba(37,99,235,0.58)');
-    fillLayer(ysFront, g);
-    strokeSurface(ysBack, 'rgba(255,255,255,0.14)', 1);
-    strokeSurface(ysFront, 'rgba(255,255,255,0.38)', 1.5);
 
-    // бульбашки
-    updateBubbles(lastDt);
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-    ctx.fillStyle = 'rgba(255,255,255,0.08)';
-    for (let i = 0; i < bubbles.length; i++){
-      const b = bubbles[i];
-      ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, 6.2832); ctx.fill(); ctx.stroke();
+    // задній шар — світліший, для глибини
+    fillLayer(ysBack, 'rgba(80,195,225,0.30)');
+
+    // основне тіло: яскрава бірюза, до дна темнішає
+    const top = clamp(y0 - 12, 0, ch);
+    const g = ctx.createLinearGradient(0, top, 0, ch);
+    g.addColorStop(0,    'rgba(70,180,210,0.88)');
+    g.addColorStop(0.35, 'rgba(22,135,170,0.90)');
+    g.addColorStop(1,    'rgba(0,95,132,0.95)');
+    fillLayer(ysFront, g);
+
+    // м'які відблиски/затемнення всередині води (повільно пливуть)
+    ctx.save();
+    tracePath(ysFront);
+    ctx.clip();
+    for (let k = 0; k < 3; k++){
+      const bx = cw * (0.5 + 0.42 * Math.sin(t * 0.25 + k * 2.1));
+      const by = y0 + ch * (0.12 + 0.1 * Math.sin(t * 0.33 + k * 1.7));
+      const br = ch * (0.55 + 0.1 * k);
+      const rg = ctx.createRadialGradient(bx, by, 0, bx, by, br);
+      if (k === 1){ rg.addColorStop(0, 'rgba(0,55,95,0.16)'); rg.addColorStop(1, 'rgba(0,55,95,0)'); }
+      else        { rg.addColorStop(0, 'rgba(150,232,248,0.14)'); rg.addColorStop(1, 'rgba(150,232,248,0)'); }
+      ctx.fillStyle = rg;
+      ctx.fillRect(0, 0, cw, ch);
     }
+    ctx.restore();
+
+    // світла кромка поверхні
+    ctx.lineJoin = 'round';
+    strokeSurface(ysBack, 'rgba(190,240,252,0.16)', 1);
+    strokeSurface(ysFront, 'rgba(130,225,242,0.30)', 7);
+    strokeSurface(ysFront, 'rgba(205,246,255,0.80)', 1.6);
   }
 
   function frame(ts){
@@ -14768,7 +14776,7 @@ var WaterFluid = (function(){
 
     // без датчиків — легке самостійне похитування
     const sensorAlive = (performance.now() / 1000 - lastSensorAt) < 1.2;
-    if (!sensorAlive) tiltTarget = 0.14 * Math.sin(now * 0.8) + 0.07 * Math.sin(now * 1.9 + 1) + 0.035 * Math.sin(now * 3.1 + 2);
+    if (!sensorAlive) tiltTarget = 0.09 * Math.sin(now * 0.8) + 0.045 * Math.sin(now * 1.9 + 1) + 0.02 * Math.sin(now * 3.1 + 2);
     lastDt = dt;
 
     // пружина нахилу з інерцією: вода трохи запізнюється і «перехльостує»
@@ -14779,10 +14787,10 @@ var WaterFluid = (function(){
     const tAcc = (tiltVel - prevTiltVel) / Math.max(dt, 0.001);
     prevTiltVel = tiltVel;
     tAccS += (tAcc - tAccS) * Math.min(1, dt * 12);
-    m1v += (-70 * m1 - 3.0 * m1v + tiltVel * ch * 3) * dt;
-    m2v += (-120 * m2 - 2.5 * m2v + tAccS * ch * 0.8) * dt;
-    m1 = clamp(m1 + m1v * dt, -ch * 0.05, ch * 0.05);
-    m2 = clamp(m2 + m2v * dt, -ch * 0.05, ch * 0.05);
+    m1v += (-70 * m1 - 3.0 * m1v + tiltVel * ch * 4) * dt;
+    m2v += (-120 * m2 - 2.5 * m2v + tAccS * ch * 1.0) * dt;
+    m1 = clamp(m1 + m1v * dt, -ch * 0.06, ch * 0.06);
+    m2 = clamp(m2 + m2v * dt, -ch * 0.06, ch * 0.06);
 
     // випадкові ледь помітні поштовхи — вода ніколи не завмирає
     if (now > nextKick){
