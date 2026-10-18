@@ -14710,7 +14710,7 @@ var WaterFluid = (function(){
   function draw(t){
     ctx.clearRect(0, 0, cw, ch);
     if (level <= 0.001) return;
-    const s = -Math.tan(tilt * 0.1);                       // майже рівна поверхня, без «купи» з одного боку
+    const s = -Math.tan(clamp(tilt * 0.3, -0.2, 0.2));                       // майже рівна поверхня, без «купи» з одного боку
     const y0 = solveY0(s, level);
     const amb = 1 + 0.5 * Math.sin(t * 0.45);             // амплітуда рябі «дихає»
     for (let i = 0; i < N; i++){
@@ -14719,12 +14719,12 @@ var WaterFluid = (function(){
       // вигин поверхні (нульове середнє — об'єм води не змінюється)
       const slosh = -m1 * Math.cos(Math.PI * u) + m2 * Math.cos(2 * Math.PI * u);
       ysBack[i]  = line + 0.7 * slosh - 0.6 * hgt[i]
-                 + amb * (2.8 * Math.sin(x * 0.04 - t * 1.7 + 1.3) + 1.6 * Math.sin(x * 0.09 + t * 2.3));
+                 + amb * (3.8 * Math.sin(x * 0.04 - t * 1.7 + 1.3) + 2.2 * Math.sin(x * 0.09 + t * 2.3));
       ysMid[i]   = line + 0.9 * slosh - 0.2 * hgt[i]
                  + amb * (1.8 * Math.sin(x * 0.055 + t * 1.4 + 0.6));
       ysFront[i] = line + slosh + hgt[i]
-                 + amb * (2.0 * Math.sin(x * 0.05 + t * 1.2) + 1.3 * Math.sin(x * 0.11 - t * 1.9 + 2.0)
-                        + 0.9 * Math.sin(x * 0.023 + t * 0.7));
+                 + amb * (3.0 * Math.sin(x * 0.05 + t * 1.2) + 1.9 * Math.sin(x * 0.11 - t * 1.9 + 2.0)
+                        + 1.4 * Math.sin(x * 0.023 + t * 0.7));
     }
     fillLayer(ysBack, 'rgba(56,189,248,0.22)');
     fillLayer(ysMid, 'rgba(56,189,248,0.18)');
@@ -14768,7 +14768,7 @@ var WaterFluid = (function(){
 
     // без датчиків — легке самостійне похитування
     const sensorAlive = (performance.now() / 1000 - lastSensorAt) < 1.2;
-    if (!sensorAlive) tiltTarget = 0.05 * Math.sin(now * 0.8) + 0.025 * Math.sin(now * 1.9 + 1) + 0.012 * Math.sin(now * 3.1 + 2);
+    if (!sensorAlive) tiltTarget = 0.14 * Math.sin(now * 0.8) + 0.07 * Math.sin(now * 1.9 + 1) + 0.035 * Math.sin(now * 3.1 + 2);
     lastDt = dt;
 
     // пружина нахилу з інерцією: вода трохи запізнюється і «перехльостує»
@@ -14779,17 +14779,22 @@ var WaterFluid = (function(){
     const tAcc = (tiltVel - prevTiltVel) / Math.max(dt, 0.001);
     prevTiltVel = tiltVel;
     tAccS += (tAcc - tAccS) * Math.min(1, dt * 12);
-    m1v += (-70 * m1 - 3.0 * m1v + tiltVel * ch * 1.2) * dt;
-    m2v += (-120 * m2 - 2.5 * m2v + tAccS * ch * 0.3) * dt;
-    m1 = clamp(m1 + m1v * dt, -ch * 0.02, ch * 0.02);
-    m2 = clamp(m2 + m2v * dt, -ch * 0.02, ch * 0.02);
+    m1v += (-70 * m1 - 3.0 * m1v + tiltVel * ch * 3) * dt;
+    m2v += (-120 * m2 - 2.5 * m2v + tAccS * ch * 0.8) * dt;
+    m1 = clamp(m1 + m1v * dt, -ch * 0.05, ch * 0.05);
+    m2 = clamp(m2 + m2v * dt, -ch * 0.05, ch * 0.05);
 
     // випадкові ледь помітні поштовхи — вода ніколи не завмирає
     if (now > nextKick){
-      nextKick = now + 0.8 + Math.random() * 1.6;
-      vel[(Math.random() * N) | 0] += (Math.random() - 0.5) * 1.1;
-      m2v += (Math.random() - 0.5) * ch * 0.05;
+      nextKick = now + 0.35 + Math.random() * 0.9;
+      vel[(Math.random() * N) | 0] += (Math.random() - 0.5) * 2.6;
+      m2v += (Math.random() - 0.5) * ch * 0.12;
     }
+
+    // рух телефона штовхає воду біля стінок — звідти біжать хвилі
+    const edge = clamp(tiltVel * 0.25, -1.2, 1.2);
+    vel[0] += edge; vel[1] += edge * 0.6;
+    vel[N - 1] -= edge; vel[N - 2] -= edge * 0.6;
 
     const steps = clamp(Math.round(dt * 60), 1, 3);
     for (let n = 0; n < steps; n++) stepWaves();
