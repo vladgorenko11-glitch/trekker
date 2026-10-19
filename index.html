@@ -6486,6 +6486,50 @@ function hwFixInheritedTiers(){
   }
 }
 
+// Відновлення очок з журналу дій: бали котла = сума того, що справді нараховано за записами
+// (продовжені вогники, форми, тижневі, вода, їжа, «усі вогники», щоденний бонус). Це виправляє стан після
+// першого перерахунку, який віднімав число й міг «обнулити» чесні бали. Скіни, не підкріплені балами
+// (їх вибито на завищених очках), забираються — з кінця списку. Працює лише в день старту івенту
+// (журнал зберігає тільки останній день нарахування за звичку) і лише один раз.
+function hwRebuildPointsFromRecords(){
+  if (!hwOn() || !hwEvent || hwEvent.pointsFix2) return;
+  const st = hwEvent.startedAt ? new Date(hwEvent.startedAt) : null;
+  const sameDay = st && st.getFullYear() === today.getFullYear() && st.getMonth() === today.getMonth() && st.getDate() === today.getDate();
+  hwEvent.pointsFix2 = 1;
+  if (!sameDay){ saveState(); return; }
+  const tk = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const aw = sprout.awarded || {};
+  const ex = hhEnsureExtra();
+  const sumVals = o => Object.keys(o || {}).reduce((a, k) => a + (typeof o[k] === 'number' ? o[k] : 0), 0);
+  let pts = 0;
+  Object.keys(aw.flame || {}).forEach(id => { if (aw.flame[id] === tk) pts += 1 + (ex.flame[id] || 0); });
+  Object.keys(aw.weekly || {}).forEach(id => { if (aw.weekly[id] === tk) pts += 10 + (ex.weekly[id] || 0); });
+  Object.keys(aw.tier || {}).forEach(id => {
+    (Array.isArray(aw.tier[id]) ? aw.tier[id] : []).forEach(name => { pts += 5 + (ex.tier[id + ':' + name] || 0); });
+  });
+  if (aw.water === todayDateKeyStr()) pts += 2 + (ex.water || 0);
+  if (aw.meal === todayDateKeyStr()) pts += 2 + (ex.meal || 0);
+  if (celebratedAllDoneKey === tk) pts += 5 + (ex.allDone || 0);
+  pts += sumVals(sprout.dailyBonus && sprout.dailyBonus.claimed) * hwMul();
+  const before = sprout.points || 0;
+  sprout.points = pts;
+
+  // скіни: лишаємо тільки ті, що підкріплені очками (кожні HW_SKIN_STEP очок — один скін)
+  const earned = Math.min(HW_SKINS.length, Math.floor(pts / HW_SKIN_STEP));
+  let droppedSkins = 0;
+  if (Array.isArray(sprout.hwSkinList) && sprout.hwSkinList.length > earned){
+    droppedSkins = sprout.hwSkinList.length - earned;
+    sprout.hwSkinList = sprout.hwSkinList.slice(0, earned);
+    sprout.hwSkins = sprout.hwSkinList.length;
+    if (!sprout.hwSkinList.includes(sprout.hwEquipped)) delete sprout.hwEquipped;
+  }
+  if (typeof sprout.lastSeenStage === 'number' && sprout.lastSeenStage > earned) sprout.lastSeenStage = earned;
+  saveState();
+  try{ renderSproutBtn(); }catch(e){}
+  try{ const ov = document.getElementById('sproutOverlay'); if (ov && ov.classList.contains('open')) renderSproutOverlay(); }catch(e){}
+  try{ showMilestoneToast('🎃 Очки котла: ' + pts + (droppedSkins ? ' · зайвий скін забрано' : '')); }catch(e){}
+}
+
 function hwEnd(){
   let skins = 0;
   try{ skins = hwSkinsOwned(); }catch(e){}
@@ -6525,6 +6569,7 @@ function hwSync(){
     if (ov && ov.classList.contains('open')) renderSproutOverlay();
   }
   try{ hwFixInheritedTiers(); }catch(e){}
+  try{ hwRebuildPointsFromRecords(); }catch(e){}
   try{ hwRenderX3Banner(); }catch(e){}
   hwScheduleDialog(changed ? 250 : 0);
 }
