@@ -6423,7 +6423,67 @@ function hwStart(){
     hhExtra: { flame: {}, weekly: {}, tier: {}, water: 0, meal: 0, allDone: 0 },
     quests: backup.quests,
   });
+  try{ hwRecordTierBase(); }catch(e){}
   saveState();
+}
+
+// Запам'ятовує поточні стріки як «базу»: форми вогника (7/30/90 днів), що вже були відкриті до івенту,
+// не мають давати +5 балів котлу при першому ж продовженні вогника.
+function hwRecordTierBase(){
+  if (!sprout.awarded) sprout.awarded = { flame: {}, weekly: {}, tier: {}, water: null, meal: null };
+  const base = {};
+  (habits || []).forEach(h => { if (!h.archived) base[h.id] = computeStreak(h); });
+  sprout.awarded.tierBase = base;
+}
+
+// Скільки кроків стріку звичка h зробила від старту івенту (для відновлення «бази» в уже запущеному івенті)
+function hwEventDone(h){
+  const st = hwEvent && hwEvent.startedAt ? new Date(hwEvent.startedAt) : null;
+  if (!st) return 0;
+  st.setHours(0, 0, 0, 0);
+  const d = new Date(st), end = new Date(today);
+  let n = 0, guard = 0;
+  while (d <= end && guard++ < 400){
+    if (h.days[dayKey(d.getFullYear(), d.getMonth(), d.getDate())] === true){
+      if (!isWindowHabit(h)) n++;
+      else { const w = windowInstanceStartDate(h, d); if (w.getTime() === d.getTime()) n++; }
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return n;
+}
+
+// Одноразовий перерахунок для івенту, що вже запущений зі старою логікою: забирає «зайві» +5 за форми,
+// які звичка мала ще до 19 жовтня, і запам'ятовує базу, щоб це більше не повторювалось.
+function hwFixInheritedTiers(){
+  if (!hwOn() || !hwEvent || hwEvent.tierFix || !Array.isArray(habits)) return;
+  if (!sprout.awarded) sprout.awarded = { flame: {}, weekly: {}, tier: {}, water: null, meal: null };
+  const aw = sprout.awarded;
+  if (!aw.tier || typeof aw.tier !== 'object') aw.tier = {};
+  const base = aw.tierBase = (aw.tierBase && typeof aw.tierBase === 'object') ? aw.tierBase : {};
+  const ex = hhEnsureExtra();
+  let removed = 0;
+  habits.forEach(h => {
+    if (h.archived) return;
+    if (base[h.id] == null) base[h.id] = Math.max(0, computeStreak(h) - hwEventDone(h));
+    if (!Array.isArray(aw.tier[h.id]) || !aw.tier[h.id].length) return;
+    [[7, 'red'], [30, 'purple'], [90, 'blue']].forEach(([th, name]) => {
+      if (th <= base[h.id] && aw.tier[h.id].includes(name)){
+        aw.tier[h.id] = aw.tier[h.id].filter(x => x !== name);
+        const xk = h.id + ':' + name;
+        const e = ex.tier[xk] || 0; delete ex.tier[xk];
+        removed += 5 + e;
+      }
+    });
+  });
+  if (removed > 0) sprout.points = Math.max(0, (sprout.points || 0) - removed);
+  hwEvent.tierFix = 1;
+  hwEvent.tierFixRemoved = removed;
+  saveState();
+  if (removed > 0){
+    try{ renderSproutBtn(); }catch(e){}
+    try{ showMilestoneToast('🎃 Перерахували очки котла: −' + removed + ' (зайві бонуси за старі форми вогника)'); }catch(e){}
+  }
 }
 
 function hwEnd(){
@@ -6464,6 +6524,7 @@ function hwSync(){
     const ov = document.getElementById('sproutOverlay');
     if (ov && ov.classList.contains('open')) renderSproutOverlay();
   }
+  try{ hwFixInheritedTiers(); }catch(e){}
   try{ hwRenderX3Banner(); }catch(e){}
   hwScheduleDialog(changed ? 250 : 0);
 }
@@ -6848,7 +6909,10 @@ function awardSproutForHabitCompletion(h){
   // +5 — відкрив нову форму вогника (7 / 30 / 90 днів), раз на звичку на форму
   const streak = computeStreak(h);
   if (!sprout.awarded.tier[h.id]) sprout.awarded.tier[h.id] = [];
+  // стрік на момент старту івенту (tierBase): форми, відкриті ще до нього, нових балів не дають
+  const tierBase = (sprout.awarded.tierBase && sprout.awarded.tierBase[h.id]) || 0;
   [[7, 'red'], [30, 'purple'], [90, 'blue']].forEach(([threshold, name]) => {
+    if (threshold <= tierBase) return;
     if (streak >= threshold && !sprout.awarded.tier[h.id].includes(name)){
       sprout.awarded.tier[h.id].push(name);
       const x = hhX(5);
