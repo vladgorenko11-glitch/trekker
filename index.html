@@ -6456,7 +6456,7 @@ function hwEventDone(h){
 // Одноразовий перерахунок для івенту, що вже запущений зі старою логікою: забирає «зайві» +5 за форми,
 // які звичка мала ще до 19 жовтня, і запам'ятовує базу, щоб це більше не повторювалось.
 function hwFixInheritedTiers(){
-  if (!hwOn() || !hwEvent || hwEvent.tierFix || !Array.isArray(habits)) return;
+  if (!hwOn() || !hwEvent || hwEvent.tierFix3 || !Array.isArray(habits)) return;
   if (!sprout.awarded) sprout.awarded = { flame: {}, weekly: {}, tier: {}, water: null, meal: null };
   const aw = sprout.awarded;
   if (!aw.tier || typeof aw.tier !== 'object') aw.tier = {};
@@ -6477,7 +6477,7 @@ function hwFixInheritedTiers(){
     });
   });
   if (removed > 0) sprout.points = Math.max(0, (sprout.points || 0) - removed);
-  hwEvent.tierFix = 1;
+  hwEvent.tierFix3 = 1;
   hwEvent.tierFixRemoved = removed;
   saveState();
   if (removed > 0){
@@ -6492,10 +6492,10 @@ function hwFixInheritedTiers(){
 // (їх вибито на завищених очках), забираються — з кінця списку. Працює лише в день старту івенту
 // (журнал зберігає тільки останній день нарахування за звичку) і лише один раз.
 function hwRebuildPointsFromRecords(){
-  if (!hwOn() || !hwEvent || hwEvent.pointsFix2) return;
+  if (!hwOn() || !hwEvent || hwEvent.pointsFix3) return;
   const st = hwEvent.startedAt ? new Date(hwEvent.startedAt) : null;
   const sameDay = st && st.getFullYear() === today.getFullYear() && st.getMonth() === today.getMonth() && st.getDate() === today.getDate();
-  hwEvent.pointsFix2 = 1;
+  hwEvent.pointsFix3 = 1;
   if (!sameDay){ saveState(); return; }
   const tk = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
   const aw = sprout.awarded || {};
@@ -7252,6 +7252,7 @@ function loadState(){
             flame: parsed.sprout.awarded.flame || {},
             weekly: parsed.sprout.awarded.weekly || {},
             tier: parsed.sprout.awarded.tier || {},
+            tierBase: (parsed.sprout.awarded.tierBase && typeof parsed.sprout.awarded.tierBase === 'object') ? parsed.sprout.awarded.tierBase : {},
             water: typeof parsed.sprout.awarded.water === 'string' ? parsed.sprout.awarded.water : null,
             meal: typeof parsed.sprout.awarded.meal === 'string' ? parsed.sprout.awarded.meal : null,
           };
