@@ -5297,8 +5297,73 @@
   .sif-ico.i-orange { background: rgba(255,150,50,0.22); }
   .sif-card.hw .sif-btn { color: #3A1400; background: linear-gradient(180deg, #FFB65A 0%, #FF8A1F 100%); box-shadow: 0 6px 18px rgba(255,130,30,0.3); }
 </style>
+<style id="splash-css">
+#splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  background:radial-gradient(60% 42% at 12% -6%,rgba(108,92,231,.55),transparent 70%),radial-gradient(55% 40% at 108% 12%,rgba(62,155,255,.45),transparent 70%),#0D0F14;
+  animation:splashOut .35s ease 1s forwards}
+#splash .s-logo{width:96px;height:96px;border-radius:26px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 0 60px rgba(62,155,255,.35);
+  animation:splashPop .5s cubic-bezier(.2,.9,.3,1.2) both}
+#splash svg{width:64px;height:64px;overflow:visible}
+#splash .c1,#splash .c2{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+#splash .c1{stroke:url(#sg);stroke-width:14;animation:splashDraw .45s ease .2s forwards}
+#splash .c2{stroke:#9fd0ff;stroke-width:12;opacity:.55;animation:splashDraw .35s ease .5s forwards}
+#splash .s-name{font:800 26px/1 'Rubik','Inter',sans-serif;letter-spacing:.5px;color:#F2F3F7;opacity:0;animation:splashText .4s ease .45s forwards}
+@keyframes splashPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes splashDraw{to{stroke-dashoffset:0}}
+@keyframes splashText{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes splashOut{to{opacity:0;visibility:hidden;transform:scale(1.04)}}
+@media (prefers-reduced-motion:reduce){#splash,#splash *{animation-duration:.01s!important;animation-delay:0s!important}#splash{animation-delay:.4s!important}}
+</style>
+<style id="whatsnew-css">
+#whatsNewOverlay{z-index:70}
+.wn-card{position:relative;width:min(380px,100%);height:min(590px,calc(100vh - 32px));height:min(590px,calc(100dvh - 32px));border-radius:32px;overflow:hidden;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#171A24 0%,#0F1219 100%);border:1px solid rgba(255,255,255,.10);box-shadow:0 28px 80px rgba(0,0,0,.65);animation:sifIn .35s cubic-bezier(.22,1,.36,1) both;--c:#6C5CE7}
+.wn-top{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:16px 16px 0 20px}
+.wn-pill{padding:5px 11px;border-radius:999px;font-size:11px;font-weight:600;color:#C9CDDA;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10)}
+.wn-x{width:32px;height:32px;border:none;border-radius:50%;font-size:15px;color:#C9CDDA;background:rgba(255,255,255,.08);cursor:pointer}
+.wn-track{flex:1;min-height:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.wn-track::-webkit-scrollbar{display:none}
+.wn-slide{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;flex-direction:column;min-width:0}
+.wn-hero{flex:0 0 52%;display:flex;align-items:center;justify-content:center;position:relative;
+  background:radial-gradient(70% 75% at 50% 52%,rgba(108,92,231,.5),transparent 72%);background:radial-gradient(70% 75% at 50% 52%,color-mix(in srgb,var(--sc) 55%,transparent),transparent 72%)}
+.wn-emoji{font-size:88px;line-height:1;filter:drop-shadow(0 10px 28px var(--sc))}
+.wn-body{padding:6px 26px 0}
+.wn-tag{display:inline-block;margin-bottom:10px;padding:3px 9px;border-radius:7px;font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#fff;background:var(--sc)}
+.wn-title{font-family:'Rubik','Inter',sans-serif;font-size:25px;font-weight:700;line-height:1.15;color:#F2F3F7}
+.wn-text{margin-top:10px;font-size:14px;line-height:1.5;color:#8A90A3}
+.wn-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px 20px}
+.wn-dots{display:flex;gap:6px;align-items:center}
+.wn-dot{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.2);transition:all .25s}
+.wn-dot.on{width:22px;background:var(--c)}
+.wn-next{padding:13px 28px;border:none;border-radius:16px;font-family:inherit;font-size:14.5px;font-weight:600;color:#fff;cursor:pointer;background:linear-gradient(135deg,#6C5CE7,#3E9BFF);box-shadow:0 8px 22px rgba(108,92,231,.38)}
+.wn-next:active{transform:scale(.97)}
+/* візуали */
+.wn-logo{width:112px;height:112px;border-radius:32px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);box-shadow:0 0 70px rgba(62,155,255,.5)}
+.wn-logo svg{width:72px;height:72px;overflow:visible}
+.wn-logo path{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:wnDraw 2.4s ease infinite}
+.wn-logo .a{stroke:#3E9BFF;stroke-width:14}.wn-logo .b{stroke:#9fd0ff;stroke-width:12;opacity:.6;animation-delay:.35s}
+@keyframes wnDraw{0%{stroke-dashoffset:1}35%,80%{stroke-dashoffset:0}100%{stroke-dashoffset:0;opacity:0}}
+.wn-mock{width:150px;padding:12px;border-radius:20px;background:#1B1F2B;border:1px solid rgba(255,255,255,.12);box-shadow:0 16px 40px rgba(0,0,0,.5);transform:rotate(-4deg)}
+.wn-mock i{display:block;height:8px;border-radius:6px;background:rgba(255,255,255,.14);margin-top:7px}
+.wn-mock i.t{width:60%;height:11px;background:rgba(255,255,255,.4);margin:0 0 10px}
+.wn-mock b{display:block;height:30px;margin-top:12px;border-radius:11px;background:linear-gradient(135deg,#6C5CE7,#3E9BFF)}
+.wn-mock2{position:absolute;width:150px;height:130px;border-radius:20px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);transform:rotate(6deg) translate(26px,8px)}
+</style>
 </head>
 <body>
+<div id="splash" aria-hidden="true">
+  <div class="s-logo">
+    <svg viewBox="0 0 120 120">
+      <defs><linearGradient id="sg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#3E9BFF"/><stop offset="1" stop-color="#6CB8FF"/></linearGradient></defs>
+      <path class="c1" pathLength="1" d="M24 66 L46 88 L88 30"/>
+      <path class="c2" pathLength="1" d="M72 92 L100 54"/>
+    </svg>
+  </div>
+  <div class="s-name">Звички</div>
+</div>
+<script>(function(){var s=document.getElementById('splash');if(!s)return;var rm=function(){s&&s.parentNode&&s.parentNode.removeChild(s);s=null};s.addEventListener('animationend',function(e){if(e.target===s)rm()});setTimeout(rm,2500)})();</script>
+
 <div class="pager" id="pager">
   <div class="pager-track" id="pagerTrack">
 
@@ -18463,6 +18528,83 @@ setTimeout(() => checkEventReminder(), 1300);
   });
 
   goToPage(1, false);
+})();
+</script>
+<script id="whatsnew-js">
+/* ================= «ЩО НОВОГО» =================
+   Нове оновлення = новий об'єкт ЗВЕРХУ масиву WHATS_NEW (id унікальний). Показується лише найновіший запис,
+   один раз. Кожна функція/зміна = окремий слайд. Перевірка: додай ?whatsnew до адреси.
+   slide: { c:'#колір', emoji:'🔥', vis:'<html великого візуалу (замість емодзі)>', tag:'НОВЕ'|'ВИПРАВЛЕНО'|'КРАЩЕ', title, text } */
+(function(){
+  const WN_LOGO = '<div class="wn-logo"><svg viewBox="0 0 120 120"><path class="a" pathLength="1" d="M24 66 L46 88 L88 30"/><path class="b" pathLength="1" d="M72 92 L100 54"/></svg></div>';
+  const WN_MOCK = '<div class="wn-mock2"></div><div class="wn-mock"><i class="t"></i><i></i><i style="width:80%"></i><i style="width:55%"></i><b></b></div>';
+  const WHATS_NEW = [
+    {
+      id: '2026-10-22-splash-whatsnew',
+      date: '22 жовтня',
+      slides: [
+        { c:'#3E9BFF', vis: WN_LOGO, tag:'НОВЕ', title:'Стартова анімація', text:'Коли відкриваєш додаток, на секунду з’являється лого: галочки домальовуються, і екран плавно відкриває трекер.' },
+        { c:'#6C5CE7', vis: WN_MOCK, tag:'НОВЕ', title:'Банер новинок', text:'Після кожного оновлення з’являтиметься таке вікно: окремий слайд на кожну нову функцію чи зміну.' }
+      ]
+    }
+  ];
+
+  const KEY = 'whatsNewSeen';
+  const cur = WHATS_NEW[0];
+  if (!cur || !cur.slides || !cur.slides.length) return;
+  const force = /[?&]whatsnew\b/.test(location.search);
+  const seen = () => { try { return localStorage.getItem(KEY); } catch(e){ return null; } };
+  const mark = () => { try { localStorage.setItem(KEY, cur.id); } catch(e){} };
+  if (!force && seen() === cur.id) return;
+
+  const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+  function open(){
+    if (document.querySelector('.overlay.open, .newlevel-overlay.open, .badge-unlock-overlay.open')){
+      setTimeout(open, 2500); return;
+    }
+    const S = cur.slides, n = S.length;
+    const ov = document.createElement('div');
+    ov.className = 'overlay sprout-reset-overlay';
+    ov.id = 'whatsNewOverlay';
+    ov.innerHTML = `
+      <div class="wn-card">
+        <div class="wn-top"><span class="wn-pill">Оновлення · ${esc(cur.date)}</span><button class="wn-x" aria-label="Закрити">✕</button></div>
+        <div class="wn-track">
+          ${S.map(s => `
+            <div class="wn-slide" style="--sc:${s.c || '#6C5CE7'}">
+              <div class="wn-hero">${s.vis || `<div class="wn-emoji">${s.emoji || '✨'}</div>`}</div>
+              <div class="wn-body">
+                ${s.tag ? `<div class="wn-tag">${esc(s.tag)}</div>` : ''}
+                <div class="wn-title">${esc(s.title)}</div>
+                <div class="wn-text">${esc(s.text)}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div class="wn-bottom">
+          <div class="wn-dots">${n > 1 ? S.map(() => '<span class="wn-dot"></span>').join('') : ''}</div>
+          <button class="wn-next"></button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    const card = ov.querySelector('.wn-card'), track = ov.querySelector('.wn-track');
+    const dots = ov.querySelectorAll('.wn-dot'), next = ov.querySelector('.wn-next');
+    let idx = 0;
+    const sync = () => {
+      idx = Math.max(0, Math.min(n - 1, Math.round(track.scrollLeft / (track.clientWidth || 1))));
+      dots.forEach((d, i) => d.classList.toggle('on', i === idx));
+      card.style.setProperty('--c', S[idx].c || '#6C5CE7');
+      next.textContent = idx === n - 1 ? 'Готово' : 'Далі';
+    };
+    const close = () => { mark(); ov.classList.remove('open'); setTimeout(() => ov.remove(), 50); };
+    track.addEventListener('scroll', sync, { passive: true });
+    next.addEventListener('click', () => idx >= n - 1 ? close() : track.scrollTo({ left: (idx + 1) * track.clientWidth, behavior: 'smooth' }));
+    ov.querySelector('.wn-x').addEventListener('click', close);
+    ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    requestAnimationFrame(() => { ov.classList.add('open'); sync(); });
+  }
+  const go = () => setTimeout(open, 1400);
+  if (document.readyState === 'complete') go(); else window.addEventListener('load', go);
 })();
 </script>
 </body>
