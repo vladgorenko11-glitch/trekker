@@ -85,15 +85,15 @@
   }
   .pager-track {
     display: flex;
-    width: 200%;
+    width: 300%;
     height: 100%;
-    transform: translateX(-50%); /* за замовчуванням відкрита сторінка звичок (права) */
+    transform: translateX(-33.3333%); /* за замовчуванням відкрита сторінка звичок (середня) */
   }
   .pager-track.pager-dragging { transition: none; }
   .pager-track:not(.pager-dragging) { transition: transform .32s cubic-bezier(.22,.61,.36,1); }
   .page-slide {
-    width: 50%;
-    flex: 0 0 50%;
+    width: 33.3333%;
+    flex: 0 0 33.3333%;
     display: flex;
     justify-content: center;
     height: 100%;
@@ -5316,8 +5316,8 @@
 @media (prefers-reduced-motion:reduce){#splash,#splash *{animation-duration:.01s!important;animation-delay:0s!important}#splash{animation-delay:.4s!important}}
 </style>
 <style id="whatsnew-css">
-#whatsNewOverlay{z-index:70}
-.wn-card{position:relative;width:min(380px,100%);height:min(590px,calc(100vh - 32px));height:min(590px,calc(100dvh - 32px));border-radius:32px;overflow:hidden;display:flex;flex-direction:column;
+#whatsNewOverlay{z-index:70;align-items:center!important;justify-content:center;padding:16px}
+.wn-card{position:relative;width:min(332px,100%);margin:auto;height:min(490px,calc(100vh - 150px));height:min(490px,calc(100dvh - 150px));border-radius:32px;overflow:hidden;display:flex;flex-direction:column;
   background:linear-gradient(180deg,#171A24 0%,#0F1219 100%);border:1px solid rgba(255,255,255,.10);box-shadow:0 28px 80px rgba(0,0,0,.65);animation:sifIn .35s cubic-bezier(.22,1,.36,1) both;--c:#6C5CE7}
 .wn-top{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:16px 16px 0 20px}
 .wn-pill{padding:5px 11px;border-radius:999px;font-size:11px;font-weight:600;color:#C9CDDA;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10)}
@@ -5328,10 +5328,10 @@
 .wn-hero{flex:0 0 52%;display:flex;align-items:center;justify-content:center;position:relative;
   background:radial-gradient(70% 75% at 50% 52%,rgba(108,92,231,.5),transparent 72%);background:radial-gradient(70% 75% at 50% 52%,color-mix(in srgb,var(--sc) 55%,transparent),transparent 72%)}
 .wn-emoji{font-size:88px;line-height:1;filter:drop-shadow(0 10px 28px var(--sc))}
-.wn-body{padding:6px 26px 0}
+.wn-body{padding:4px 22px 0}
 .wn-tag{display:inline-block;margin-bottom:10px;padding:3px 9px;border-radius:7px;font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#fff;background:var(--sc)}
-.wn-title{font-family:'Rubik','Inter',sans-serif;font-size:25px;font-weight:700;line-height:1.15;color:#F2F3F7}
-.wn-text{margin-top:10px;font-size:14px;line-height:1.5;color:#8A90A3}
+.wn-title{font-family:'Rubik','Inter',sans-serif;font-size:22px;font-weight:700;line-height:1.15;color:#F2F3F7}
+.wn-text{margin-top:8px;font-size:13.5px;line-height:1.5;color:#8A90A3}
 .wn-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px 20px}
 .wn-dots{display:flex;gap:6px;align-items:center}
 .wn-dot{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.2);transition:all .25s}
@@ -5339,8 +5339,8 @@
 .wn-next{padding:13px 28px;border:none;border-radius:16px;font-family:inherit;font-size:14.5px;font-weight:600;color:#fff;cursor:pointer;background:linear-gradient(135deg,#6C5CE7,#3E9BFF);box-shadow:0 8px 22px rgba(108,92,231,.38)}
 .wn-next:active{transform:scale(.97)}
 /* візуали */
-.wn-logo{width:112px;height:112px;border-radius:32px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);box-shadow:0 0 70px rgba(62,155,255,.5)}
-.wn-logo svg{width:72px;height:72px;overflow:visible}
+.wn-logo{width:96px;height:96px;border-radius:32px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);box-shadow:0 0 70px rgba(62,155,255,.5)}
+.wn-logo svg{width:62px;height:62px;overflow:visible}
 .wn-logo path{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:wnDraw 2.4s ease infinite}
 .wn-logo .a{stroke:#3E9BFF;stroke-width:14}.wn-logo .b{stroke:#9fd0ff;stroke-width:12;opacity:.6;animation-delay:.35s}
 @keyframes wnDraw{0%{stroke-dashoffset:1}35%,80%{stroke-dashoffset:0}100%{stroke-dashoffset:0;opacity:0}}
@@ -5442,12 +5442,18 @@
 </div>
     </div><!-- /#slideHabits -->
 
+    <!-- Сторінка "Профіль" (права від головної) -->
+    <div class="page-slide" id="slideProfile">
+      <div class="app profile-app" id="profileApp"></div>
+    </div>
+
   </div><!-- /#pagerTrack -->
 </div><!-- /#pager -->
 
 <div class="page-switcher" id="pageSwitcher">
   <div class="page-dot" id="dotActivity" data-page="0" title="Центр активності"></div>
   <div class="page-dot active" id="dotHabits" data-page="1" title="Звички"></div>
+  <div class="page-dot" id="dotProfile" data-page="2" title="Профіль"></div>
 </div>
 
 <!-- Оверлей з карткою деталей звички (відкривається поверх, фон затемнюється) -->
@@ -18435,6 +18441,7 @@ setTimeout(() => checkEventReminder(), 1300);
   const track = document.getElementById('pagerTrack');
   const dotActivity = document.getElementById('dotActivity');
   const dotHabits = document.getElementById('dotHabits');
+  const dotProfile = document.getElementById('dotProfile');
 
   let currentPage = 1; // 0 = активність (ліва), 1 = звички (права, за замовчуванням)
   let pagerWidth = pager.clientWidth;
@@ -18442,18 +18449,21 @@ setTimeout(() => checkEventReminder(), 1300);
   function setDots(page) {
     dotActivity.classList.toggle('active', page === 0);
     dotHabits.classList.toggle('active', page === 1);
+    dotProfile.classList.toggle('active', page === 2);
   }
 
   function goToPage(page, animate = true) {
-    currentPage = Math.max(0, Math.min(1, page));
+    currentPage = Math.max(0, Math.min(2, page));
     track.classList.toggle('pager-dragging', !animate);
-    // Кожна сторінка займає 50% ширини треку (сам трек — 200% ширини пейджера)
-    track.style.transform = `translateX(-${currentPage * 50}%)`;
+    // Кожна сторінка займає 1/3 ширини треку (сам трек — 300% ширини пейджера)
+    track.style.transform = `translateX(-${currentPage * (100 / 3)}%)`;
     setDots(currentPage);
+    if (currentPage === 2 && window.renderProfile) { try { window.renderProfile(); } catch (e) {} }
   }
 
   dotActivity.addEventListener('click', () => goToPage(0));
   dotHabits.addEventListener('click', () => goToPage(1));
+  dotProfile.addEventListener('click', () => goToPage(2));
 
   window.addEventListener('resize', () => { pagerWidth = pager.clientWidth; });
 
@@ -18502,11 +18512,11 @@ setTimeout(() => checkEventReminder(), 1300);
     deltaX = dx;
     // Опір на краях (не можна перегорнути далі за 0 або 1 сторінку)
     let resisted = deltaX;
-    if ((currentPage === 0 && deltaX > 0) || (currentPage === 1 && deltaX < 0)) {
+    if ((currentPage === 0 && deltaX > 0) || (currentPage === 2 && deltaX < 0)) {
       resisted = deltaX / 3;
     }
-    const basePercent = currentPage * 50;
-    const dragPercent = (resisted / pagerWidth) * 50;
+    const basePercent = currentPage * (100 / 3);
+    const dragPercent = (resisted / pagerWidth) * (100 / 3);
     track.style.transform = `translateX(-${basePercent - dragPercent}%)`;
   }, { passive: false });
 
@@ -18518,7 +18528,7 @@ setTimeout(() => checkEventReminder(), 1300);
       const threshold = pagerWidth * 0.18;
       if (deltaX > threshold && currentPage > 0) {
         goToPage(currentPage - 1);
-      } else if (deltaX < -threshold && currentPage < 1) {
+      } else if (deltaX < -threshold && currentPage < 2) {
         goToPage(currentPage + 1);
       } else {
         goToPage(currentPage);
@@ -18530,6 +18540,287 @@ setTimeout(() => checkEventReminder(), 1300);
   goToPage(1, false);
 })();
 </script>
+<style id="profile-css">
+.profile-app{padding-bottom:96px;gap:0}
+.pf-hero{position:relative;margin:-28px -20px 0;padding:84px 20px 0;background-size:cover;background-position:center;isolation:isolate}
+.pf-hero::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(0,0,0,.22) 0%,rgba(13,15,20,.5) 55%,var(--bg) 100%)}
+.pf-cam{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:16px;width:38px;height:38px;border:none;border-radius:50%;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.pf-cam svg{width:19px;height:19px}
+.pf-hero-row{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.pf-hero-info{min-width:0;flex:1}
+.pf-name{font:700 28px/1.1 'Rubik','Inter',sans-serif;color:#fff;word-break:break-word;text-shadow:0 2px 14px rgba(0,0,0,.45)}
+.pf-user{display:inline-flex;align-items:center;margin-top:8px;padding:4px 12px;border-radius:999px;font:600 14px 'Inter',sans-serif;color:#D5CFFF;background:rgba(108,92,231,.3);border:1px solid rgba(160,145,255,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:pointer}
+.pf-user.empty{color:var(--text-secondary);background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15)}
+.pf-ring{flex:0 0 auto;padding:3px;border-radius:50%;background:linear-gradient(135deg,#6C5CE7,#3E9BFF)}
+.pf-avatar{width:98px;height:98px;border-radius:50%;border:3px solid var(--bg);overflow:hidden;display:flex;align-items:center;justify-content:center;font:700 40px 'Rubik','Inter',sans-serif;color:#fff;background:linear-gradient(135deg,#6C5CE7,#3E9BFF)}
+.pf-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.pf-stats-row{display:flex;gap:24px;margin-top:18px}
+.pf-stats-row b{display:block;font:700 18px 'Rubik','Inter',sans-serif;color:#fff}
+.pf-stats-row span{display:block;margin-top:1px;font-size:12px;color:rgba(255,255,255,.62)}
+.pf-btnrow{display:flex;gap:10px;margin-top:18px}
+.pf-btn{height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--card-border);background:var(--card);color:var(--text-primary);font:600 14.5px 'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pf-btn:active{transform:scale(.97)}
+.pf-btn.main{flex:1;border:none;color:#fff;background:linear-gradient(135deg,#6C5CE7,#3E9BFF);box-shadow:0 8px 22px rgba(108,92,231,.35)}
+.pf-btn.icon{width:44px;padding:0}.pf-btn.icon svg{width:19px;height:19px}
+.pf-bio{margin-top:16px;font-size:14.5px;line-height:1.45;color:var(--text-primary);white-space:pre-wrap;word-break:break-word}
+.pf-bio.empty{color:var(--text-tertiary);cursor:pointer}
+.pf-meta{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--text-secondary)}
+.pf-card{margin-top:18px;border-radius:var(--radius-lg);background:var(--card);border:1px solid var(--card-border);overflow:hidden}
+.pf-row{display:flex;align-items:center;gap:12px;padding:14px 16px;font-size:14px;color:var(--text-primary)}
+.pf-row+.pf-row{border-top:1px solid var(--divider)}
+.pf-row em{font-style:normal;margin-left:auto;color:var(--text-secondary)}
+.pf-row.tap{cursor:pointer}.pf-row.tap:active{background:rgba(255,255,255,.04)}
+.pf-row i{font-style:normal;width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(108,92,231,.2)}
+.pf-sheet{width:min(460px,100%);max-height:calc(100dvh - 24px);overflow-y:auto;padding:18px 20px 22px;border-radius:28px 28px 0 0;background:var(--bg-elevated);border:1px solid var(--card-border);border-bottom:none;animation:sifIn .3s ease both}
+.pf-sh-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;font:700 17px 'Rubik','Inter',sans-serif}
+.pf-sh-top button{border:none;background:none;font:600 14px 'Inter',sans-serif;color:var(--text-secondary);cursor:pointer;padding:6px}
+.pf-sh-top button.ok{color:#8E80FF}
+.pf-ban-prev{height:104px;border-radius:18px;background-size:cover;background-position:center;position:relative;cursor:pointer;border:1px solid var(--card-border)}
+.pf-ban-prev b{position:absolute;right:10px;bottom:10px;padding:5px 11px;border-radius:12px;font:600 12px 'Inter',sans-serif;color:#fff;background:rgba(0,0,0,.5)}
+.pf-sw{display:flex;gap:8px;margin:10px 0 4px;align-items:center}
+.pf-sw span{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;flex:0 0 auto}
+.pf-sw span.on{border-color:#fff}
+.pf-sw small{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--danger);cursor:pointer}
+.pf-ava-edit{display:flex;flex-direction:column;align-items:center;gap:8px;margin:-34px 0 16px;position:relative}
+.pf-ava-edit .pf-avatar{width:84px;height:84px;font-size:34px;cursor:pointer}
+.pf-ava-edit small{color:#8E80FF;font-size:13px;font-weight:600;cursor:pointer}
+.pf-ava-edit small.rm{color:var(--danger)}
+.pf-field{margin-bottom:12px}
+.pf-field label{display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;color:var(--text-secondary)}
+.pf-field input,.pf-field textarea{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--card-border);background:var(--card);color:var(--text-primary);font:15px 'Inter',sans-serif;outline:none;resize:none}
+.pf-field input:focus,.pf-field textarea:focus{border-color:#6C5CE7}
+.pf-at{position:relative}.pf-at input{padding-left:30px}.pf-at::before{content:'@';position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#8E80FF;font-weight:700}
+.pf-hint{margin-top:5px;font-size:11.5px;color:var(--text-tertiary)}
+.pf-bk{display:flex;flex-direction:column;gap:10px}
+.pf-bk p{margin:0 0 4px;font-size:13px;line-height:1.45;color:var(--text-secondary)}
+.wn-prof{position:relative;width:176px;border-radius:22px;overflow:hidden;background:#1B1F2B;border:1px solid rgba(255,255,255,.12);box-shadow:0 16px 40px rgba(0,0,0,.5)}
+.wn-prof .bn{height:78px;background:linear-gradient(135deg,#6C5CE7,#3E9BFF 70%,#FF6B5B)}
+.wn-prof .av{position:absolute;top:44px;right:14px;width:50px;height:50px;border-radius:50%;border:3px solid #1B1F2B;background:linear-gradient(135deg,#FF6B5B,#FFB65A);display:flex;align-items:center;justify-content:center;font:700 20px 'Rubik',sans-serif;color:#fff}
+.wn-prof .b{padding:12px 14px 16px}
+.wn-prof i{display:block;height:9px;border-radius:6px;background:rgba(255,255,255,.4);width:55%}
+.wn-prof em{display:inline-block;margin-top:8px;padding:2px 9px;border-radius:99px;font:600 10.5px 'Inter',sans-serif;font-style:normal;color:#D5CFFF;background:rgba(108,92,231,.3);border:1px solid rgba(160,145,255,.5)}
+</style>
+<script id="profile-js">
+/* ================= ПРОФІЛЬ КОРИСТУВАЧА (сторінка справа від «Звичок») ================= */
+(function(){
+  const PKEY = 'habits-profile-v1';
+  const GRADS = ['linear-gradient(135deg,#6C5CE7,#3E9BFF)','linear-gradient(135deg,#FF6B5B,#FFB65A)','linear-gradient(135deg,#11998e,#38ef7d)','linear-gradient(135deg,#ff5f9e,#6C5CE7)','linear-gradient(135deg,#232526,#414345)','linear-gradient(135deg,#0f2027,#2c5364)'];
+  const DEF = { name:'', username:'', bio:'', city:'', avatar:'', banner:'', bannerGrad:0, createdAt:0 };
+  let P = Object.assign({}, DEF);
+  try { Object.assign(P, JSON.parse(localStorage.getItem(PKEY) || '{}')); } catch(e){}
+  if (!P.createdAt){ P.createdAt = Date.now(); save(true); }
+
+  const status = (t, err) => { if (window.showSaveStatus) showSaveStatus(t, err); };
+  function save(quiet){
+    try { localStorage.setItem(PKEY, JSON.stringify(P)); return true; }
+    catch(e){ if (!quiet) status('Не вдалося зберегти (мало місця)', true); return false; }
+  }
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const num = n => (n || 0).toLocaleString('uk-UA');
+  const bannerCss = () => P.banner ? `url(${P.banner})` : GRADS[P.bannerGrad] || GRADS[0];
+
+  function stats(){
+    const o = { habits:0, total:0, cur:0, best:0, since:null };
+    try {
+      const act = habits.filter(h => !h.archived);
+      o.habits = act.length;
+      o.total = countTotalHabitCompletions();
+      o.best = maxEverStreakAcrossHabits();
+      act.forEach(h => { const s = computeStreak(h); if (s > o.cur) o.cur = s; });
+      habits.forEach(h => Object.keys(h.days || {}).forEach(k => { const d = keyToDate(k); if (d && !isNaN(d) && (!o.since || d < o.since)) o.since = d; }));
+    } catch(e){}
+    if (!o.since) o.since = new Date(P.createdAt);
+    return o;
+  }
+  function avatarHtml(){
+    if (P.avatar) return `<img src="${P.avatar}" alt="">`;
+    const ch = (P.name || '').trim().charAt(0).toUpperCase();
+    return ch ? esc(ch) : '🙂';
+  }
+  function toImg(file, w, h, q){
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const k = Math.max(w / img.width, h / img.height), sw = w / k, sh = h / k;
+          const c = document.createElement('canvas'); c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, w, h);
+          res(c.toDataURL('image/jpeg', q));
+        };
+        img.onerror = rej; img.src = e.target.result;
+      };
+      r.onerror = rej; r.readAsDataURL(file);
+    });
+  }
+  function pickFile(cb){
+    const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*';
+    f.onchange = () => { if (f.files && f.files[0]) cb(f.files[0]); };
+    f.click();
+  }
+  const setBanner = async file => {
+    try { const prev = P.banner; P.banner = await toImg(file, 900, 520, 0.8); if (!save()) { P.banner = prev; return false; } return true; }
+    catch(e){ status('Не вдалося прочитати фото', true); return false; }
+  };
+
+  function render(){
+    const el = document.getElementById('profileApp');
+    if (!el) return;
+    const st = stats();
+    const since = st.since.toLocaleDateString('uk-UA', { month:'long', year:'numeric' });
+    el.innerHTML = `
+      <div class="pf-hero" style="background-image:${bannerCss()}">
+        <button class="pf-cam" id="pfCam" title="Змінити банер"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+        <div class="pf-hero-row">
+          <div class="pf-hero-info">
+            <div class="pf-name">${esc(P.name || 'Новий користувач')}</div>
+            ${P.username ? `<div class="pf-user" id="pfUserChip" title="Натисни, щоб скопіювати">@${esc(P.username)}</div>` : `<div class="pf-user empty" id="pfUserAdd">+ Додай нікнейм</div>`}
+          </div>
+          <div class="pf-ring"><div class="pf-avatar">${avatarHtml()}</div></div>
+        </div>
+        <div class="pf-stats-row">
+          <div><b>${num(st.habits)}</b><span>Звичок</span></div>
+          <div><b>${num(st.total)}</b><span>Виконань</span></div>
+          <div><b>${num(st.cur)}</b><span>Серія, днів</span></div>
+        </div>
+      </div>
+      <div class="pf-btnrow">
+        <button class="pf-btn main" id="pfEdit">Редагувати профіль</button>
+        <button class="pf-btn icon" id="pfShare" title="Поділитися"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg></button>
+      </div>
+      ${P.bio ? `<div class="pf-bio">${esc(P.bio)}</div>` : `<div class="pf-bio empty" id="pfBioEmpty">Розкажи трохи про себе…</div>`}
+      <div class="pf-meta">
+        ${P.city ? `<span>📍 ${esc(P.city)}</span>` : ''}
+        <span>📅 У трекері з ${esc(since)}</span>
+      </div>
+      <div class="pf-card">
+        <div class="pf-row"><i>🔥</i>Поточна серія<em>${num(st.cur)} дн.</em></div>
+        <div class="pf-row"><i>🏆</i>Рекордна серія<em>${num(st.best)} дн.</em></div>
+        <div class="pf-row"><i>✅</i>Усього виконань<em>${num(st.total)}</em></div>
+      </div>
+      <div class="pf-card">
+        <div class="pf-row tap" id="pfBackup"><i>💾</i>Резервна копія і відновлення<em>›</em></div>
+      </div>`;
+    const $ = id => el.querySelector('#' + id);
+    $('pfEdit').onclick = openEdit;
+    $('pfShare').onclick = () => share(st);
+    $('pfCam').onclick = () => pickFile(async f => { if (await setBanner(f)) { render(); status('Банер змінено'); } });
+    $('pfBackup').onclick = openBackup;
+    const be = $('pfBioEmpty'); if (be) be.onclick = openEdit;
+    const ua = $('pfUserAdd'); if (ua) ua.onclick = openEdit;
+    const uc = $('pfUserChip');
+    if (uc) uc.onclick = () => { try { navigator.clipboard.writeText('@' + P.username).then(() => status('Нікнейм скопійовано')); } catch(e){} };
+  }
+
+  function share(st){
+    const text = `Мій профіль у «Звичках»: ${P.name || 'Користувач'}${P.username ? ' (@' + P.username + ')' : ''} — ${st.habits} звичок, ${st.total} виконань, серія ${st.cur} 🔥`;
+    if (navigator.share) { navigator.share({ text }).catch(() => {}); return; }
+    try { navigator.clipboard.writeText(text).then(() => status('Скопійовано')); } catch(e){}
+  }
+
+  function sheet(id, html){
+    const ov = document.createElement('div');
+    ov.className = 'overlay'; ov.id = id;
+    ov.innerHTML = `<div class="pf-sheet">${html}</div>`;
+    document.body.appendChild(ov);
+    const close = () => { ov.classList.remove('open'); setTimeout(() => ov.remove(), 50); };
+    ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    requestAnimationFrame(() => ov.classList.add('open'));
+    return { ov, close, $: sel => ov.querySelector('#' + sel) };
+  }
+
+  function openEdit(){
+    if (document.getElementById('profileEditOverlay')) return;
+    let ava = P.avatar, ban = P.banner, grad = P.bannerGrad;
+    const S = sheet('profileEditOverlay', `
+      <div class="pf-sh-top"><button id="pfCancel">Скасувати</button><span>Профіль</span><button class="ok" id="pfSave">Зберегти</button></div>
+      <div class="pf-ban-prev" id="pfBanPrev"><b>Змінити банер</b></div>
+      <div class="pf-sw" id="pfSw">${GRADS.map((g, i) => `<span data-i="${i}" style="background:${g}"></span>`).join('')}<small id="pfBanRm">Прибрати фото</small></div>
+      <div class="pf-ava-edit">
+        <div class="pf-ring"><div class="pf-avatar" id="pfAvaPrev"></div></div>
+        <small id="pfAvaPick">Змінити фото</small>
+        <small class="rm" id="pfAvaRm">Видалити фото</small>
+      </div>
+      <div class="pf-field"><label>Ім’я</label><input id="pfName" maxlength="30" placeholder="Як тебе звати" value="${esc(P.name)}"></div>
+      <div class="pf-field"><label>Нікнейм</label><div class="pf-at"><input id="pfUser" maxlength="20" placeholder="nickname" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" value="${esc(P.username)}"></div><div class="pf-hint">3–20 символів: a–z, 0–9, _ та крапка</div></div>
+      <div class="pf-field"><label>Про себе <span id="pfBioCnt"></span></label><textarea id="pfBio" rows="3" maxlength="120" placeholder="Кілька слів про себе">${esc(P.bio)}</textarea></div>
+      <div class="pf-field"><label>Місто</label><input id="pfCity" maxlength="30" placeholder="Де ти живеш" value="${esc(P.city)}"></div>`);
+    const { $ } = S;
+    const paint = () => {
+      const prev = $('pfAvaPrev');
+      if (ava) prev.innerHTML = `<img src="${ava}" alt="">`; else { prev.textContent = ($('pfName').value || '').trim().charAt(0).toUpperCase() || '🙂'; }
+      $('pfAvaRm').style.display = ava ? '' : 'none';
+      $('pfBanPrev').style.backgroundImage = ban ? `url(${ban})` : GRADS[grad];
+      $('pfBanRm').style.display = ban ? '' : 'none';
+      $('pfSw').querySelectorAll('span').forEach((s, i) => s.classList.toggle('on', !ban && i === grad));
+    };
+    const cnt = () => { $('pfBioCnt').textContent = $('pfBio').value.length + '/120'; };
+    paint(); cnt();
+    $('pfName').oninput = () => { if (!ava) paint(); };
+    $('pfBio').oninput = cnt;
+    $('pfUser').oninput = e => { e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ''); };
+    $('pfSw').onclick = e => { const i = e.target.dataset && e.target.dataset.i; if (i !== undefined) { grad = +i; ban = ''; paint(); } };
+    $('pfBanRm').onclick = () => { ban = ''; paint(); };
+    $('pfBanPrev').onclick = () => pickFile(async f => { try { ban = await toImg(f, 900, 520, 0.8); paint(); } catch(e){ status('Не вдалося прочитати фото', true); } });
+    $('pfAvaPrev').onclick = $('pfAvaPick').onclick = () => pickFile(async f => { try { ava = await toImg(f, 256, 256, 0.85); paint(); } catch(e){ status('Не вдалося прочитати фото', true); } });
+    $('pfAvaRm').onclick = () => { ava = ''; paint(); };
+    $('pfCancel').onclick = S.close;
+    $('pfSave').onclick = () => {
+      const u = $('pfUser').value.trim();
+      if (u && u.length < 3) { status('Нікнейм: мінімум 3 символи', true); return; }
+      const prev = Object.assign({}, P);
+      P.name = $('pfName').value.trim(); P.username = u; P.bio = $('pfBio').value.trim();
+      P.city = $('pfCity').value.trim(); P.avatar = ava; P.banner = ban; P.bannerGrad = grad;
+      if (!save()) { P = prev; return; }
+      render(); S.close(); status('Збережено');
+    };
+  }
+
+  /* ---- Резервна копія: усі дані трекера в один файл ---- */
+  function openBackup(){
+    if (document.getElementById('profileBackupOverlay')) return;
+    const S = sheet('profileBackupOverlay', `
+      <div class="pf-sh-top"><span style="width:60px"></span><span>Резервна копія</span><button id="bkX">Закрити</button></div>
+      <div class="pf-bk">
+        <p>Файл містить усі твої звички, прогрес, ростка й профіль. Збережи його в «Файли» чи iCloud: якщо втратиш дані, відновиш усе звідси.</p>
+        <button class="pf-btn main" id="bkSave">Зберегти копію</button>
+        <button class="pf-btn" id="bkLoad">Відновити з файлу</button>
+      </div>`);
+    S.$('bkX').onclick = S.close;
+    S.$('bkSave').onclick = async () => {
+      const data = {};
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); data[k] = localStorage.getItem(k); }
+      const d = new Date(), pad = n => String(n).padStart(2, '0');
+      const name = `zvychky-${P.username || 'backup'}-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.json`;
+      const file = new File([JSON.stringify({ _app:'zvychky-backup', v:1, at:Date.now(), username:P.username, data })], name, { type:'application/json' });
+      try {
+        if (navigator.canShare && navigator.canShare({ files:[file] })) { await navigator.share({ files:[file] }); return; }
+      } catch(e){ if (e && e.name === 'AbortError') return; }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      status('Копію збережено');
+    };
+    S.$('bkLoad').onclick = () => pickFileAny(async f => {
+      try {
+        const j = JSON.parse(await f.text());
+        if (j._app !== 'zvychky-backup' || !j.data) throw 0;
+        const when = new Date(j.at).toLocaleString('uk-UA');
+        if (!confirm(`Відновити дані з копії від ${when}${j.username ? ' (@' + j.username + ')' : ''}? Поточні дані буде замінено.`)) return;
+        Object.keys(j.data).forEach(k => localStorage.setItem(k, j.data[k]));
+        location.reload();
+      } catch(e){ status('Це не файл копії «Звичок»', true); }
+    });
+  }
+  function pickFileAny(cb){
+    const f = document.createElement('input'); f.type = 'file'; f.accept = '.json,application/json';
+    f.onchange = () => { if (f.files && f.files[0]) cb(f.files[0]); };
+    f.click();
+  }
+
+  window.renderProfile = render;
+  render();
+})();
+</script>
 <script id="whatsnew-js">
 /* ================= «ЩО НОВОГО» =================
    Нове оновлення = новий об'єкт ЗВЕРХУ масиву WHATS_NEW (id унікальний). Показується лише найновіший запис,
@@ -18538,7 +18829,23 @@ setTimeout(() => checkEventReminder(), 1300);
 (function(){
   const WN_LOGO = '<div class="wn-logo"><svg viewBox="0 0 120 120"><path class="a" pathLength="1" d="M24 66 L46 88 L88 30"/><path class="b" pathLength="1" d="M72 92 L100 54"/></svg></div>';
   const WN_MOCK = '<div class="wn-mock2"></div><div class="wn-mock"><i class="t"></i><i></i><i style="width:80%"></i><i style="width:55%"></i><b></b></div>';
+  const WN_PROF = '<div class="wn-prof"><div class="bn"></div><div class="av">В</div><div class="b"><i></i><em>@vlad_g</em></div></div>';
   const WHATS_NEW = [
+    {
+      id: '2026-10-22-profile-v2',
+      date: '22 жовтня',
+      slides: [
+        { c:'#6C5CE7', vis: WN_PROF, tag:'КРАЩЕ', title:'Банер і нікнейм', text:'Банер профілю тепер можна міняти: своє фото або колір. Нікнейм виділено, а на тапі він копіюється.' },
+        { c:'#3E9BFF', emoji:'💾', tag:'НОВЕ', title:'Резервна копія', text:'У профілі можна зберегти всі дані одним файлом і відновити їх, якщо щось пропаде.' }
+      ]
+    },
+    {
+      id: '2026-10-22-profile',
+      date: '22 жовтня',
+      slides: [
+        { c:'#6C5CE7', vis: WN_PROF, tag:'НОВЕ', title:'Профіль користувача', text:'Нова сторінка справа від «Звичок»: фото, ім’я, нікнейм, опис і твоя статистика. Свайпни вліво з головного екрана.' }
+      ]
+    },
     {
       id: '2026-10-22-splash-whatsnew',
       date: '22 жовтня',
