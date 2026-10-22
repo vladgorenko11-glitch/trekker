@@ -686,6 +686,8 @@
   #storageBanner:empty,
   .weekly-today-cards:empty,
   #mainArea:empty,
+  #vacBanner:empty,
+  #mealTrackerBanner:empty,
   .quick-tasks-done:empty {
     display: none;
   }
@@ -1698,7 +1700,7 @@
   .sh-days { margin-top: 2px; font-size: 11px; font-weight: 600; color: rgba(225,255,235,0.85); }
 
   /* ---------- Швидкі завдання на день (без вогника, окремо від звичок) ---------- */
-  .quick-tasks { margin: 0 2px 4px; }
+  .quick-tasks { margin: 0 2px 0; }
   .quick-tasks-done { margin: 4px 2px 8px; }
   .quick-tasks-list { display: flex; flex-direction: column; }
   .quick-tasks-bar-spacer { height: 2px; }
@@ -18482,7 +18484,7 @@ setTimeout(() => checkEventReminder(), 1300);
       isDragging = false;
       return;
     }
-    if (e.target.closest && e.target.closest('.habit-rail, .tag-filter-row, .heatmap-scroll, .overlay')) {
+    if (e.target.closest && e.target.closest('.habit-rail, .tag-filter-row, .heatmap-scroll, .pf-badges, .overlay')) {
       isDragging = false;
       return;
     }
@@ -18549,9 +18551,9 @@ setTimeout(() => checkEventReminder(), 1300);
 .pf-hero-row{display:flex;align-items:center;justify-content:space-between;gap:14px}
 .pf-hero-info{min-width:0;flex:1}
 .pf-name{font:700 28px/1.1 'Rubik','Inter',sans-serif;color:#fff;word-break:break-word;text-shadow:0 2px 14px rgba(0,0,0,.45)}
-.pf-user{display:inline-flex;align-items:center;margin-top:8px;padding:4px 12px;border-radius:999px;font:600 14px 'Inter',sans-serif;color:#D5CFFF;background:rgba(108,92,231,.3);border:1px solid rgba(160,145,255,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:pointer}
+.pf-user{display:inline-flex;align-items:center;margin-top:8px;padding:4px 12px;border-radius:999px;font:600 14px 'Inter',sans-serif;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:pointer}
 .pf-user.empty{color:var(--text-secondary);background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15)}
-.pf-ring{flex:0 0 auto;padding:3px;border-radius:50%;background:linear-gradient(135deg,#6C5CE7,#3E9BFF)}
+.pf-ring{flex:0 0 auto;padding:3px;border-radius:50%;background:rgba(255,255,255,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .pf-avatar{width:98px;height:98px;border-radius:50%;border:3px solid var(--bg);overflow:hidden;display:flex;align-items:center;justify-content:center;font:700 40px 'Rubik','Inter',sans-serif;color:#fff;background:linear-gradient(135deg,#6C5CE7,#3E9BFF)}
 .pf-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .pf-stats-row{display:flex;gap:24px;margin-top:18px}
@@ -18565,6 +18567,17 @@ setTimeout(() => checkEventReminder(), 1300);
 .pf-bio{margin-top:16px;font-size:14.5px;line-height:1.45;color:var(--text-primary);white-space:pre-wrap;word-break:break-word}
 .pf-bio.empty{color:var(--text-tertiary);cursor:pointer}
 .pf-meta{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--text-secondary)}
+.pf-sec{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 10px;font:700 15px 'Rubik','Inter',sans-serif;color:var(--text-primary)}
+.pf-sec span{font:500 12.5px 'Inter',sans-serif;color:var(--text-tertiary)}
+.pf-badges{display:flex;gap:24px;overflow-x:auto;margin:0 -20px;padding:2px 20px 6px;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x;will-change:scroll-position}
+.pf-badges::-webkit-scrollbar{display:none}
+.pf-badges .badge-tile{flex:0 0 auto}
+.pf-badges .pf-all{flex:0 0 auto;width:76px;align-self:flex-start;aspect-ratio:320/454;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border-radius:18px;border:1px dashed var(--card-border);color:var(--text-secondary);font:600 12px 'Inter',sans-serif;cursor:pointer;user-select:none}
+.pf-badges .pf-all svg{width:22px;height:22px}
+.pf-badges .pf-all:active{transform:scale(.95)}
+.pf-sec .pf-link{display:inline-flex;align-items:center;gap:2px;font:600 13px 'Inter',sans-serif;color:#8E80FF;cursor:pointer}
+.pf-sec .pf-link svg{width:14px;height:14px}
+.pf-badges-empty{padding:14px 0;font-size:13.5px;color:var(--text-tertiary)}
 .pf-card{margin-top:18px;border-radius:var(--radius-lg);background:var(--card);border:1px solid var(--card-border);overflow:hidden}
 .pf-row{display:flex;align-items:center;gap:12px;padding:14px 16px;font-size:14px;color:var(--text-primary)}
 .pf-row+.pf-row{border-top:1px solid var(--divider)}
@@ -18598,14 +18611,14 @@ setTimeout(() => checkEventReminder(), 1300);
 .wn-prof .av{position:absolute;top:44px;right:14px;width:50px;height:50px;border-radius:50%;border:3px solid #1B1F2B;background:linear-gradient(135deg,#FF6B5B,#FFB65A);display:flex;align-items:center;justify-content:center;font:700 20px 'Rubik',sans-serif;color:#fff}
 .wn-prof .b{padding:12px 14px 16px}
 .wn-prof i{display:block;height:9px;border-radius:6px;background:rgba(255,255,255,.4);width:55%}
-.wn-prof em{display:inline-block;margin-top:8px;padding:2px 9px;border-radius:99px;font:600 10.5px 'Inter',sans-serif;font-style:normal;color:#D5CFFF;background:rgba(108,92,231,.3);border:1px solid rgba(160,145,255,.5)}
+.wn-prof em{display:inline-block;margin-top:8px;padding:2px 9px;border-radius:99px;font:600 10.5px 'Inter',sans-serif;font-style:normal;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28)}
 </style>
 <script id="profile-js">
 /* ================= ПРОФІЛЬ КОРИСТУВАЧА (сторінка справа від «Звичок») ================= */
 (function(){
   const PKEY = 'habits-profile-v1';
   const GRADS = ['linear-gradient(135deg,#6C5CE7,#3E9BFF)','linear-gradient(135deg,#FF6B5B,#FFB65A)','linear-gradient(135deg,#11998e,#38ef7d)','linear-gradient(135deg,#ff5f9e,#6C5CE7)','linear-gradient(135deg,#232526,#414345)','linear-gradient(135deg,#0f2027,#2c5364)'];
-  const DEF = { name:'', username:'', bio:'', city:'', avatar:'', banner:'', bannerGrad:0, createdAt:0 };
+  const DEF = { name:'', username:'', bio:'', city:'', avatar:'', banner:'', bannerGrad:0, createdAt:0, badgeAt:{} };
   let P = Object.assign({}, DEF);
   try { Object.assign(P, JSON.parse(localStorage.getItem(PKEY) || '{}')); } catch(e){}
   if (!P.createdAt){ P.createdAt = Date.now(); save(true); }
@@ -18631,6 +18644,21 @@ setTimeout(() => checkEventReminder(), 1300);
     } catch(e){}
     if (!o.since) o.since = new Date(P.createdAt);
     return o;
+  }
+  // Останні розблоковані бейджі: час розблокування запам'ятовуємо при першому показі профілю.
+  // Бейджі, що були розблоковані ще до цієї функції, отримують 0 і йдуть у порядку каталогу.
+  function recentBadges(){
+    let list = [];
+    try { list = getBadgesState().filter(b => b.unlocked); } catch(e){ return []; }
+    const first = !P.badgeAt || !Object.keys(P.badgeAt).length;
+    if (!P.badgeAt) P.badgeAt = {};
+    let dirty = false;
+    const ids = {};
+    list.forEach(b => { ids[b.id] = 1; if (!(b.id in P.badgeAt)) { P.badgeAt[b.id] = first ? 0 : Date.now(); dirty = true; } });
+    Object.keys(P.badgeAt).forEach(id => { if (!ids[id]) { delete P.badgeAt[id]; dirty = true; } });
+    if (dirty) save(true);
+    const order = id => BADGE_DEFS.findIndex(d => d.id === id);
+    return list.slice().sort((a, b) => (P.badgeAt[b.id] - P.badgeAt[a.id]) || (order(b.id) - order(a.id))).slice(0, 12);
   }
   function avatarHtml(){
     if (P.avatar) return `<img src="${P.avatar}" alt="">`;
@@ -18667,6 +18695,7 @@ setTimeout(() => checkEventReminder(), 1300);
     const el = document.getElementById('profileApp');
     if (!el) return;
     const st = stats();
+    const rb = recentBadges();
     const since = st.since.toLocaleDateString('uk-UA', { month:'long', year:'numeric' });
     el.innerHTML = `
       <div class="pf-hero" style="background-image:${bannerCss()}">
@@ -18693,6 +18722,8 @@ setTimeout(() => checkEventReminder(), 1300);
         ${P.city ? `<span>📍 ${esc(P.city)}</span>` : ''}
         <span>📅 У трекері з ${esc(since)}</span>
       </div>
+      <div class="pf-sec">Останні бейджі<div class="pf-link" id="pfAllBadges">Усі<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div></div>
+      ${rb.length ? `<div class="pf-badges" id="pfBadges">${rb.map(b => `<div class="badge-tile" data-bid="${esc(b.id)}">${badgeTileInnerHtml(b)}</div>`).join('')}<div class="pf-all" id="pfAllTile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>Усі</div></div>` : `<div class="pf-badges-empty">Поки що немає розблокованих бейджів.</div>`}
       <div class="pf-card">
         <div class="pf-row"><i>🔥</i>Поточна серія<em>${num(st.cur)} дн.</em></div>
         <div class="pf-row"><i>🏆</i>Рекордна серія<em>${num(st.best)} дн.</em></div>
@@ -18706,6 +18737,19 @@ setTimeout(() => checkEventReminder(), 1300);
     $('pfShare').onclick = () => share(st);
     $('pfCam').onclick = () => pickFile(async f => { if (await setBanner(f)) { render(); status('Банер змінено'); } });
     $('pfBackup').onclick = openBackup;
+    const allBadges = () => {
+      try {
+        listsView = { screen: 'badges', listId: null }; listsAdding = false; listItemAdding = false;
+        renderListsBody();
+        document.getElementById('listsOverlay').classList.add('open');
+      } catch(e){ try { openListsModal(); } catch(_){} }
+    };
+    $('pfAllBadges').onclick = allBadges;
+    const at = $('pfAllTile'); if (at) at.onclick = allBadges;
+    el.querySelectorAll('#pfBadges .badge-tile').forEach(t => t.onclick = () => {
+      const b = rb.find(x => x.id === t.dataset.bid);
+      if (b && typeof openBadgeUnlockOverlay === 'function') openBadgeUnlockOverlay(b);
+    });
     const be = $('pfBioEmpty'); if (be) be.onclick = openEdit;
     const ua = $('pfUserAdd'); if (ua) ua.onclick = openEdit;
     const uc = $('pfUserChip');
@@ -18735,7 +18779,7 @@ setTimeout(() => checkEventReminder(), 1300);
     const S = sheet('profileEditOverlay', `
       <div class="pf-sh-top"><button id="pfCancel">Скасувати</button><span>Профіль</span><button class="ok" id="pfSave">Зберегти</button></div>
       <div class="pf-ban-prev" id="pfBanPrev"><b>Змінити банер</b></div>
-      <div class="pf-sw" id="pfSw">${GRADS.map((g, i) => `<span data-i="${i}" style="background:${g}"></span>`).join('')}<small id="pfBanRm">Прибрати фото</small></div>
+      <div class="pf-sw" id="pfSw"><small id="pfBanRm">Прибрати фото</small></div>
       <div class="pf-ava-edit">
         <div class="pf-ring"><div class="pf-avatar" id="pfAvaPrev"></div></div>
         <small id="pfAvaPick">Змінити фото</small>
@@ -18823,6 +18867,7 @@ setTimeout(() => checkEventReminder(), 1300);
 </script>
 <script id="whatsnew-js">
 /* ================= «ЩО НОВОГО» =================
+   ОБОВ'ЯЗКОВЕ ПРАВИЛО: КОЖНА зміна цього файлу (нова функція, виправлення, покращення вигляду) = новий запис у WHATS_NEW, одразу, без нагадувань.
    Нове оновлення = новий об'єкт ЗВЕРХУ масиву WHATS_NEW (id унікальний). Показується лише найновіший запис,
    один раз. Кожна функція/зміна = окремий слайд. Перевірка: додай ?whatsnew до адреси.
    slide: { c:'#колір', emoji:'🔥', vis:'<html великого візуалу (замість емодзі)>', tag:'НОВЕ'|'ВИПРАВЛЕНО'|'КРАЩЕ', title, text } */
@@ -18831,6 +18876,29 @@ setTimeout(() => checkEventReminder(), 1300);
   const WN_MOCK = '<div class="wn-mock2"></div><div class="wn-mock"><i class="t"></i><i></i><i style="width:80%"></i><i style="width:55%"></i><b></b></div>';
   const WN_PROF = '<div class="wn-prof"><div class="bn"></div><div class="av">В</div><div class="b"><i></i><em>@vlad_g</em></div></div>';
   const WHATS_NEW = [
+    {
+      id: '2026-10-22-profile-v5',
+      date: '22 жовтня',
+      slides: [
+        { c:'#FFB65A', emoji:'🏅', tag:'КРАЩЕ', title:'Зручніша стрічка бейджів', text:'Між бейджами в профілі більше місця, а гортається стрічка плавніше. Кнопка «Усі» відкриває повний екран бейджів.' }
+      ]
+    },
+    {
+      id: '2026-10-22-profile-v4',
+      date: '22 жовтня',
+      slides: [
+        { c:'#FFB65A', emoji:'🏅', tag:'НОВЕ', title:'Останні бейджі в профілі', text:'Над статистикою з’явилась стрічка з твоїми найновішими бейджами. Гортай її вбік, тапни на бейдж, щоб побачити його повністю.' }
+      ]
+    },
+    {
+      id: '2026-10-22-profile-v3',
+      date: '22 жовтня',
+      slides: [
+        { c:'#8E80FF', vis: WN_PROF, tag:'КРАЩЕ', title:'М’якші рамки профілю', text:'Рамка навколо фото і плашка з нікнеймом тепер напівпрозорі, без різкого фіолетового.' },
+        { c:'#34C759', emoji:'📏', tag:'КРАЩЕ', title:'Менше порожнього місця', text:'На екрані звичок під «Завданням на сьогодні» прибрано зайвий пустий проміжок: картки починаються ближче.' },
+        { c:'#3E9BFF', emoji:'🎨', tag:'КРАЩЕ', title:'Простіше редагування', text:'З редагування профілю прибрано вибір кольорів банера. Лишилося тільки твоє фото.' }
+      ]
+    },
     {
       id: '2026-10-22-profile-v2',
       date: '22 жовтня',
