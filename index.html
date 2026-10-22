@@ -18567,6 +18567,9 @@ setTimeout(() => checkEventReminder(), 1300);
 .pf-bio{margin-top:16px;font-size:14.5px;line-height:1.45;color:var(--text-primary);white-space:pre-wrap;word-break:break-word}
 .pf-bio.empty{color:var(--text-tertiary);cursor:pointer}
 .pf-meta{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--text-secondary)}
+.pf-share-img{display:block;max-width:100%;max-height:58dvh;width:auto;height:auto;margin:0 auto;border-radius:20px;border:1px solid var(--card-border)}
+.pf-share-btns{display:flex;gap:10px;margin-top:16px}
+.pf-share-btns .pf-btn{flex:1}
 .pf-sec{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 10px;font:700 15px 'Rubik','Inter',sans-serif;color:var(--text-primary)}
 .pf-sec span{font:500 12.5px 'Inter',sans-serif;color:var(--text-tertiary)}
 .pf-badges{display:flex;gap:24px;overflow-x:auto;margin:0 -20px;padding:2px 20px 6px;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x;will-change:scroll-position}
@@ -18756,10 +18759,154 @@ setTimeout(() => checkEventReminder(), 1300);
     if (uc) uc.onclick = () => { try { navigator.clipboard.writeText('@' + P.username).then(() => status('Нікнейм скопійовано')); } catch(e){} };
   }
 
-  function share(st){
+  function shareText(st){
     const text = `Мій профіль у «Звичках»: ${P.name || 'Користувач'}${P.username ? ' (@' + P.username + ')' : ''} — ${st.habits} звичок, ${st.total} виконань, серія ${st.cur} 🔥`;
     if (navigator.share) { navigator.share({ text }).catch(() => {}); return; }
     try { navigator.clipboard.writeText(text).then(() => status('Скопійовано')); } catch(e){}
+  }
+
+  const loadImg = src => new Promise(res => {
+    if (!src) return res(null);
+    const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src;
+  });
+  function rrect(c, x, y, w, h, r){
+    c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+  }
+  function cover(c, img, x, y, w, h){
+    const k = Math.max(w / img.width, h / img.height), sw = w / k, sh = h / k;
+    c.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, x, y, w, h);
+  }
+  function wrapLines(c, text, maxW, maxLines){
+    const words = String(text).split(/\s+/), lines = []; let cur = '';
+    for (const w of words){
+      const t = cur ? cur + ' ' + w : w;
+      if (c.measureText(t).width <= maxW) cur = t; else { if (cur) lines.push(cur); cur = w; }
+    }
+    if (cur) lines.push(cur);
+    if (lines.length > maxLines){ lines.length = maxLines; lines[maxLines - 1] = lines[maxLines - 1].replace(/.{0,2}$/, '…'); }
+    return lines;
+  }
+  function gradFromCss(c, css, x, y, w, h){
+    const m = String(css).match(/#[0-9a-fA-F]{3,8}/g) || ['#6C5CE7', '#3E9BFF'];
+    const g = c.createLinearGradient(x, y, x + w, y + h);
+    m.forEach((col, i) => g.addColorStop(m.length === 1 ? 0 : i / (m.length - 1), col));
+    return g;
+  }
+
+  async function buildCard(st){
+    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch(e){}
+    const badges = recentBadges().slice(0, 5);
+    const W = 1080, H = badges.length ? 1350 : 1130;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const c = cv.getContext('2d');
+    const F = (wt, px) => `${wt} ${px}px 'Rubik','Inter',-apple-system,sans-serif`;
+
+    c.fillStyle = '#0D0F14'; c.fillRect(0, 0, W, H);
+
+    // банер
+    const BH = 520;
+    const banImg = await loadImg(P.banner);
+    c.save(); c.beginPath(); c.rect(0, 0, W, BH); c.clip();
+    if (banImg) cover(c, banImg, 0, 0, W, BH);
+    else { c.fillStyle = gradFromCss(c, GRADS[P.bannerGrad] || GRADS[0], 0, 0, W, BH); c.fillRect(0, 0, W, BH); }
+    const ov = c.createLinearGradient(0, 0, 0, BH);
+    ov.addColorStop(0, 'rgba(0,0,0,.22)'); ov.addColorStop(.55, 'rgba(13,15,20,.5)'); ov.addColorStop(1, '#0D0F14');
+    c.fillStyle = ov; c.fillRect(0, 0, W, BH); c.restore();
+
+    // аватар
+    const ax = W / 2, ay = 400, ar = 128;
+    c.beginPath(); c.arc(ax, ay, ar + 22, 0, Math.PI * 2); c.fillStyle = 'rgba(255,255,255,.28)'; c.fill();
+    c.beginPath(); c.arc(ax, ay, ar + 8, 0, Math.PI * 2); c.fillStyle = '#0D0F14'; c.fill();
+    c.save(); c.beginPath(); c.arc(ax, ay, ar, 0, Math.PI * 2); c.clip();
+    const avImg = await loadImg(P.avatar);
+    if (avImg) cover(c, avImg, ax - ar, ay - ar, ar * 2, ar * 2);
+    else {
+      c.fillStyle = gradFromCss(c, GRADS[0], ax - ar, ay - ar, ar * 2, ar * 2); c.fillRect(ax - ar, ay - ar, ar * 2, ar * 2);
+      c.fillStyle = '#fff'; c.font = F(700, 120); c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText(((P.name || '').trim().charAt(0).toUpperCase()) || '🙂', ax, ay + 6);
+    }
+    c.restore();
+
+    // ім'я + нікнейм
+    c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    c.fillStyle = '#fff'; c.font = F(700, 76);
+    let y = 640;
+    c.fillText(P.name || 'Новий користувач', W / 2, y);
+    if (P.username){
+      c.font = F(600, 38);
+      const tw = c.measureText('@' + P.username).width, pw = tw + 64, ph = 68;
+      rrect(c, W / 2 - pw / 2, y + 34, pw, ph, 34);
+      c.fillStyle = 'rgba(255,255,255,.14)'; c.fill();
+      c.strokeStyle = 'rgba(255,255,255,.28)'; c.lineWidth = 2; c.stroke();
+      c.fillStyle = '#fff'; c.fillText('@' + P.username, W / 2, y + 34 + 46);
+      y += 34 + ph;
+    }
+    if (P.bio){
+      c.font = F(400, 34); c.fillStyle = 'rgba(255,255,255,.72)';
+      wrapLines(c, P.bio, 820, 2).forEach((ln, i) => c.fillText(ln, W / 2, y + 62 + i * 46));
+      y += 62 + 46;
+    }
+
+    // статистика
+    const sy = Math.max(y + 56, 860), sh = 170, sx = 70, sw = W - 140;
+    rrect(c, sx, sy, sw, sh, 36); c.fillStyle = 'rgba(255,255,255,.06)'; c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.12)'; c.lineWidth = 2; c.stroke();
+    const cols = [[st.habits, 'Звичок'], [st.total, 'Виконань'], [st.cur, 'Серія, днів']];
+    cols.forEach((col, i) => {
+      const cx = sx + sw / 6 + i * (sw / 3);
+      c.fillStyle = '#fff'; c.font = F(700, 62); c.fillText(num(col[0]), cx, sy + 85);
+      c.fillStyle = 'rgba(255,255,255,.6)'; c.font = F(400, 28); c.fillText(col[1], cx, sy + 128);
+    });
+
+    // бейджі
+    let by = sy + sh;
+    if (badges.length){
+      c.fillStyle = 'rgba(255,255,255,.85)'; c.font = F(700, 34); c.textAlign = 'left';
+      c.fillText('Останні бейджі', 70, by + 78);
+      const bh = 160, bw = Math.round(bh * 320 / 454), gap = 36, imgs = await Promise.all(badges.map(b => badgeIsImagePath(b.icon) ? loadImg(b.icon) : null));
+      const total = badges.length * bw + (badges.length - 1) * gap;
+      let bx = 70;
+      badges.forEach((b, i) => {
+        if (imgs[i]) c.drawImage(imgs[i], bx, by + 106, bw, bh);
+        else { c.textAlign = 'center'; c.font = F(400, 90); c.fillStyle = '#fff'; c.fillText(b.icon, bx + bw / 2, by + 106 + bh * .7); c.textAlign = 'left'; }
+        bx += bw + gap;
+      });
+      by += 106 + bh;
+    }
+
+    // підпис
+    c.textAlign = 'center'; c.fillStyle = 'rgba(255,255,255,.4)'; c.font = F(600, 28);
+    const since = st.since.toLocaleDateString('uk-UA', { month: 'long', year: 'numeric' });
+    c.fillText(`Звички · у трекері з ${since}`, W / 2, H - 38);
+    return cv;
+  }
+
+  async function share(st){
+    let cv, blob;
+    try {
+      cv = await buildCard(st);
+      blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+      if (!blob) throw new Error('blob');
+    } catch(e){ shareText(st); return; }
+    const url = URL.createObjectURL(blob);
+    const file = new File([blob], 'profile.png', { type: 'image/png' });
+    const S = sheet('profileShareOverlay', `
+      <div class="pf-sh-top"><button id="pfShClose">Закрити</button><span>Картка профілю</span><span style="width:60px"></span></div>
+      <img class="pf-share-img" src="${url}" alt="">
+      <div class="pf-share-btns"><button class="pf-btn main" id="pfShSend">Поділитися</button><button class="pf-btn" id="pfShSave">Зберегти</button></div>`);
+    const close = S.close;
+    S.close = () => { close(); setTimeout(() => URL.revokeObjectURL(url), 500); };
+    const download = () => { const a = document.createElement('a'); a.href = url; a.download = 'profile.png'; document.body.appendChild(a); a.click(); a.remove(); };
+    S.$('pfShClose').onclick = S.close;
+    S.ov.addEventListener('click', e => { if (e.target === S.ov) setTimeout(() => URL.revokeObjectURL(url), 500); });
+    S.$('pfShSave').onclick = download;
+    S.$('pfShSend').onclick = async () => {
+      try {
+        if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
+        else download();
+      } catch(e){ if (e && e.name !== 'AbortError') download(); }
+    };
   }
 
   function sheet(id, html){
@@ -18876,6 +19023,13 @@ setTimeout(() => checkEventReminder(), 1300);
   const WN_MOCK = '<div class="wn-mock2"></div><div class="wn-mock"><i class="t"></i><i></i><i style="width:80%"></i><i style="width:55%"></i><b></b></div>';
   const WN_PROF = '<div class="wn-prof"><div class="bn"></div><div class="av">В</div><div class="b"><i></i><em>@vlad_g</em></div></div>';
   const WHATS_NEW = [
+    {
+      id: '2026-10-22-profile-v6',
+      date: '22 жовтня',
+      slides: [
+        { c:'#6C5CE7', vis: WN_PROF, tag:'НОВЕ', title:'Картка для поширення', text:'Кнопка «Поділитися» в профілі тепер робить гарну картинку: фото, ім’я, нікнейм, статистика і твої останні бейджі. Можна надіслати або зберегти.' }
+      ]
+    },
     {
       id: '2026-10-22-profile-v5',
       date: '22 жовтня',
