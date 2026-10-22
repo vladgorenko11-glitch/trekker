@@ -7668,6 +7668,8 @@ function loadState(){
   }catch(e){
     console.error('Не вдалося завантажити дані:', e);
   }
+  window.__badgeStampReady = true;
+  try{ getBadgesState(); }catch(e){}
 }
 
 let viewYear = new Date().getFullYear();
@@ -9979,7 +9981,35 @@ function hwBadgeVisible(){
   return countHalloween2026Skins() >= HW_BADGE_MIN_SKINS;
 }
 
+/* Реальний час отримання бейджів: фіксується в момент, коли бейдж уперше стає розблокованим (після завантаження даних).
+   Бейджі, отримані ще до цієї версії, мають 0 (або час із профілю) і йдуть у порядку каталогу. */
+const BADGE_AT_KEY = 'badge-unlock-at-v1';
+function badgeUnlockTimes(){
+  try{ const o = JSON.parse(localStorage.getItem(BADGE_AT_KEY) || 'null'); return (o && o.at) || {}; }catch(e){ return {}; }
+}
+function stampBadgeTimes(list){
+  if (!window.__badgeStampReady) return;
+  let o = null;
+  try{ o = JSON.parse(localStorage.getItem(BADGE_AT_KEY) || 'null'); }catch(e){}
+  let init = false;
+  if (!o || typeof o !== 'object' || !o.at){
+    o = { at: {} }; init = true;
+    try{ const p = JSON.parse(localStorage.getItem('habits-profile-v1') || '{}'); if (p && p.badgeAt) Object.assign(o.at, p.badgeAt); }catch(e){}
+  }
+  let dirty = init;
+  list.forEach(b => {
+    if (b.unlocked){
+      if (!(b.id in o.at)){ o.at[b.id] = init ? 0 : Date.now(); dirty = true; }
+    } else if (b.id in o.at){ delete o.at[b.id]; dirty = true; }
+  });
+  if (dirty){ try{ localStorage.setItem(BADGE_AT_KEY, JSON.stringify(o)); }catch(e){} }
+}
 function getBadgesState(){
+  const r = getBadgesStateRaw();
+  try{ stampBadgeTimes(r); }catch(e){}
+  return r;
+}
+function getBadgesStateRaw(){
   const maxStreak = maxEverStreakAcrossHabits();
   const perfectDays = countPerfectNoFreezeDays();
   const frozenTimes = countFrozenTimesActiveOnly();
@@ -18705,15 +18735,9 @@ setTimeout(() => checkEventReminder(), 1300);
   function recentBadges(){
     let list = [];
     try { list = getBadgesState().filter(b => b.unlocked); } catch(e){ return []; }
-    const first = !P.badgeAt || !Object.keys(P.badgeAt).length;
-    if (!P.badgeAt) P.badgeAt = {};
-    let dirty = false;
-    const ids = {};
-    list.forEach(b => { ids[b.id] = 1; if (!(b.id in P.badgeAt)) { P.badgeAt[b.id] = first ? 0 : Date.now(); dirty = true; } });
-    Object.keys(P.badgeAt).forEach(id => { if (!ids[id]) { delete P.badgeAt[id]; dirty = true; } });
-    if (dirty) save(true);
+    const at = badgeUnlockTimes();
     const order = id => BADGE_DEFS.findIndex(d => d.id === id);
-    return list.slice().sort((a, b) => (P.badgeAt[b.id] - P.badgeAt[a.id]) || (order(b.id) - order(a.id))).slice(0, 12);
+    return list.slice().sort((a, b) => ((at[b.id] || 0) - (at[a.id] || 0)) || (order(b.id) - order(a.id))).slice(0, 12);
   }
   function avatarHtml(){
     if (P.avatar) return `<img src="${P.avatar}" alt="">`;
@@ -18772,7 +18796,7 @@ setTimeout(() => checkEventReminder(), 1300);
         <button class="pf-btn main" id="pfEdit">Редагувати профіль</button>
         <button class="pf-btn icon" id="pfShare" title="Поділитися"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg></button>
       </div>
-      ${P.bio ? `<div class="pf-bio">${esc(P.bio)}</div>` : `<div class="pf-bio empty" id="pfBioEmpty">Розкажи трохи про себе…</div>`}
+      ${P.bio ? `<div class="pf-bio">${esc(P.bio)}</div>` : ''}
       <div class="pf-meta">
         ${P.city ? `<span>📍 ${esc(P.city)}</span>` : ''}
         <span>📅 У трекері з ${esc(since)}</span>
@@ -19075,6 +19099,14 @@ setTimeout(() => checkEventReminder(), 1300);
   const WN_MOCK = '<div class="wn-mock2"></div><div class="wn-mock"><i class="t"></i><i></i><i style="width:80%"></i><i style="width:55%"></i><b></b></div>';
   const WN_PROF = '<div class="wn-prof"><div class="bn"></div><div class="av">В</div><div class="b"><i></i><em>@vlad_g</em></div></div>';
   const WHATS_NEW = [
+    {
+      id: '2026-10-22-profile-v7',
+      date: '22 жовтня',
+      slides: [
+        { c:'#FFB65A', emoji:'🏅', tag:'ВИПРАВЛЕНО', title:'Бейджі за датою отримання', text:'Стрічка бейджів у профілі тепер точно йде від найновіших до старіших: час отримання фіксується в момент, коли ти справді розблокував бейдж.' },
+        { c:'#6C5CE7', emoji:'🧹', tag:'КРАЩЕ', title:'Без зайвого напису', text:'Підказка «Розкажи трохи про себе…» зникла з профілю, поки ти не додав опис.' }
+      ]
+    },
     {
       id: '2026-10-22-halloween-surprise-x10',
       date: '22 жовтня',
