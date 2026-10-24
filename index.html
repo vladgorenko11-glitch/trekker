@@ -4438,7 +4438,7 @@
   }
   .weekly-today-card.lit .wtc-flame-wrap {
     position: absolute; right: 10px; bottom: 6px; width: 92px; height: 92px; pointer-events: none; user-select: none;
-    animation: wtcFlame 2.6s ease-in-out infinite; transform-origin: 50% 90%;
+    animation: wtcFlame 2.6s ease-in-out calc(1.8s - var(--el,0ms)) infinite; transform-origin: 50% 90%;
   }
   .weekly-today-card.lit .wtc-flame {
     width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(0 6px 10px rgba(120,30,0,0.35));
@@ -4454,7 +4454,7 @@
   .wtc-spark { position: absolute; left: 50%; top: 52%; border-radius: 50%; opacity: 0; pointer-events: none;
     box-shadow: 0 0 6px rgba(255,200,80,.9); animation: wtcSpark .85s cubic-bezier(.15,.7,.3,1) forwards; }
   @keyframes wtcSpark { 0% { opacity: 1; transform: translate(-50%,-50%) scale(1); } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.2); } }
-  @keyframes wtcFlame { 0%,100% { transform: scale(1) rotate(-1.5deg); } 50% { transform: scale(1.05) rotate(1.5deg); } }
+  @keyframes wtcFlame { 0%,100% { transform: none; } 50% { transform: scale(1.05) rotate(1.5deg); } }
   .weekly-today-card.lit .weekly-tag, .weekly-today-card.lit .wtc-sub { position: relative; }
   .weekly-today-card.lit .wtc-name {
     color: #fff; font-size: 19px; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 6px rgba(140,40,0,0.35);
@@ -4468,6 +4468,8 @@
   .weekly-today-card.lit.celebrate {
     background: var(--card); box-shadow: none; isolation: isolate;
   }
+  .weekly-today-card.lit.celebrate { animation: wtcGlowIn .6s ease calc(500ms - var(--el,0ms)) both; }
+  @keyframes wtcGlowIn { 0% { box-shadow: 0 10px 26px -10px rgba(255,106,0,0), inset 0 1px 0 rgba(255,255,255,0); } 100% { box-shadow: 0 10px 26px -10px rgba(255,106,0,0.6), inset 0 1px 0 rgba(255,255,255,0.35); } }
   .weekly-today-card.lit.celebrate::before { opacity: 0; animation: wtcFadeIn .4s ease calc(450ms - var(--el,0ms)) forwards; }
   @keyframes wtcFadeIn { to { opacity: 1; } }
   .weekly-today-card.lit.celebrate::after {
@@ -10054,6 +10056,50 @@ const BADGE_AT_KEY = 'badge-unlock-at-v1';
 function badgeUnlockTimes(){
   try{ const o = JSON.parse(localStorage.getItem(BADGE_AT_KEY) || 'null'); return (o && o.at) || {}; }catch(e){ return {}; }
 }
+/* Оцінка реальної дати отримання для бейджів, що рахуються з історії звичок: «N днів поспіль» і «N виконань загалом».
+   Дивимось у відмітки днів і знаходимо день, коли поріг було досягнуто. Для інших бейджів дату відновити неможливо. */
+function estimateBadgeTime(b){
+  try{
+    const noon = d => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12).getTime();
+    if (!b.kind){ // серія днів поспіль
+      let best = null;
+      habits.forEach(h => {
+        const ds = Object.keys(h.days || {}).filter(k => h.days[k] === true).map(keyToDate).sort((a, c) => a - c);
+        let cur = 0;
+        for (let i = 0; i < ds.length; i++){
+          if (i === 0) cur = 1;
+          else {
+            const diff = Math.round((ds[i] - ds[i - 1]) / 86400000);
+            let ok = diff === 1;
+            if (!ok && diff > 1 && diff < 200){
+              ok = true;
+              for (let g = 1; g < diff; g++){ if (!isVacationDate(new Date(ds[i - 1].getFullYear(), ds[i - 1].getMonth(), ds[i - 1].getDate() + g))){ ok = false; break; } }
+            }
+            cur = ok ? cur + 1 : 1;
+          }
+          if (cur >= b.threshold){ if (!best || ds[i] < best) best = ds[i]; break; }
+        }
+      });
+      return best ? noon(best) : 0;
+    }
+    if (b.kind === 'total-habit-completions'){
+      const all = [];
+      habits.forEach(h => {
+        if (isWindowHabit(h)){
+          const seen = new Set();
+          Object.keys(h.days || {}).forEach(k => {
+            if (h.days[k] !== true) return;
+            const d = keyToDate(k), st = windowInstanceStartDate(h, d), sk = dayKey(st.getFullYear(), st.getMonth(), st.getDate());
+            if (!seen.has(sk)){ seen.add(sk); all.push(d); }
+          });
+        } else Object.keys(h.days || {}).forEach(k => { if (h.days[k] === true) all.push(keyToDate(k)); });
+      });
+      all.sort((a, c) => a - c);
+      return all.length >= b.threshold ? noon(all[b.threshold - 1]) : 0;
+    }
+  }catch(e){}
+  return 0;
+}
 function stampBadgeTimes(list){
   if (!window.__badgeStampReady) return;
   let o = null;
@@ -10064,10 +10110,19 @@ function stampBadgeTimes(list){
     try{ const p = JSON.parse(localStorage.getItem('habits-profile-v1') || '{}'); if (p && p.badgeAt) Object.assign(o.at, p.badgeAt); }catch(e){}
   }
   let dirty = init;
+  if (!o.est) o.est = {};
   list.forEach(b => {
     if (b.unlocked){
       if (!(b.id in o.at)){ o.at[b.id] = init ? 0 : Date.now(); dirty = true; }
-    } else if (b.id in o.at){ delete o.at[b.id]; dirty = true; }
+      // одноразово уточнюємо дату за історією звичок (для серій і загальної кількості виконань)
+      if (!o.est[b.id]){
+        o.est[b.id] = 1; dirty = true;
+        if (!b.kind || b.kind === 'total-habit-completions'){
+          const e = estimateBadgeTime(b);
+          if (e) o.at[b.id] = Math.min(e, o.at[b.id] > 0 ? o.at[b.id] : e);
+        }
+      }
+    } else if (b.id in o.at){ delete o.at[b.id]; delete o.est[b.id]; dirty = true; }
   });
   if (dirty){ try{ localStorage.setItem(BADGE_AT_KEY, JSON.stringify(o)); }catch(e){} }
 }
@@ -13805,7 +13860,7 @@ function weeklyWeeksStreak(h){
     return streak;
   }catch(e){ return 0; }
 }
-const WTC_ANIM_MS = 2600;
+const WTC_ANIM_MS = 4400; // = 1.8с (старт «дихання» вогника) + 2.6с (його період): клас знімаємо рівно у фазі 0, тож без ривка
 var __wtcDone = {}, __wtcAnim = {};
 function wtcSparks(card){
   const host = card.querySelector('.wtc-flame-wrap'); if (!host) return;
@@ -18933,7 +18988,7 @@ setTimeout(() => checkEventReminder(), 1300);
 (function(){
   const PKEY = 'habits-profile-v1';
   const GRADS = ['linear-gradient(135deg,#6C5CE7,#3E9BFF)','linear-gradient(135deg,#FF6B5B,#FFB65A)','linear-gradient(135deg,#11998e,#38ef7d)','linear-gradient(135deg,#ff5f9e,#6C5CE7)','linear-gradient(135deg,#232526,#414345)','linear-gradient(135deg,#0f2027,#2c5364)'];
-  const DEF = { name:'', username:'', bio:'', city:'', avatar:'', banner:'', bannerGrad:0, createdAt:0, badgeAt:{} };
+  const DEF = { name:'', username:'', bio:'', city:'', birthday:'', avatar:'', banner:'', bannerGrad:0, createdAt:0, badgeAt:{} };
   let P = Object.assign({}, DEF);
   try { Object.assign(P, JSON.parse(localStorage.getItem(PKEY) || '{}')); } catch(e){}
   if (!P.createdAt){ P.createdAt = Date.now(); save(true); }
@@ -18942,6 +18997,21 @@ setTimeout(() => checkEventReminder(), 1300);
   function save(quiet){
     try { localStorage.setItem(PKEY, JSON.stringify(P)); return true; }
     catch(e){ if (!quiet) status('Не вдалося зберегти (мало місця)', true); return false; }
+  }
+  // Дата народження: 'YYYY-MM-DD' → «12 травня · 28 років»; у сам день — привітання
+  function birthdayInfo(){
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(P.birthday || '');
+    if (!m) return null;
+    const y = +m[1], mo = +m[2] - 1, d = +m[3];
+    const now = new Date();
+    let age = now.getFullYear() - y;
+    if (now.getMonth() < mo || (now.getMonth() === mo && now.getDate() < d)) age--;
+    if (age < 0 || age > 130) return null;
+    const isToday = now.getMonth() === mo && now.getDate() === d;
+    const dm = new Date(2000, mo, d).toLocaleDateString('uk-UA', { day:'numeric', month:'long' });
+    const n10 = age % 10, n100 = age % 100;
+    const yrs = (n10 === 1 && n100 !== 11) ? 'рік' : ((n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) ? 'роки' : 'років');
+    return { text: isToday ? `Сьогодні день народження, ${age} ${yrs}!` : `${dm} · ${age} ${yrs}`, isToday };
   }
   const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const num = n => (n || 0).toLocaleString('uk-UA');
@@ -19029,6 +19099,7 @@ setTimeout(() => checkEventReminder(), 1300);
       ${P.bio ? `<div class="pf-bio">${esc(P.bio)}</div>` : ''}
       <div class="pf-meta">
         ${P.city ? `<span>📍 ${esc(P.city)}</span>` : ''}
+        ${(() => { const b = birthdayInfo(); return b ? `<span>${b.isToday ? '🎉' : '🎂'} ${esc(b.text)}</span>` : ''; })()}
         <span>📅 У трекері з ${esc(since)}</span>
       </div>
       <div class="pf-sec">Останні бейджі<div class="pf-link" id="pfAllBadges">Усі<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div></div>
@@ -19241,7 +19312,8 @@ setTimeout(() => checkEventReminder(), 1300);
       <div class="pf-field"><label>Ім’я</label><input id="pfName" maxlength="30" placeholder="Як тебе звати" value="${esc(P.name)}"></div>
       <div class="pf-field"><label>Нікнейм</label><div class="pf-at"><input id="pfUser" maxlength="20" placeholder="nickname" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" value="${esc(P.username)}"></div><div class="pf-hint">3–20 символів: a–z, 0–9, _ та крапка</div></div>
       <div class="pf-field"><label>Про себе <span id="pfBioCnt"></span></label><textarea id="pfBio" rows="3" maxlength="120" placeholder="Кілька слів про себе">${esc(P.bio)}</textarea></div>
-      <div class="pf-field"><label>Місто</label><input id="pfCity" maxlength="30" placeholder="Де ти живеш" value="${esc(P.city)}"></div>`);
+      <div class="pf-field"><label>Місто</label><input id="pfCity" maxlength="30" placeholder="Де ти живеш" value="${esc(P.city)}"></div>
+      <div class="pf-field"><label>Дата народження</label><input id="pfBirthday" type="date" min="1900-01-01" max="${new Date().toISOString().slice(0,10)}" value="${esc(P.birthday || '')}"></div>`);
     const { $ } = S;
     const paint = () => {
       const prev = $('pfAvaPrev');
@@ -19267,7 +19339,7 @@ setTimeout(() => checkEventReminder(), 1300);
       if (u && u.length < 3) { status('Нікнейм: мінімум 3 символи', true); return; }
       const prev = Object.assign({}, P);
       P.name = $('pfName').value.trim(); P.username = u; P.bio = $('pfBio').value.trim();
-      P.city = $('pfCity').value.trim(); P.avatar = ava; P.banner = ban; P.bannerGrad = grad;
+      P.city = $('pfCity').value.trim(); P.birthday = ($('pfBirthday').value || '').trim(); P.avatar = ava; P.banner = ban; P.bannerGrad = grad;
       if (!save()) { P = prev; return; }
       render(); S.close(); status('Збережено');
     };
