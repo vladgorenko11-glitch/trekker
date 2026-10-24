@@ -3410,6 +3410,10 @@
     color: #12131A; text-align: center; z-index: 2;
     animation: buoUp .5s ease .18s both;
   }
+  .buo-date { margin-top: 10px; font-size: 12.5px; color: rgba(255,255,255,0.72); display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  .buo-date b { color: #fff; font-weight: 700; }
+  .buo-date-edit { position: relative; color: #fff; text-decoration: underline; cursor: pointer; overflow: hidden; }
+  .buo-date-edit input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
   .buo-subtitle {
     margin-top: 10px; font-size: 16px; color: #8A8B92; text-align: center;
     max-width: 300px; line-height: 1.45; padding: 0 24px; z-index: 2;
@@ -10082,6 +10086,10 @@ function estimateBadgeTime(b){
       });
       return best ? noon(best) : 0;
     }
+    if (b.kind === 'books-read'){
+      const ds = bookshelfBooks.filter(x => x.status === 'read' && x.finishedAt).map(x => keyToDate(x.finishedAt)).filter(d => d && !isNaN(d)).sort((a, c) => a - c);
+      return ds.length >= b.threshold ? noon(ds[b.threshold - 1]) : 0;
+    }
     if (b.kind === 'total-habit-completions'){
       const all = [];
       habits.forEach(h => {
@@ -10100,6 +10108,23 @@ function estimateBadgeTime(b){
   }catch(e){}
   return 0;
 }
+// Якщо дату відновити неможливо: бейджі івентів — найновіші (щойно отримані), решту ставимо «давно» —
+// від початку ведення трекера, зберігаючи порядок каталогу. Так невідомі бейджі не перебивають ті, чию дату знаємо.
+function fallbackBadgeTime(b){
+  if (b.event) return Date.now();
+  let first = null;
+  try{ habits.forEach(h => Object.keys(h.days || {}).forEach(k => { const d = keyToDate(k); if (d && !isNaN(d) && (!first || d < first)) first = d; })); }catch(e){}
+  const idx = Math.max(0, BADGE_DEFS.findIndex(d => d.id === b.id));
+  return (first ? first.getTime() : 86400000) + idx * 1000;
+}
+function setBadgeTime(id, ts){
+  try{
+    const o = JSON.parse(localStorage.getItem(BADGE_AT_KEY) || 'null') || { at: {}, est: {}, v: 3 };
+    if (!o.at) o.at = {}; if (!o.est) o.est = {};
+    o.at[id] = ts || 0; o.est[id] = 1; if (!o.v) o.v = 3;
+    localStorage.setItem(BADGE_AT_KEY, JSON.stringify(o));
+  }catch(e){}
+}
 function stampBadgeTimes(list){
   if (!window.__badgeStampReady) return;
   let o = null;
@@ -10110,17 +10135,27 @@ function stampBadgeTimes(list){
     try{ const p = JSON.parse(localStorage.getItem('habits-profile-v1') || '{}'); if (p && p.badgeAt) Object.assign(o.at, p.badgeAt); }catch(e){}
   }
   let dirty = init;
-  if (!o.est) o.est = {};
+  if (!o.est || o.v !== 3){
+    // v2 ставив вигадані дати для бейджів без історії (початок трекера + індекс, а для івентів «зараз») — прибираємо їх
+    if (o.v === 2){
+      list.forEach(b => {
+        if (!(b.id in o.at)) return;
+        if (b.event || o.at[b.id] === fallbackBadgeTime({ id: b.id })) o.at[b.id] = 0;
+      });
+    }
+    o.est = {}; o.v = 3; dirty = true;
+  }
   list.forEach(b => {
     if (b.unlocked){
       if (!(b.id in o.at)){ o.at[b.id] = init ? 0 : Date.now(); dirty = true; }
       // одноразово уточнюємо дату за історією звичок (для серій і загальної кількості виконань)
       if (!o.est[b.id]){
         o.est[b.id] = 1; dirty = true;
-        if (!b.kind || b.kind === 'total-habit-completions'){
+        if (!b.event && (!b.kind || b.kind === 'total-habit-completions' || b.kind === 'books-read')){
           const e = estimateBadgeTime(b);
           if (e) o.at[b.id] = Math.min(e, o.at[b.id] > 0 ? o.at[b.id] : e);
         }
+        if (!(o.at[b.id] > 0)) o.at[b.id] = 0; // дату не збережено — не вигадуємо
       }
     } else if (b.id in o.at){ delete o.at[b.id]; delete o.est[b.id]; dirty = true; }
   });
@@ -10496,6 +10531,32 @@ function openBadgeUnlockOverlay(b){
 
   document.getElementById('badgeUnlockTitle').textContent = b.title;
   document.getElementById('badgeUnlockSubtitle').textContent = b.subtitle || '';
+  // Дата отримання: збережена/відновлена з історії — показуємо; невідому можна вказати вручну
+  let dateEl = document.getElementById('badgeUnlockDate');
+  if (!dateEl){
+    dateEl = document.createElement('div'); dateEl.id = 'badgeUnlockDate'; dateEl.className = 'buo-date';
+    document.getElementById('badgeUnlockSubtitle').after(dateEl);
+  }
+  if (b.unlocked){
+    const ts = (badgeUnlockTimes() || {})[b.id] || 0;
+    const fmt = t => new Date(t).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+    const maxD = new Date().toISOString().slice(0, 10);
+    dateEl.style.display = '';
+    dateEl.innerHTML = ts
+      ? `<span>Отримано: <b>${fmt(ts)}</b></span> <label class="buo-date-edit">змінити<input type="date" max="${maxD}"></label>`
+      : `<span>Дату отримання не збережено</span> <label class="buo-date-edit">вказати<input type="date" max="${maxD}"></label>`;
+    const inp = dateEl.querySelector('input');
+    inp.addEventListener('change', () => {
+      if (!inp.value) return;
+      const d = new Date(inp.value + 'T12:00:00');
+      if (isNaN(d)) return;
+      setBadgeTime(b.id, d.getTime());
+      dateEl.querySelector('span').innerHTML = `Отримано: <b>${fmt(d.getTime())}</b>`;
+      try{ if (window.renderProfile) window.renderProfile(); }catch(e){}
+    });
+  } else {
+    dateEl.style.display = 'none';
+  }
 
   const progressEl = document.getElementById('badgeUnlockProgress');
   const checkRow = document.getElementById('badgeUnlockCheckRow');
@@ -19037,7 +19098,7 @@ setTimeout(() => checkEventReminder(), 1300);
     try { list = getBadgesState().filter(b => b.unlocked); } catch(e){ return []; }
     const at = badgeUnlockTimes();
     const order = id => BADGE_DEFS.findIndex(d => d.id === id);
-    return list.slice().sort((a, b) => ((at[b.id] || 0) - (at[a.id] || 0)) || (order(b.id) - order(a.id))).slice(0, 12);
+    return list.slice().sort((a, b) => ((at[b.id] || 0) - (at[a.id] || 0)) || (order(b.id) - order(a.id))).slice(0, 12); // без збереженої дати (0) — в кінці
   }
   function avatarHtml(){
     if (P.avatar) return `<img src="${P.avatar}" alt="">`;
