@@ -19098,7 +19098,9 @@ setTimeout(() => checkEventReminder(), 1300);
     try { list = getBadgesState().filter(b => b.unlocked); } catch(e){ return []; }
     const at = badgeUnlockTimes();
     const order = id => BADGE_DEFS.findIndex(d => d.id === id);
-    return list.slice().sort((a, b) => ((at[b.id] || 0) - (at[a.id] || 0)) || (order(b.id) - order(a.id))).slice(0, 12); // без збереженої дати (0) — в кінці
+    // Ключ порядку: збережена дата; бейдж івенту без дати — найновіший (івент триває зараз); решта без дати — в кінці
+    const key = b => at[b.id] > 0 ? at[b.id] : (b.event ? Number.MAX_SAFE_INTEGER : 0);
+    return list.slice().sort((a, b) => (key(a) === key(b) ? 0 : (key(b) > key(a) ? 1 : -1)) || (order(b.id) - order(a.id))).slice(0, 12);
   }
   function avatarHtml(){
     if (P.avatar) return `<img src="${P.avatar}" alt="">`;
