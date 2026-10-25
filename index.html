@@ -5370,6 +5370,40 @@
   .sif-card.hw .sif-item-text { color: rgba(205,178,245,0.7); }
   .sif-ico.i-orange { background: rgba(255,150,50,0.22); }
   .sif-card.hw .sif-btn { color: #3A1400; background: linear-gradient(180deg, #FFB65A 0%, #FF8A1F 100%); box-shadow: 0 6px 18px rgba(255,130,30,0.3); }
+  /* Банер «енергія за час Хелловіну» (після повернення ростка) */
+  .sif-card.hwc { text-align: center; }
+  .hwc-hero { position: relative; height: 196px; margin: -6px -6px 4px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 22px; }
+  .hwc-rays { position: absolute; left: 50%; top: 46%; width: 360px; height: 360px; margin: -180px 0 0 -180px; border-radius: 50%;
+    background: repeating-conic-gradient(from 0deg, rgba(255,176,70,0.26) 0deg 9deg, transparent 9deg 24deg);
+    -webkit-mask-image: radial-gradient(ellipse 50% 27% at 50% 50%, #000 0%, transparent 100%); mask-image: radial-gradient(ellipse 50% 27% at 50% 50%, #000 0%, transparent 100%);
+    animation: hwcSpin 22s linear infinite; }
+  @keyframes hwcSpin { to { transform: rotate(360deg); } }
+  .hwc-glow { position: absolute; left: 50%; top: 46%; width: 190px; height: 190px; margin: -95px 0 0 -95px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,170,60,0.55) 0%, rgba(255,120,30,0.18) 45%, transparent 70%); animation: hwcPulse 2.2s ease-in-out infinite; }
+  @keyframes hwcPulse { 0%,100% { transform: scale(.94); opacity: .8; } 50% { transform: scale(1.08); opacity: 1; } }
+  .hwc-sprout { position: relative; width: 138px; height: 138px; object-fit: contain; margin-top: -18px; -webkit-user-drag: none;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,0.5)); animation: hwcWake .9s cubic-bezier(.2,1.3,.4,1) both; }
+  @keyframes hwcWake { from { opacity: 0; transform: translateY(26px) scale(.7); } to { opacity: 1; transform: none; } }
+  .hwc-spark { position: absolute; width: 26px; height: 26px; object-fit: contain; opacity: 0; filter: drop-shadow(0 0 8px rgba(255,170,50,0.8));
+    animation: hwcRise 2.6s ease-in infinite; }
+  @keyframes hwcRise { 0% { opacity: 0; transform: translateY(24px) scale(.5); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-70px) scale(1.1) rotate(14deg); } }
+  .hwc-chip { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px;
+    padding: 7px 18px 7px 12px; border-radius: 999px; color: #3A1400; background: linear-gradient(180deg, #FFC56E 0%, #FF8A1F 100%);
+    box-shadow: 0 8px 24px rgba(255,130,30,0.5), inset 0 1px 0 rgba(255,255,255,0.5); animation: hwcPop .6s .5s cubic-bezier(.2,1.5,.4,1) both; }
+  @keyframes hwcPop { from { opacity: 0; transform: translateX(-50%) scale(.4); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+  .hwc-chip-bolt { width: 26px; height: 26px; object-fit: contain; }
+  .hwc-chip b { font-family: 'Rubik', sans-serif; font-size: 30px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; }
+  .hwc-bar { margin-top: 14px; padding: 12px 14px 13px; border-radius: 16px; background: rgba(160,110,255,0.08); border: 1px solid rgba(175,125,255,0.2); text-align: left; }
+  .hwc-bar-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: rgba(205,178,245,0.74); }
+  .hwc-bar-row b { color: #fff; font-weight: 700; }
+  .hwc-bar-row .up { color: #FFB65A; }
+  .hwc-track { position: relative; height: 10px; margin: 9px 0 8px; border-radius: 6px; background: rgba(255,255,255,0.1); overflow: hidden; }
+  .hwc-fill-old, .hwc-fill-new { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
+  .hwc-fill-old { background: rgba(190,150,255,0.55); }
+  .hwc-fill-new { background: linear-gradient(90deg, #FF8A1F, #FFC56E); box-shadow: 0 0 12px rgba(255,150,40,0.7); transition: width 1.3s .7s cubic-bezier(.2,.8,.2,1); }
+  .sif-card.hwc .sif-list { text-align: left; margin-top: 10px; }
+  .hwc-sub b { color: #FFB65A; }
+  .sif-card.hwc .sif-title { text-wrap: balance; }
 </style>
 <script id="hw-theme-detect">/* Хелловін-оформлення: 19 жовтня – 2 листопада 2026. Перевірка: ?halloween=1 / ?halloween=0 (те саме, що й для івенту). */
 (function(){try{var q=new URLSearchParams(location.search).get('halloween'),n=new Date();var on=q==='1'?true:(q==='0'?false:(n>=new Date(2026,9,19)&&n<new Date(2026,10,3)));if(on)document.documentElement.classList.add('hw-theme');}catch(e){}})();
@@ -6840,8 +6874,12 @@ function hwRebuildPointsFromRecords(){
   try{ showMilestoneToast('🎃 Очки котла: ' + pts + (droppedSkins ? ' · зайвий скін забрано' : '')); }catch(e){}
 }
 
+/* Компенсація: поки йшов івент, росток спав і не отримував бали. Коли він повертається — даруємо йому HW_COMP_POINTS енергії
+   й показуємо банер із поясненням (hwOpenComp). Нараховується один раз у hwEnd(). */
+const HW_COMP_POINTS = 75;
 function hwEnd(){
   let skins = 0;
+  let compFrom = 0, compGiven = 0;
   try{ skins = hwSkinsOwned(); }catch(e){}
   const result = { name: sprout.name, points: sprout.points || 0, skins, skinList: (sprout.hwSkinList || []).slice(), equipped: hwEquippedIdx(), rare: !!sprout.cloverRare, endedAt: new Date().toISOString() };
   const backup = hwEvent && hwEvent.backup;
@@ -6849,6 +6887,9 @@ function hwEnd(){
     Object.keys(sprout).forEach(k => delete sprout[k]);
     Object.assign(sprout, backup);
     if (Array.isArray(sprout.history)) sprout.history = sprout.history.filter(h => h && !h.frozen); // заморожена картка йде з архіву — росток знову живий
+    compFrom = sprout.points || 0;
+    compGiven = HW_COMP_POINTS;
+    sprout.points = compFrom + compGiven; // компенсація за час, який росток проспав
   }
   // Котел переїжджає в «Історію ростків» як особлива подія (картка з його останнім скіном)
   if (!Array.isArray(sprout.history)) sprout.history = [];
@@ -6863,7 +6904,7 @@ function hwEnd(){
     equipped: typeof result.equipped === 'number' ? result.equipped : null,
     rare: !!result.rare,
   });
-  hwEvent = { active: false, backup: null, startedAt: hwEvent ? hwEvent.startedAt : null, introSeen: true, farewellPending: true, result };
+  hwEvent = { active: false, backup: null, startedAt: hwEvent ? hwEvent.startedAt : null, introSeen: true, farewellPending: true, compPending: compGiven > 0, comp: compGiven, compFrom, result };
   saveState();
 }
 
@@ -7103,17 +7144,17 @@ function hwOpenX3(){
 }
 function hwScheduleDialog(delay){
   if (hwDialogTimer || !hwEvent) return;
-  if (!(hwEvent.farewellPending || (hwEvent.active && !hwEvent.introSeen) || hwX3Pending())) return;
+  if (!(hwEvent.farewellPending || hwEvent.compPending || (hwEvent.active && !hwEvent.introSeen) || hwX3Pending())) return;
   hwDialogTimer = setTimeout(() => { hwDialogTimer = null; hwMaybeShowDialog(); }, delay || 200);
 }
 function hwMaybeShowDialog(){
   if (!hwEvent) return;
-  if (!(hwEvent.farewellPending || (hwEvent.active && !hwEvent.introSeen) || hwX3Pending())) return;
+  if (!(hwEvent.farewellPending || hwEvent.compPending || (hwEvent.active && !hwEvent.introSeen) || hwX3Pending())) return;
   if (document.querySelector('.overlay.open, .newlevel-overlay.open, .badge-unlock-overlay.open')){
     hwScheduleDialog(2500); // інший діалог відкритий — спробуємо трохи згодом
     return;
   }
-  if (hwEvent.farewellPending) hwOpenFarewell(); else if (hwEvent.active && !hwEvent.introSeen) hwOpenIntro(); else hwOpenX3();
+  if (hwEvent.farewellPending) hwOpenFarewell(); else if (hwEvent.compPending) hwOpenComp(); else if (hwEvent.active && !hwEvent.introSeen) hwOpenIntro(); else hwOpenX3();
 }
 function hwDialogHtml(img, title, sub, items, btnId, btnText){
   return `
@@ -7272,15 +7313,74 @@ function hwOpenFarewell(){
     `Котел розсіявся туманом, а твій росток уже прокинувся.`,
     [
       ['i-orange', '🎃', `Скінів котла: ${r.skins || 0}`, `Разом ${r.points} ${r.points === 1 ? 'бал' : 'балів'} — гарний результат для чарівника!`],
-      ['i-green', '🌱', 'Росток повернувся', 'Його бали, рівень і історія такі самі, якими ти їх залишив.'],
+      ['i-green', '🌱', 'Росток повернувся', hwEvent.compPending ? 'Його рівень, ім’я та історія на місці. А ще він приготував для тебе невеликий подарунок.' : 'Його бали, рівень і історія такі самі, якими ти їх залишив.'],
     ],
     'hwFarewellOk', 'Зрозуміло'
   );
   const close = () => {
     ov.classList.remove('open'); ov.innerHTML = ''; ov.onclick = null;
     hwEvent.farewellPending = false; saveState();
+    if (hwEvent.compPending) setTimeout(hwOpenComp, 320); // одразу за прощанням — банер із бонусною енергією
   };
   document.getElementById('hwFarewellOk').addEventListener('click', close);
+  ov.onclick = (e) => { if (e.target === ov) close(); };
+  ov.classList.add('open');
+}
+
+function hwOpenComp(){
+  /* Банер після повернення ростка: «+N енергії за час, який ти провів у Хелловіні» + що це й за що */
+  const ov = document.getElementById('sproutInfoOverlay');
+  if (!ov || !hwEvent) return;
+  const comp = hwEvent.comp || HW_COMP_POINTS;
+  const now = sprout.points || 0, before = typeof hwEvent.compFrom === 'number' ? hwEvent.compFrom : Math.max(0, now - comp);
+  const stage = sproutStageIndex(now);
+  const lo = SPROUT_LEVEL_THRESHOLDS[Math.min(stage, SPROUT_MAX_STAGE)];
+  const hi = stage >= SPROUT_MAX_STAGE ? lo : SPROUT_LEVEL_THRESHOLDS[stage + 1];
+  const frac = v => hi > lo ? Math.max(0, Math.min(1, (v - lo) / (hi - lo))) : 1;
+  const days = Math.max(1, Math.round((HW_END.getTime() - HW_START.getTime()) / 86400000));
+  const dayWord = (days % 10 === 1 && days % 100 !== 11) ? 'день' : ((days % 10 >= 2 && days % 10 <= 4 && (days % 100 < 12 || days % 100 > 14)) ? 'дні' : 'днів');
+  const left = Math.max(0, hi - now);
+  const sparks = [[14, 66, 0], [80, 58, .7], [26, 30, 1.4], [70, 24, 2.0], [50, 14, .35]]
+    .map(([x, y, d]) => `<img class="hwc-spark" src="${SPROUT_BOLT_URL}" alt="" draggable="false" style="left:${x}%;top:${y}%;animation-delay:${d}s" />`).join('');
+  ov.innerHTML = `
+    <div class="sif-card hw hwc">
+      <div class="hwc-hero">
+        <div class="hwc-rays"></div><div class="hwc-glow"></div>
+        <img class="hwc-sprout" src="${makeFreshSproutUrl(stage)}" alt="" draggable="false" />
+        ${sparks}
+        <div class="hwc-chip">${sproutBoltImg('hwc-chip-bolt')}<b id="hwcNum">+0</b></div>
+      </div>
+      <div class="sif-title">Росток прокинувся з енергією!</div>
+      <div class="sif-sub hwc-sub">Поки ти варив зілля в котлі, росток ${days} ${dayWord} спав і не отримував бали. Щоб ти нічого не втратив, він дарує тобі <b>+${comp}</b>.</div>
+      <div class="hwc-bar">
+        <div class="hwc-bar-row"><span>Було <b>${before}</b></span><span class="up">Стало <b>${now}</b></span></div>
+        <div class="hwc-track"><div class="hwc-fill-old" style="width:${(frac(before) * 100).toFixed(1)}%"></div><div class="hwc-fill-new" id="hwcFill" style="width:${(frac(before) * 100).toFixed(1)}%"></div></div>
+        <div class="hwc-bar-row"><span>${stage >= SPROUT_MAX_STAGE ? 'Максимальний рівень' : `До наступного рівня ще ${left}`}</span></div>
+      </div>
+      <div class="sif-list">
+        <div class="sif-item"><div class="sif-ico i-orange">⚡</div><div><div class="sif-item-title">За що ці бали?</div><div class="sif-item-text">Це подарунок за час Хелловіну: на ці ${days} ${dayWord} ріст ростка стояв, а тепер він трохи наздоганяє.</div></div></div>
+        <div class="sif-item"><div class="sif-ico i-green">🎃</div><div><div class="sif-item-title">Котел нікуди не зник</div><div class="sif-item-text">Усі його скіни чекають в «Історії ростків».</div></div></div>
+      </div>
+      <button class="sif-btn" id="hwCompOk">Дякую, росток!</button>
+    </div>`;
+  let raf = 0, stopped = false;
+  const numEl = document.getElementById('hwcNum');
+  const t0 = performance.now() + 650;
+  const tick = (t) => {
+    if (stopped) return;
+    const k = Math.max(0, Math.min(1, (t - t0) / 1100));
+    numEl.textContent = '+' + Math.round(comp * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+  setTimeout(() => { const f = document.getElementById('hwcFill'); if (f) f.style.width = (frac(now) * 100).toFixed(1) + '%'; }, 60);
+  const close = () => {
+    stopped = true; cancelAnimationFrame(raf);
+    ov.classList.remove('open'); ov.innerHTML = ''; ov.onclick = null;
+    hwEvent.compPending = false; saveState();
+    try{ renderSproutBtn(); }catch(e){}
+  };
+  document.getElementById('hwCompOk').addEventListener('click', close);
   ov.onclick = (e) => { if (e.target === ov) close(); };
   ov.classList.add('open');
 }
@@ -19588,7 +19688,15 @@ setTimeout(() => checkEventReminder(), 1300);
   const WN_MOCK = '<div class="wn-mock2"></div><div class="wn-mock"><i class="t"></i><i></i><i style="width:80%"></i><i style="width:55%"></i><b></b></div>';
   const WN_PROF = '<div class="wn-prof"><div class="bn"></div><div class="av">В</div><div class="b"><i></i><em>@vlad_g</em></div></div>';
   const WN_TITLE = '<div style="display:flex;justify-content:center"><div class="pf-title" style="margin:0;font-size:38px;cursor:default"><span>#новачок</span></div></div>';
+  const WN_COMP = '<div style="display:flex;justify-content:center"><div style="display:flex;align-items:center;gap:8px;padding:12px 24px 12px 18px;border-radius:999px;background:linear-gradient(180deg,#FFC56E,#FF8A1F);color:#3A1400;font:800 40px Rubik,sans-serif;box-shadow:0 10px 30px rgba(255,130,30,.45)"><span style="font-size:34px">⚡</span>+75</div></div>';
   const WHATS_NEW = [
+    {
+      id: '2026-10-25-hw-comp',
+      date: '25 жовтня',
+      slides: [
+        { c:'#FFB62E', vis: WN_COMP, tag:'НОВЕ', title:'Енергія за час Хелловіну', text:'Поки котел варить зілля, росток спить і не росте. Коли івент закінчиться, він прокинеться з подарунком: +75 енергії. Покажемо банер, звідки вона взялась.' }
+      ]
+    },
     {
       id: '2026-10-25-titles',
       date: '25 жовтня',
