@@ -6355,12 +6355,14 @@ function hwOpenSkins(listArg, rareBase, canEquip, entry){
   const close = () => { ov.classList.remove('open'); ov.innerHTML = ''; ov.onclick = null; };
   const nameOf = i => (HW_SKINS[i] && HW_SKINS[i].name) ? HW_SKINS[i].name : 'Скін №' + (i + 1);
   const showGrid = () => {
+    try { if (owned > total && window.profileGrantTitle) window.profileGrantTitle('povelytel'); } catch(e){}
     ov.innerHTML = `
       <div class="hws-card" role="dialog" aria-modal="true">
         <div class="hws-head">
           <div><div class="hws-title">🎨 Скіни котла</div><div class="hws-sub">Зібрано ${owned} з ${total + 1} · рулетка кожні ${HW_SKIN_STEP} балів</div></div>
           <button class="hws-x" id="hwsX" aria-label="Закрити">✕</button>
         </div>
+        <div class="hws-rw" style="margin:0 0 14px"><div class="pf-title t-povelytel" style="margin-top:0;cursor:default" data-text="#повелительгарбузів"><span>#повелительгарбузів</span></div><div class="hws-sub">${owned > total ? 'Титул отримано' : 'Щоб отримати цей титул, збери всі скіни'}</div></div>
         <div class="hws-grid">
           <button class="hws-cell owned${eq() === -1 ? ' equipped' : ''}" data-i="-1" aria-label="Стандартний котел">
             ${eq() === -1 ? '<span class="hws-eq">✓</span>' : ''}
@@ -16592,6 +16594,7 @@ function sproutApplyCycleReset(){
 // Сам цикл скидається лише після підтвердження в діалозі (srdConfirm).
 function resetSproutCycle(){
   if (!sproutCanResetCycle()) return;
+  try { if (window.checkProfileTitles) window.checkProfileTitles(); } catch(e){}
   openSproutResetDialog();
 }
 
@@ -16924,6 +16927,7 @@ let sproutQuestListExpanded = false; // чи розгорнутий список
 
 function renderSproutOverlay(){
   ensureSproutCycleStartDate();
+  try { if (window.checkProfileTitles && sproutCanResetCycle()) window.checkProfileTitles(); } catch(e){}
   const wrap = document.getElementById('sproutModalWrap');
   const progress = sproutProgress();
   const stage = sproutStageIndex(progress);
@@ -17141,6 +17145,7 @@ function renderListsBtn(){
 
 // Оновлює вигляд кнопки-ростка в шапці: підсвічує та замінює на 🎁, якщо відкрито новий рівень
 function renderSproutBtn(){
+  try { if (window.checkProfileTitles && sproutCanResetCycle()) window.checkProfileTitles(); } catch(e){}
   const btn = document.getElementById('sproutBtn');
   if (!btn) return;
   const bonus = dailyBonusAvailable();
@@ -18979,6 +18984,36 @@ setTimeout(() => checkEventReminder(), 1300);
 .pf-name{font:700 28px/1.1 'Rubik','Inter',sans-serif;color:#fff;word-break:break-word;text-shadow:0 2px 14px rgba(0,0,0,.45)}
 .pf-user{display:inline-flex;align-items:center;margin-top:8px;padding:4px 12px;border-radius:999px;font:600 14px 'Inter',sans-serif;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:pointer}
 .pf-user.empty{color:var(--text-secondary);background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15)}
+.pf-title{--tg:linear-gradient(100deg,#E8A317 0%,#FFD450 25%,#FFF6C4 40%,#FFD450 55%,#E8A317 75%,#E8A317 100%);--to:#3A2406;position:relative;display:block;width:fit-content;max-width:100%;margin-top:7px;font:900 14px/1.2 'Montserrat','Rubik',sans-serif;letter-spacing:.02em;word-break:break-word;user-select:none;-webkit-user-select:none;isolation:isolate;cursor:pointer}
+.pf-title.t-old,.pf-title.t-povelytel{--tg:linear-gradient(100deg,#7CF5CF 0%,#8FC8FF 18%,#C18CFF 36%,#FF8FD6 52%,#FFF2FA 60%,#FF8FD6 68%,#C18CFF 82%,#7CF5CF 100%);--to:#1E1B33}
+.pf-title::before{content:attr(data-text);position:absolute;left:0;top:0;z-index:-1;color:var(--to);-webkit-text-stroke:3.5px var(--to);paint-order:stroke fill;text-shadow:0 2px 0 var(--to),0 3px 6px rgba(0,0,0,.4);pointer-events:none}
+.pf-title span{display:block;color:transparent;-webkit-text-fill-color:transparent;background-image:var(--tg);background-size:200% 100%;background-repeat:repeat-x;-webkit-background-clip:text;background-clip:text;will-change:background-position;animation:pfTitleShine 3.6s linear infinite}
+@keyframes pfTitleShine{from{background-position:200% 0}to{background-position:0 0}}
+@media (prefers-reduced-motion:reduce){.pf-title span{animation:none;background-position:60% 0}}
+.pf-award{position:fixed;inset:0;z-index:10050;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;background:radial-gradient(circle at 50% 44%,rgba(70,48,4,.96),rgba(6,6,12,.98) 66%);opacity:0;transition:opacity .35s ease;overflow:hidden}
+.pf-award.on{opacity:1}
+.pf-aw-rays{position:absolute;left:50%;top:44%;width:150vmax;height:150vmax;margin:-75vmax 0 0 -75vmax;background:repeating-conic-gradient(from 0deg,rgba(255,200,70,.16) 0 8deg,transparent 8deg 22deg);-webkit-mask-image:radial-gradient(circle,#000 0,transparent 42%);mask-image:radial-gradient(circle,#000 0,transparent 42%);animation:pfAwSpin 24s linear infinite;pointer-events:none}
+@keyframes pfAwSpin{to{transform:rotate(360deg)}}
+.pf-aw-kicker{position:relative;font:800 13px 'Montserrat','Rubik',sans-serif;letter-spacing:.28em;text-transform:uppercase;color:#FFD66B;opacity:0;animation:pfAwUp .5s .15s ease-out forwards}
+.pf-aw-t{position:relative;display:flex;justify-content:center;opacity:0;transform:scale(.2);animation:pfAwPop .75s .35s cubic-bezier(.2,1.5,.4,1) forwards}
+.pf-aw-t .pf-title{margin:0;font-size:34px;cursor:default}
+.pf-aw-t .pf-title::before{-webkit-text-stroke:7px var(--to);text-shadow:0 3px 0 var(--to),0 6px 14px rgba(0,0,0,.55)}
+@keyframes pfAwPop{0%{opacity:0;transform:scale(.2) rotate(-6deg)}60%{opacity:1;transform:scale(1.18) rotate(2deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes pfAwUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.pf-aw-sparks{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
+.pf-aw-sparks i{position:absolute;left:0;top:0;width:var(--sz);height:var(--sz);margin:calc(var(--sz) / -2);border-radius:50%;background:radial-gradient(circle,#FFF6C4,#FFC247);box-shadow:0 0 8px #FFC247;opacity:0;animation:pfAwSpark 1.1s var(--dl) ease-out .55s forwards}
+@keyframes pfAwSpark{0%{opacity:1;transform:rotate(var(--a)) translateX(0) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateX(var(--d)) scale(.2)}}
+.pf-aw-rule{position:relative;max-width:300px;text-align:center;font:500 13.5px/1.4 'Inter',sans-serif;color:rgba(255,255,255,.7);opacity:0;animation:pfAwUp .5s 1s ease-out forwards}
+.pf-aw-btns{position:relative;display:flex;gap:10px;margin-top:8px;width:min(320px,100%);opacity:0;animation:pfAwUp .5s 1.3s ease-out forwards}
+.pf-aw-btns .pf-btn{flex:1}
+@media (prefers-reduced-motion:reduce){.pf-aw-rays{animation:none}.pf-aw-sparks{display:none}}
+.pf-tlist{display:flex;flex-direction:column;gap:8px}
+.pf-tt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:14px;border:1px solid var(--card-border);background:var(--card);cursor:pointer}
+.pf-tt.on{border-color:#6C5CE7;background:rgba(108,92,231,.14)}
+.pf-tt.lock{cursor:default}.pf-tt.lock .pf-title{opacity:.4;filter:grayscale(.6)}
+.pf-tt .pf-title{margin-top:0;cursor:inherit}.pf-tt .pf-title span{animation:none}
+.pf-tt-l small{display:block;margin-top:5px;font-size:11.5px;color:var(--text-tertiary)}
+.pf-tt i{font-style:normal;font-weight:700;color:#8E80FF;width:18px;text-align:center}
 .pf-ring{flex:0 0 auto;padding:3px;border-radius:50%;background:rgba(255,255,255,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .pf-avatar{width:98px;height:98px;border-radius:50%;border:3px solid var(--bg);overflow:hidden;display:flex;align-items:center;justify-content:center;font:700 40px 'Rubik','Inter',sans-serif;color:#fff;background:linear-gradient(135deg,#6C5CE7,#3E9BFF)}
 .pf-avatar img{width:100%;height:100%;object-fit:cover;display:block}
@@ -19049,7 +19084,43 @@ setTimeout(() => checkEventReminder(), 1300);
 (function(){
   const PKEY = 'habits-profile-v1';
   const GRADS = ['linear-gradient(135deg,#6C5CE7,#3E9BFF)','linear-gradient(135deg,#FF6B5B,#FFB65A)','linear-gradient(135deg,#11998e,#38ef7d)','linear-gradient(135deg,#ff5f9e,#6C5CE7)','linear-gradient(135deg,#232526,#414345)','linear-gradient(135deg,#0f2027,#2c5364)'];
-  const DEF = { name:'', username:'', bio:'', city:'', birthday:'', avatar:'', banner:'', bannerGrad:0, createdAt:0, badgeAt:{} };
+  // Титули профілю. Новачок видається автоматично всім при створенні акаунта.
+  // Усі титули золоті. badge — id бейджа, що відкриває титул; check — власна умова.
+  const LAUNCH_END = new Date(2026, 9, 19, 23, 59, 59); // застосунок запущено 19.09.2026, «перший місяць» — до 19.10
+  const TITLES = {
+    novachok:   { id:'novachok',   name:'#новачок',      rule:'Видається автоматично всім' },
+    vrusli:     { id:'vrusli',     name:'#вруслі',       badge:'streak-3',      rule:'Серія 3 дні поспіль' },
+    nezupynnyi: { id:'nezupynnyi', name:'#незупинний',   badge:'streak-10',     rule:'Серія 10 днів поспіль' },
+    harakter:   { id:'harakter',   name:'#характер',     badge:'streak-50',     rule:'Серія 50 днів поспіль' },
+    hidrated:   { id:'hidrated',   name:'#гідратований', check:() => countWaterGoalDaysReached() >= 100, rule:'Досягти денної норми води 100 разів' },
+    knyzhnyi:   { id:'knyzhnyi',   name:'#книжнийчерв',  check:() => countReadBooks() >= 10, rule:'Прочитати 10 книг на книжковій полиці' },
+    legenda:    { id:'legenda',    name:'#легенда',      badge:'streak-100',    rule:'Серія 100 днів поспіль' },
+    zaliznyi:   { id:'zaliznyi',   name:'#залізний',     check:() => countPerfectNoFreezeDays() >= 100, rule:'100 ідеальних днів без жодного пропуску' },
+    zelenyi:    { id:'zelenyi',    name:'#зелений',      check:() => typeof sproutCanResetCycle === 'function' && sproutCanResetCycle(), anim:true, rule:'Пройти всі фази ростка — коли з\u2019являється можливість оновити цикл' },
+    hurman:     { id:'hurman',     name:'#гурман',       check:() => countTotalMealsLogged() >= 100, rule:'Відмітити 100 прийомів їжі загалом' },
+    lodovyk:    { id:'lodovyk',    name:'#льодовик',     check:() => countFrozenTimesActiveOnly() >= 100, rule:'Заморозити стрік 100 разів' },
+    pozytyvchyk:{ id:'pozytyvchyk',name:'#позитивчик',   check:() => countGreatMoodDays() >= 10, rule:'10 днів із настроєм «Чудово»' },
+    mvp:        { id:'mvp',        name:'#M.V.P.',       check:() => countTotalHabitCompletions() >= 500, rule:'Виконати 500 звичок загалом' },
+    povelytel:  { id:'povelytel',  name:'#повелительгарбузів', check:() => typeof hwOn === 'function' && hwOn() && typeof hwSkinsOwned === 'function' && hwSkinsOwned() >= HW_SKINS.length, rule:'Зібрати всі скіни котла в Хелловін-івенті 2026 (лише в івенті)' },
+    old:        { id:'old',        name:'#олд',          check:() => { const d = stats().since; return !!d && d <= LAUNCH_END; }, rule:'Почати користуватися в перший місяць після запуску (до 19 жовтня 2026)' }
+  };
+  const TITLE_ORDER = ['novachok','vrusli','nezupynnyi','harakter','hidrated','knyzhnyi','legenda','zaliznyi','zelenyi','hurman','lodovyk','pozytyvchyk','mvp','old','povelytel'];
+  // Які титули відкриті: збережені + ті, чия умова виконана. Нові одразу запам'ятовуємо.
+  function unlockedTitles(){
+    const set = new Set(['novachok'].concat(Array.isArray(P.titles) ? P.titles : []));
+    let ids = new Set();
+    try { ids = new Set(getBadgesState().filter(b => b.unlocked).map(b => b.id)); } catch(e){}
+    TITLE_ORDER.forEach(id => { const t = TITLES[id]; try { if ((t.badge && ids.has(t.badge)) || (t.check && t.check())) set.add(id); } catch(e){} });
+    const arr = TITLE_ORDER.filter(id => set.has(id));
+    const before = Array.isArray(P.titles) ? P.titles : [];
+    if (arr.length !== before.length) {
+      P.titles = arr; save(true);
+      arr.filter(id => !before.includes(id) && TITLES[id].anim).forEach(id => setTimeout(() => showTitleAward(id), 450));
+    }
+    return set;
+  }
+  const titleHtml = (t, extra) => `<div class="pf-title t-${t.id}"${extra || ''} data-text="${esc(t.name)}"><span>${esc(t.name)}</span></div>`;
+  const DEF = { name:'', username:'', bio:'', city:'', birthday:'', avatar:'', banner:'', bannerGrad:0, createdAt:0, badgeAt:{}, title:'novachok', titles:['novachok'] };
   let P = Object.assign({}, DEF);
   try { Object.assign(P, JSON.parse(localStorage.getItem(PKEY) || '{}')); } catch(e){}
   if (!P.createdAt){ P.createdAt = Date.now(); save(true); }
@@ -19146,6 +19217,7 @@ setTimeout(() => checkEventReminder(), 1300);
           <div class="pf-hero-info">
             <div class="pf-name">${esc(P.name || 'Новий користувач')}</div>
             ${P.username ? `<div class="pf-user" id="pfUserChip" title="Натисни, щоб скопіювати">@${esc(P.username)}</div>` : `<div class="pf-user empty" id="pfUserAdd">+ Додай нікнейм</div>`}
+            ${(() => { const un = unlockedTitles(); const t = (un.has(P.title) && TITLES[P.title]) || TITLES.novachok; return titleHtml(t, ' id="pfTitle"'); })()}
           </div>
           <div class="pf-ring"><div class="pf-avatar">${avatarHtml()}</div></div>
         </div>
@@ -19193,6 +19265,7 @@ setTimeout(() => checkEventReminder(), 1300);
       const b = rb.find(x => x.id === t.dataset.bid);
       if (b && typeof openBadgeUnlockOverlay === 'function') openBadgeUnlockOverlay(b);
     });
+    const tt = $('pfTitle'); if (tt) tt.onclick = openTitles;
     const be = $('pfBioEmpty'); if (be) be.onclick = openEdit;
     const ua = $('pfUserAdd'); if (ua) ua.onclick = openEdit;
     const uc = $('pfUserChip');
@@ -19408,6 +19481,56 @@ setTimeout(() => checkEventReminder(), 1300);
     };
   }
 
+  /* ---- Анімація видачі титулу ---- */
+  function showTitleAward(id){
+    const t = TITLES[id];
+    if (!t || document.getElementById('titleAwardOverlay')) return;
+    const ov = document.createElement('div');
+    ov.className = 'pf-award'; ov.id = 'titleAwardOverlay';
+    let sparks = '';
+    for (let i = 0; i < 28; i++) {
+      const a = (360 / 28) * i + Math.random() * 10, d = 110 + Math.random() * 120, dl = (Math.random() * .25).toFixed(2), sz = 4 + Math.random() * 6;
+      sparks += `<i style="--a:${a.toFixed(0)}deg;--d:${d.toFixed(0)}px;--dl:${dl}s;--sz:${sz.toFixed(1)}px"></i>`;
+    }
+    ov.innerHTML = `
+      <div class="pf-aw-rays"></div>
+      <div class="pf-aw-kicker">Новий титул!</div>
+      <div class="pf-aw-t"><div class="pf-aw-sparks">${sparks}</div>${titleHtml(t)}</div>
+      <div class="pf-aw-rule">${esc(t.rule)}</div>
+      <div class="pf-aw-btns"><button class="pf-btn" id="pfAwLater">Закрити</button><button class="pf-btn main" id="pfAwEquip">Одягнути</button></div>`;
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add('on'));
+    try { if (navigator.vibrate) navigator.vibrate([30, 40, 60]); } catch(e){}
+    const close = () => { ov.classList.remove('on'); setTimeout(() => ov.remove(), 350); };
+    ov.querySelector('#pfAwLater').onclick = close;
+    ov.querySelector('#pfAwEquip').onclick = () => { P.title = id; save(); try { render(); } catch(e){} status('Титул змінено'); close(); };
+  }
+  window.showTitleAward = showTitleAward;
+
+  /* ---- Вибір титулу: тап по титулу в профілі ---- */
+  function openTitles(){
+    if (document.getElementById('profileTitlesOverlay')) return;
+    const S = sheet('profileTitlesOverlay', `
+      <div class="pf-sh-top"><span></span><span>Титули · <b id="pfTCnt"></b></span><button class="ok" id="pfTClose">Готово</button></div>
+      <div class="pf-tlist" id="pfTList"></div>`);
+    const { $ } = S;
+    const paint = () => {
+      const un = unlockedTitles();
+      const cur = un.has(P.title) ? P.title : 'novachok';
+      $('pfTCnt').textContent = un.size + ' / ' + TITLE_ORDER.length;
+      $('pfTList').innerHTML = TITLE_ORDER.map(id => { const t = TITLES[id], ok = un.has(id);
+        return `<div class="pf-tt${ok ? '' : ' lock'}${ok && cur === id ? ' on' : ''}" data-id="${id}">
+          <div class="pf-tt-l">${titleHtml(t)}<small>${ok ? '' : '🔒 '}${esc(t.rule)}</small></div>
+          <i>${ok && cur === id ? '✓' : ''}</i></div>`; }).join('');
+    };
+    paint();
+    $('pfTClose').onclick = S.close;
+    $('pfTList').onclick = e => {
+      const r = e.target.closest('.pf-tt'); if (!r || r.classList.contains('lock')) return;
+      P.title = r.dataset.id; save(); render(); status('Титул змінено'); S.close();
+    };
+  }
+
   /* ---- Резервна копія: усі дані трекера в один файл ---- */
   function openBackup(){
     if (document.getElementById('profileBackupOverlay')) return;
@@ -19450,6 +19573,9 @@ setTimeout(() => checkEventReminder(), 1300);
   }
 
   window.renderProfile = render;
+  window.checkProfileTitles = unlockedTitles;
+  // Видати титул напряму (без перевірки умови) — коли подію вже зафіксовано в іншому місці.
+  window.profileGrantTitle = id => { try { if (TITLES[id] && !(P.titles || []).includes(id)) { P.titles = TITLE_ORDER.filter(x => x === id || (P.titles || []).includes(x) || x === 'novachok'); save(true); } } catch(e){} };
   render();
 })();
 </script>
