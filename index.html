@@ -18986,8 +18986,7 @@ setTimeout(() => checkEventReminder(), 1300);
 .pf-user.empty{color:var(--text-secondary);background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15)}
 .pf-title{--tg:linear-gradient(100deg,#E8A317 0%,#FFD450 25%,#FFF6C4 40%,#FFD450 55%,#E8A317 75%,#E8A317 100%);--to:#3A2406;position:relative;display:block;width:fit-content;max-width:100%;margin-top:7px;font:900 14px/1.2 'Montserrat','Rubik',sans-serif;letter-spacing:.02em;word-break:break-word;user-select:none;-webkit-user-select:none;isolation:isolate;cursor:pointer}
 .pf-title.t-old,.pf-title.t-povelytel{--tg:linear-gradient(100deg,#7CF5CF 0%,#8FC8FF 18%,#C18CFF 36%,#FF8FD6 52%,#FFF2FA 60%,#FF8FD6 68%,#C18CFF 82%,#7CF5CF 100%);--to:#1E1B33}
-.pf-title::before{content:attr(data-text);position:absolute;left:0;top:0;z-index:-1;color:var(--to);-webkit-text-stroke:3.5px var(--to);paint-order:stroke fill;text-shadow:0 2px 0 var(--to),0 3px 6px rgba(0,0,0,.4);pointer-events:none}
-.pf-title span{display:block;color:transparent;-webkit-text-fill-color:transparent;background-image:var(--tg);background-size:200% 100%;background-repeat:repeat-x;-webkit-background-clip:text;background-clip:text;will-change:background-position;animation:pfTitleShine 3.6s linear infinite}
+.pf-title span{display:block;color:transparent;-webkit-text-fill-color:transparent;background-image:var(--tg);background-size:200% 100%;background-repeat:repeat-x;-webkit-background-clip:text;background-clip:text;animation:pfTitleShine 3.6s linear infinite}
 @keyframes pfTitleShine{from{background-position:200% 0}to{background-position:0 0}}
 @media (prefers-reduced-motion:reduce){.pf-title span{animation:none;background-position:60% 0}}
 .pf-award{position:fixed;inset:0;z-index:10050;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;background:radial-gradient(circle at 50% 44%,rgba(70,48,4,.96),rgba(6,6,12,.98) 66%);opacity:0;transition:opacity .35s ease;overflow:hidden}
@@ -18997,7 +18996,6 @@ setTimeout(() => checkEventReminder(), 1300);
 .pf-aw-kicker{position:relative;font:800 13px 'Montserrat','Rubik',sans-serif;letter-spacing:.28em;text-transform:uppercase;color:#FFD66B;opacity:0;animation:pfAwUp .5s .15s ease-out forwards}
 .pf-aw-t{position:relative;display:flex;justify-content:center;opacity:0;transform:scale(.2);animation:pfAwPop .75s .35s cubic-bezier(.2,1.5,.4,1) forwards}
 .pf-aw-t .pf-title{margin:0;font-size:34px;cursor:default}
-.pf-aw-t .pf-title::before{-webkit-text-stroke:7px var(--to);text-shadow:0 3px 0 var(--to),0 6px 14px rgba(0,0,0,.55)}
 @keyframes pfAwPop{0%{opacity:0;transform:scale(.2) rotate(-6deg)}60%{opacity:1;transform:scale(1.18) rotate(2deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
 @keyframes pfAwUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .pf-aw-sparks{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
@@ -19010,8 +19008,8 @@ setTimeout(() => checkEventReminder(), 1300);
 .pf-tlist{display:flex;flex-direction:column;gap:8px}
 .pf-tt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:14px;border:1px solid var(--card-border);background:var(--card);cursor:pointer}
 .pf-tt.on{border-color:#6C5CE7;background:rgba(108,92,231,.14)}
-.pf-tt.lock{cursor:default}.pf-tt.lock .pf-title{opacity:.4;filter:grayscale(.6)}
-.pf-tt .pf-title{margin-top:0;cursor:inherit}.pf-tt .pf-title span{animation:none}
+.pf-tt.lock{cursor:default}.pf-tt.lock .pf-title span{opacity:.45}
+.pf-tt .pf-title{margin-top:0;cursor:inherit}.pf-tt .pf-title span{animation:none;background-position:0 0}
 .pf-tt-l small{display:block;margin-top:5px;font-size:11.5px;color:var(--text-tertiary)}
 .pf-tt i{font-style:normal;font-weight:700;color:#8E80FF;width:18px;text-align:center}
 .pf-ring{flex:0 0 auto;padding:3px;border-radius:50%;background:rgba(255,255,255,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
