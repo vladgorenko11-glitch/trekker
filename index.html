@@ -4237,6 +4237,123 @@
   .movie-suggest-year { font-size: 12px; color: var(--text-tertiary); margin-top: 1px; }
 
 
+
+  /* ---------- Фільми: картки-постери ---------- */
+  .movie-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .movie-card {
+    position: relative; aspect-ratio: 2 / 3; border-radius: 12px; overflow: hidden; cursor: pointer;
+    background: var(--mc-bg, linear-gradient(160deg, #3A2470, #1A1230));
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.4);
+    transition: transform .14s ease;
+  }
+  .movie-card:active { transform: scale(0.97); }
+  .movie-card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .movie-card-empty {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 34px; padding-bottom: 30px; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.45));
+  }
+  .movie-card-shade {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 7px 7px;
+    background: linear-gradient(180deg, transparent 0%, rgba(8,6,16,0.82) 45%, rgba(8,6,16,0.96) 100%);
+  }
+  .movie-card-title {
+    font-family: 'Rubik', sans-serif; font-size: 11.5px; font-weight: 700; line-height: 1.2; color: #fff;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;
+  }
+  .movie-card-meta { font-size: 10px; color: rgba(255,255,255,0.62); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .movie-card-stars { display: flex; gap: 1px; margin-top: 5px; }
+  .movie-card-stars svg { width: 10px; height: 10px; }
+  .movie-card-stars .star-filled { color: #FFC94D; }
+  .movie-card-stars .star-empty { color: rgba(255,255,255,0.35); }
+  .movie-card-imdb {
+    display: inline-flex; align-items: center; gap: 3px; align-self: flex-start;
+    background: rgba(10,8,18,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    border-radius: 6px; padding: 2px 5px 2px 2px; font-size: 10px; font-weight: 700; color: #fff;
+  }
+  .movie-card-badges { position: absolute; top: 6px; left: 6px; right: 38px; display: flex; flex-direction: column; gap: 4px; }
+  .movie-card-soon { align-self: flex-start; background: linear-gradient(135deg, #FF8A2B, #E8452A); color: #fff; font-size: 10px; font-weight: 800; padding: 3px 6px; border-radius: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.35); }
+  .movie-card-soon.out { background: linear-gradient(135deg, #34C759, #1FA58A); }
+  .movie-card-imdb .imdb-tag { background: #F5C518; color: #000; font-weight: 800; font-size: 9.5px; padding: 1px 3px; border-radius: 3px; }
+  .movie-card-check {
+    position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(10,8,18,0.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    border: 1.5px solid rgba(255,255,255,0.35); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .movie-card-check svg { width: 12px; height: 12px; }
+  .movie-card-check.checked { background: linear-gradient(135deg, #6F2FFF, #DA26ED); border-color: transparent; }
+  .movie-card.done .movie-card-img, .movie-card.done .movie-card-empty { filter: saturate(0.75); }
+  .movie-add-card {
+    aspect-ratio: 2 / 3; border-radius: 12px; border: 1.5px dashed rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.03); color: var(--text-secondary);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer; font-size: 11px; font-weight: 600; text-align: center; padding: 0 6px;
+  }
+  .movie-add-card .plus-ico { width: 30px; height: 30px; font-size: 18px; }
+  .movie-add-form {
+    padding: 12px; border-radius: 18px; margin-bottom: 12px;
+    background: linear-gradient(165deg, #1F2330 0%, #171A24 100%); border: 1px solid rgba(255,255,255,0.06);
+  }
+  .movie-add-form .movie-add-row { display: flex; gap: 12px; align-items: flex-start; }
+  .movie-add-form .movie-add-poster {
+    width: 44px; height: 66px; border-radius: 8px; flex: 0 0 auto; overflow: hidden; opacity: .5;
+    background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 24px;
+  }
+  .movie-add-form .movie-add-poster img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* ---------- Фільми: детальна картка ---------- */
+  .movie-modal { max-width: 390px; padding: 0 0 24px; overflow-x: hidden; background: var(--bg-elevated); }
+  .movie-hero { position: relative; height: 196px; background: var(--mc-bg, linear-gradient(160deg, #3A2470, #1A1230)); overflow: hidden; }
+  .movie-hero-blur { position: absolute; inset: -20px; background-size: cover; background-position: center; filter: blur(22px) brightness(0.65); transform: scale(1.1); }
+  .movie-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(20,23,31,0.0) 55%, var(--bg-elevated) 100%); }
+  .movie-hero-close {
+    position: absolute; top: 14px; right: 14px; z-index: 3; width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(10,8,18,0.6); border: 1px solid rgba(255,255,255,0.18); color: #fff;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .movie-hero-close svg { width: 17px; height: 17px; }
+  .movie-hero-poster {
+    position: absolute; z-index: 2; left: 50%; top: 18px; transform: translateX(-50%);
+    width: 100px; height: 150px; border-radius: 14px; overflow: hidden; cursor: pointer;
+    background: var(--mc-bg, linear-gradient(160deg, #3A2470, #1A1230));
+    box-shadow: 0 14px 30px rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.14);
+    display: flex; align-items: center; justify-content: center; font-size: 52px;
+  }
+  .movie-hero-poster img { width: 100%; height: 100%; object-fit: cover; }
+  .movie-hero-poster .movie-poster-edit {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 0 6px; text-align: center;
+    font-size: 11px; font-weight: 700; color: #fff; background: linear-gradient(180deg, transparent, rgba(0,0,0,0.75));
+  }
+  .movie-body { padding: 2px 16px 0; }
+  .movie-title-input {
+    width: 100%; background: transparent; border: none; outline: none; text-align: center;
+    font-family: 'Rubik', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary); padding: 4px 0;
+  }
+  .movie-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 6px 0 14px; min-height: 8px; }
+  .movie-chip { font-size: 12px; font-weight: 600; color: var(--text-secondary); background: rgba(255,255,255,0.06); border-radius: 100px; padding: 4px 10px; }
+  .movie-chip.imdb { background: #F5C518; color: #000; font-weight: 800; }
+  .movie-field-label { font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .5px; margin: 14px 2px 6px; }
+  .movie-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .movie-input, .movie-textarea {
+    width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+    color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 13px; padding: 8px 10px; outline: none;
+  }
+  .movie-input:focus, .movie-textarea:focus { border-color: #8B6BFF; }
+  .movie-textarea { resize: none; line-height: 1.45; min-height: 56px; }
+  .movie-rate-row { display: flex; justify-content: center; gap: 8px; margin-top: 4px; }
+  .movie-rate-row .rating-star { width: 28px; height: 28px; }
+  .movie-soon-box { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: rgba(255,138,43,0.1); border: 1px solid rgba(255,138,43,0.3); }
+  .movie-soon-box .movie-field-label { margin: 0 0 6px; color: #FFA458; }
+  .movie-soon-row { display: flex; gap: 8px; align-items: center; }
+  .movie-soon-row .movie-input { flex: 1; color-scheme: dark; }
+  .movie-soon-clear { font-size: 12px; font-weight: 600; color: #A98CFF; cursor: pointer; white-space: nowrap; }
+  .movie-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .movie-actions .btn { flex: 1; }
+  .movie-link-row { display: flex; justify-content: center; gap: 18px; margin-top: 14px; }
+  .movie-link { font-size: 12.5px; font-weight: 600; color: #A98CFF; cursor: pointer; }
+  .movie-link.danger { color: #FF6B5B; }
+
   /* ---------- Рейтинг перегляду ---------- */
   .rating-modal { max-width: 400px; text-align: center; }
   .rating-item-name {
@@ -5959,6 +6076,12 @@ setTimeout(rm,hw?3600:2500)})();</script>
     <div id="bookCardBody"></div>
   </div>
 </div>
+
+<!-- Оверлей детальної картки фільму -->
+<div class="overlay" id="movieOverlay">
+  <div class="modal movie-modal" id="movieModal"></div>
+</div>
+<input type="file" accept="image/*" id="moviePosterFile" style="display:none">
 
 <!-- Оверлей оцінки переглянутого пункту списку -->
 <div class="overlay" id="ratingOverlay">
@@ -12659,7 +12782,13 @@ function commitNewListItem(listId, text){
       rating: 0,
       poster: movie ? movie.poster : null,
       imdbRating: movie ? movie.imdbRating : null,
-      year: movie ? movie.year : null
+      year: movie ? movie.year : null,
+      imdbID: movie ? movie.imdbID : null,
+      genre: movie ? movie.genre : '',
+      director: movie ? movie.director : '',
+      runtime: movie ? movie.runtime : '',
+      plot: movie ? movie.plot : '',
+      note: ''
     });
     saveState();
   }
@@ -12695,6 +12824,8 @@ async function fetchOmdbDetails(imdbID){
   return null;
 }
 
+function omdbVal(d, k){ return (d && d[k] && d[k] !== 'N/A') ? String(d[k]) : ''; }
+
 function renderMovieSuggestions(results){
   const box = document.getElementById('movieSuggestList');
   if (!box) return;
@@ -12728,7 +12859,12 @@ function renderMovieSuggestions(results){
         title: el.dataset.title,
         poster: el.dataset.poster || null,
         year: el.dataset.year || null,
-        imdbRating: (details && details.imdbRating && details.imdbRating !== 'N/A') ? details.imdbRating : null
+        imdbID: el.dataset.imdbid || null,
+        imdbRating: (details && details.imdbRating && details.imdbRating !== 'N/A') ? details.imdbRating : null,
+        genre: omdbVal(details, 'Genre'),
+        director: omdbVal(details, 'Director'),
+        runtime: omdbVal(details, 'Runtime'),
+        plot: omdbVal(details, 'Plot')
       };
       input.focus();
     });
@@ -12799,6 +12935,7 @@ function saveItemRating(listId, itemId, rating){
   item.rating = rating;
   saveState();
   renderListsBody();
+  if (movieModalCtx) renderMovieModal();
 }
 
 function deleteListItem(listId, itemId){
@@ -12812,6 +12949,237 @@ function deleteListItem(listId, itemId){
 function renderListsButtonBadge(){
   // Резерв на майбутнє (наприклад, лічильник невиконаних пунктів) — поки що не показуємо бейдж.
 }
+
+
+/* ===== Фільми: картки-постери + детальна картка ===== */
+const MOVIE_GRADIENTS = [
+  'linear-gradient(160deg,#5B2FD0,#1B1036)', 'linear-gradient(160deg,#C0307A,#2A0F26)',
+  'linear-gradient(160deg,#1F6FD0,#0E1A36)', 'linear-gradient(160deg,#D0702F,#2E1409)',
+  'linear-gradient(160deg,#1FA58A,#0A2A26)', 'linear-gradient(160deg,#7A30C0,#1E0F30)'
+];
+function movieGradientFor(id){
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return MOVIE_GRADIENTS[h % MOVIE_GRADIENTS.length];
+}
+function movieDaysUntil(str){
+  if (!str) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2]-1, +m[3]);
+  const t = new Date(); t.setHours(0,0,0,0);
+  return Math.round((d - t) / 86400000);
+}
+function movieSoonLabel(i){
+  const n = movieDaysUntil(i.releaseDate);
+  if (n === null || i.done) return null;
+  if (n > 1) return { text: '⏳ ' + n + ' дн.', out: false, long: 'Вийде через ' + n + ' дн.' };
+  if (n === 1) return { text: '⏳ завтра', out: false, long: 'Вийде завтра' };
+  if (n === 0) return { text: '🎉 сьогодні', out: true, long: 'Виходить сьогодні!' };
+  return { text: '✅ вийшов', out: true, long: 'Уже вийшов — можна дивитись' };
+}
+function movieCardHtml(i){
+  const soon = movieSoonLabel(i);
+  const stars = (i.done && i.rating > 0)
+    ? `<div class="movie-card-stars">${[1,2,3,4,5].map(s => `<span class="${s <= i.rating ? 'star-filled' : 'star-empty'}">${starIconHtml(s <= i.rating)}</span>`).join('')}</div>` : '';
+  const metaParts = [i.kind === 'series' ? 'Серіал' : '', i.year, (i.genre || '').split(',')[0].trim()].filter(Boolean);
+  return `
+    <div class="movie-card${i.done ? ' done' : ''}" data-action="open-movie" data-id="${i.id}" style="--mc-bg:${movieGradientFor(i.id)}">
+      ${i.poster ? `<img class="movie-card-img" src="${escapeHtml(i.poster)}" alt="" loading="lazy">` : `<div class="movie-card-empty">${listPosterFor(i.id)}</div>`}
+      <div class="movie-card-badges">
+        ${soon ? `<div class="movie-card-soon${soon.out ? ' out' : ''}">${soon.text}</div>` : ''}
+        ${i.imdbRating ? `<div class="movie-card-imdb"><span class="imdb-tag">IMDb</span>${escapeHtml(i.imdbRating)}</div>` : ''}
+      </div>
+      <div class="movie-card-check${i.done ? ' checked' : ''}" data-action="toggle-item" data-id="${i.id}">
+        ${i.done ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' : ''}
+      </div>
+      <div class="movie-card-shade">
+        <div class="movie-card-title">${escapeHtml(i.text)}</div>
+        ${metaParts.length ? `<div class="movie-card-meta">${escapeHtml(metaParts.join(' · '))}</div>` : ''}
+        ${stars}
+      </div>
+    </div>`;
+}
+function wireMovieCards(body, list){
+  body.querySelectorAll('[data-action="toggle-item"]').forEach(el => {
+    el.addEventListener('click', (e) => { e.stopPropagation(); toggleListItem(list.id, el.dataset.id); });
+  });
+  body.querySelectorAll('[data-action="open-movie"]').forEach(el => {
+    el.addEventListener('click', () => openMovieModal(list.id, el.dataset.id));
+  });
+}
+
+let movieModalCtx = null; // { listId, itemId }
+let movieDraftPoster = undefined; // undefined = без змін, null = прибрати, string = нова картинка
+
+function getMovieItem(){
+  if (!movieModalCtx) return null;
+  const list = lists.find(l => l.id === movieModalCtx.listId);
+  const item = list && list.items.find(i => i.id === movieModalCtx.itemId);
+  return item ? { list, item } : null;
+}
+function openMovieModal(listId, itemId){
+  movieModalCtx = { listId, itemId };
+  movieDraftPoster = undefined;
+  renderMovieModal();
+  document.getElementById('movieOverlay').classList.add('open');
+}
+function closeMovieModal(){
+  movieModalCtx = null;
+  movieDraftPoster = undefined;
+  document.getElementById('movieOverlay').classList.remove('open');
+}
+function currentMoviePoster(item){
+  return movieDraftPoster === undefined ? item.poster : movieDraftPoster;
+}
+function renderMovieModal(){
+  const found = getMovieItem();
+  if (!found){ closeMovieModal(); return; }
+  const { item } = found;
+  const poster = currentMoviePoster(item);
+  const modal = document.getElementById('movieModal');
+  const chips = [];
+  const soonL = movieSoonLabel(item);
+  if (soonL) chips.unshift(`<span class="movie-chip" style="background:rgba(255,138,43,0.18);color:#FFA458">${soonL.long}</span>`);
+  if (item.imdbRating) chips.push(`<span class="movie-chip imdb">IMDb ${escapeHtml(item.imdbRating)}</span>`);
+  if (item.year) chips.push(`<span class="movie-chip">${escapeHtml(item.year)}</span>`);
+  if (item.runtime) chips.push(`<span class="movie-chip">${escapeHtml(item.runtime)}</span>`);
+  (item.genre || '').split(',').map(g => g.trim()).filter(Boolean).slice(0, 3).forEach(g => chips.push(`<span class="movie-chip">${escapeHtml(g)}</span>`));
+  const cur = item.rating || 0;
+  modal.innerHTML = `
+    <div class="movie-hero" style="--mc-bg:${movieGradientFor(item.id)}">
+      ${poster ? `<div class="movie-hero-blur" style="background-image:url('${escapeHtml(poster)}')"></div>` : ''}
+      <div class="movie-hero-close" id="movieCloseBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></div>
+      <div class="movie-hero-poster" id="moviePosterBtn">
+        ${poster ? `<img src="${escapeHtml(poster)}" alt="">` : `<span>${listPosterFor(item.id)}</span>`}
+        <div class="movie-poster-edit">${poster ? 'Змінити' : '+ Додати картинку'}</div>
+      </div>
+    </div>
+    <div class="movie-body">
+      <input class="movie-title-input" id="movieTitleInput" maxlength="80" value="${escapeHtml(item.text)}" placeholder="Назва фільму">
+      <div class="movie-chips">${chips.join('')}</div>
+
+      <div class="movie-soon-box">
+        <div class="movie-field-label">⏳ Очікування прем'єри</div>
+        <div class="movie-soon-row">
+          <select class="movie-input" id="movieKind" style="flex:0 0 96px;">
+            <option value="movie"${item.kind === 'series' ? '' : ' selected'}>Фільм</option>
+            <option value="series"${item.kind === 'series' ? ' selected' : ''}>Серіал</option>
+          </select>
+          <input class="movie-input" type="date" id="movieRelease" value="${escapeHtml(item.releaseDate || '')}">
+          ${item.releaseDate ? '<span class="movie-soon-clear" id="movieReleaseClear">Скинути</span>' : ''}
+        </div>
+      </div>
+
+      <div class="movie-field-label">Твоя оцінка</div>
+      <div class="movie-rate-row" id="movieRateRow">
+        ${[1,2,3,4,5].map(n => `<div class="rating-star${n <= cur ? ' filled' : ''}" data-value="${n}">${starIconHtml(n <= cur)}</div>`).join('')}
+      </div>
+
+      <div class="movie-field-grid">
+        <div><div class="movie-field-label">Рік</div><input class="movie-input" id="movieYear" maxlength="9" value="${escapeHtml(item.year || '')}" placeholder="2024"></div>
+        <div><div class="movie-field-label">Тривалість</div><input class="movie-input" id="movieRuntime" maxlength="20" value="${escapeHtml(item.runtime || '')}" placeholder="120 min"></div>
+        <div><div class="movie-field-label">Жанр</div><input class="movie-input" id="movieGenre" maxlength="60" value="${escapeHtml(item.genre || '')}" placeholder="Драма, Комедія"></div>
+        <div><div class="movie-field-label">Режисер</div><input class="movie-input" id="movieDirector" maxlength="60" value="${escapeHtml(item.director || '')}" placeholder="—"></div>
+      </div>
+
+      <div class="movie-field-label">Опис</div>
+      <textarea class="movie-textarea" id="moviePlot" maxlength="600" placeholder="Про що фільм…">${escapeHtml(item.plot || '')}</textarea>
+
+      <div class="movie-field-label">Мої нотатки</div>
+      <textarea class="movie-textarea" id="movieNote" maxlength="600" placeholder="Враження, з ким дивитись, де знайти…">${escapeHtml(item.note || '')}</textarea>
+
+      <div class="movie-actions">
+        <button class="btn btn-secondary" id="movieDoneBtn" type="button">${item.done ? 'Повернути в «Хочу»' : '✓ Переглянуто'}</button>
+        <button class="btn btn-primary" id="movieSaveBtn" type="button">Зберегти</button>
+      </div>
+      <div class="movie-link-row">
+        ${poster ? '<span class="movie-link" id="moviePosterRemove">Прибрати картинку</span>' : ''}
+        <span class="movie-link danger" id="movieDeleteBtn">Видалити фільм</span>
+      </div>
+    </div>`;
+
+  document.getElementById('movieCloseBtn').addEventListener('click', closeMovieModal);
+  const rc = document.getElementById('movieReleaseClear');
+  if (rc) rc.addEventListener('click', () => { collectMovieFields(); item.releaseDate = ''; saveState(); renderMovieModal(); renderListsBody(); });
+  document.getElementById('moviePosterBtn').addEventListener('click', () => document.getElementById('moviePosterFile').click());
+  const rm = document.getElementById('moviePosterRemove');
+  if (rm) rm.addEventListener('click', () => { collectMovieFields(); movieDraftPoster = null; renderMovieModal(); });
+  document.getElementById('movieRateRow').querySelectorAll('.rating-star').forEach(el => {
+    el.addEventListener('click', () => {
+      collectMovieFields();
+      const v = Number(el.dataset.value);
+      item.rating = (item.rating === v) ? 0 : v;
+      saveState();
+      renderMovieModal();
+      renderListsBody();
+    });
+  });
+  document.getElementById('movieSaveBtn').addEventListener('click', () => { collectMovieFields(true); closeMovieModal(); });
+  document.getElementById('movieDoneBtn').addEventListener('click', () => {
+    collectMovieFields(true);
+    const { list } = found;
+    const wasDone = item.done;
+    toggleListItem(list.id, item.id);
+    if (!wasDone) closeMovieModal(); else renderMovieModal();
+  });
+  document.getElementById('movieDeleteBtn').addEventListener('click', () => {
+    if (confirm('Видалити «' + item.text + '» зі списку?')){
+      const { list } = found;
+      closeMovieModal();
+      deleteListItem(list.id, item.id);
+    }
+  });
+}
+// Зчитує поля форми в пункт. commit=true — зберегти й перемалювати список.
+function collectMovieFields(commit){
+  const found = getMovieItem();
+  if (!found) return;
+  const { item } = found;
+  const val = id => { const el = document.getElementById(id); return el ? el.value : null; };
+  const t = val('movieTitleInput');
+  if (t !== null && t.trim()) item.text = t.trim().slice(0, 80);
+  const map = { movieYear: 'year', movieRuntime: 'runtime', movieGenre: 'genre', movieDirector: 'director', moviePlot: 'plot', movieNote: 'note' };
+  Object.keys(map).forEach(id => { const v = val(id); if (v !== null) item[map[id]] = v.trim(); });
+  const rel = val('movieRelease'); if (rel !== null) item.releaseDate = rel;
+  const kind = val('movieKind'); if (kind !== null) item.kind = kind;
+  if (movieDraftPoster !== undefined){ item.poster = movieDraftPoster; movieDraftPoster = undefined; }
+  if (commit){ saveState(); renderListsBody(); }
+}
+// Стискаємо картинку, щоб localStorage не переповнювався
+function resizeImageFile(file, maxW, maxH, quality){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const k = Math.min(1, maxW / img.width, maxH / img.height);
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL('image/jpeg', quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+document.getElementById('moviePosterFile').addEventListener('change', async (e) => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file || !movieModalCtx) return;
+  try{
+    const data = await resizeImageFile(file, 480, 720, 0.82);
+    collectMovieFields();
+    movieDraftPoster = data;
+    renderMovieModal();
+  } catch(err){ alert('Не вдалося прочитати картинку.'); }
+});
+document.getElementById('movieOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'movieOverlay'){ collectMovieFields(true); closeMovieModal(); }
+});
 
 function listCardHtml(list){
   const total = list.items.length;
@@ -12998,7 +13366,11 @@ function renderListDetail(list){
   const pending = list.items.filter(i => !i.done);
   const done = list.items.filter(i => i.done);
 
-  if (pending.length){
+  if (isMoviesList){
+    if (pending.length){
+      html += `<div class="movie-grid">${pending.map(movieCardHtml).join('')}${listItemAdding ? '' : `<div class="movie-add-card" id="listItemAddBtn"><div class="plus-ico">+</div><span>Додати фільм</span></div>`}</div>`;
+    }
+  } else if (pending.length){
     html += pending.map(listItemRowHtml).join('');
   }
   if (done.length){
@@ -13007,18 +13379,22 @@ function renderListDetail(list){
 
   if (listItemAdding){
     html += `
-      <div class="list-item-row" style="align-items:flex-start;">
-        <div class="list-item-poster" id="listItemAddPoster" style="opacity:.4;"><span>🎬</span></div>
+      <div class="${isMoviesList ? 'movie-add-form' : 'list-item-row'}" style="align-items:flex-start;">
+        <div class="${isMoviesList ? 'movie-add-row' : ''}" style="${isMoviesList ? '' : 'display:contents;'}">
+        ${isMoviesList
+          ? `<div class="movie-add-poster" id="listItemAddPoster"><span>🎬</span></div>`
+          : `<div class="list-item-poster" id="listItemAddPoster" style="opacity:.4;"><span>🎬</span></div>`}
         <div style="flex:1; position:relative;">
           <input class="quick-task-input" id="listItemInput" style="width:100%;" maxlength="80" placeholder="Назва фільму…" autocomplete="off">
           <div class="movie-suggest-list" id="movieSuggestList"></div>
         </div>
+        </div>
       </div>`;
-  } else {
+  } else if (!(isMoviesList && pending.length)) {
     html += `
       <div class="lists-add-row" id="listItemAddBtn" style="margin-top:4px;">
         <div class="plus-ico">+</div>
-        <span>Додати пункт</span>
+        <span>${isMoviesList ? 'Додати фільм' : 'Додати пункт'}</span>
       </div>`;
   }
 
@@ -13037,7 +13413,7 @@ function renderListDetail(list){
     });
   }
 
-  wireListItemRowActions(body, list);
+  if (isMoviesList) wireMovieCards(body, list); else wireListItemRowActions(body, list);
   const watchedFolderEl = document.getElementById('listsBody').querySelector('[data-action="open-watched"]');
   if (watchedFolderEl){
     watchedFolderEl.addEventListener('click', () => openWatchedFolder(watchedFolderEl.dataset.id));
@@ -13101,8 +13477,9 @@ function renderWatchedDetail(list){
       </div>
     </div>`;
 
+  const grid = list.id === DEFAULT_MOVIES_LIST_ID;
   if (done.length){
-    html += done.map(listItemRowHtml).join('');
+    html += grid ? `<div class="movie-grid">${done.map(movieCardHtml).join('')}</div>` : done.map(listItemRowHtml).join('');
   } else {
     html += `<div class="lists-empty">Тут з'являться переглянуті фільми.</div>`;
   }
@@ -13114,7 +13491,7 @@ function renderWatchedDetail(list){
     renderListsBody();
   });
 
-  wireListItemRowActions(body, list);
+  if (grid) wireMovieCards(body, list); else wireListItemRowActions(body, list);
 }
 
 let lastListsScreen = null;
