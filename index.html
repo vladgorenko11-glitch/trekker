@@ -4240,32 +4240,27 @@
 
   /* ---------- Фільми: картки-постери ---------- */
   .movie-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
-  .movie-card {
-    position: relative; aspect-ratio: 2 / 3; border-radius: 12px; overflow: hidden; cursor: pointer;
-    background: var(--mc-bg, linear-gradient(160deg, #3A2470, #1A1230));
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 10px 22px rgba(0,0,0,0.4);
-    transition: transform .14s ease;
-  }
+  .movie-card { position: relative; cursor: pointer; transition: transform .14s ease; min-width: 0; }
   .movie-card:active { transform: scale(0.97); }
+  .movie-card-poster {
+    position: relative; aspect-ratio: 2 / 3; border-radius: 12px; overflow: hidden;
+    background: var(--mc-bg, linear-gradient(160deg, #3A2470, #1A1230));
+  }
+  .movie-card-info { padding: 6px 2px 0; }
   .movie-card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .movie-card-empty {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 34px; padding-bottom: 30px; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.45));
-  }
-  .movie-card-shade {
-    position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 7px 7px;
-    background: linear-gradient(180deg, transparent 0%, rgba(8,6,16,0.82) 45%, rgba(8,6,16,0.96) 100%);
+    font-size: 38px; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.45));
   }
   .movie-card-title {
-    font-family: 'Rubik', sans-serif; font-size: 11.5px; font-weight: 700; line-height: 1.2; color: #fff;
+    font-family: 'Rubik', sans-serif; font-size: 11.5px; font-weight: 700; line-height: 1.2; color: var(--text-primary);
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;
   }
-  .movie-card-meta { font-size: 10px; color: rgba(255,255,255,0.62); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .movie-card-meta { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .movie-card-stars { display: flex; gap: 1px; margin-top: 5px; }
   .movie-card-stars svg { width: 10px; height: 10px; }
   .movie-card-stars .star-filled { color: #FFC94D; }
-  .movie-card-stars .star-empty { color: rgba(255,255,255,0.35); }
+  .movie-card-stars .star-empty { color: var(--text-tertiary); opacity: .6; }
   .movie-card-imdb {
     display: inline-flex; align-items: center; gap: 3px; align-self: flex-start;
     background: rgba(10,8,18,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
@@ -4283,9 +4278,9 @@
   }
   .movie-card-check svg { width: 12px; height: 12px; }
   .movie-card-check.checked { background: linear-gradient(135deg, #6F2FFF, #DA26ED); border-color: transparent; }
-  .movie-card.done .movie-card-img, .movie-card.done .movie-card-empty { filter: saturate(0.75); }
+  .movie-card.done .movie-card-poster { filter: saturate(0.75); }
   .movie-add-card {
-    aspect-ratio: 2 / 3; border-radius: 12px; border: 1.5px dashed rgba(255,255,255,0.18);
+    aspect-ratio: 2 / 3; border-radius: 12px; border: 1.5px dashed rgba(255,255,255,0.14);
     background: rgba(255,255,255,0.03); color: var(--text-secondary);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
     cursor: pointer; font-size: 11px; font-weight: 600; text-align: center; padding: 0 6px;
@@ -4301,6 +4296,24 @@
     background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 24px;
   }
   .movie-add-form .movie-add-poster img { width: 100%; height: 100%; object-fit: cover; }
+
+  .premiere-banner {
+    margin-bottom: 14px; padding: 12px 0 12px 14px; border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255,138,43,0.2), rgba(218,38,237,0.14));
+  }
+  .premiere-banner-head { font-size: 12px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; color: #FFA458; margin-bottom: 10px; }
+  .premiere-row { display: flex; gap: 12px; overflow-x: auto; padding-right: 14px; scrollbar-width: none; }
+  .premiere-row::-webkit-scrollbar { display: none; }
+  .premiere-item { flex: 0 0 auto; display: flex; gap: 9px; align-items: center; width: 168px; cursor: pointer; }
+  .premiere-poster {
+    width: 42px; height: 63px; border-radius: 8px; flex: 0 0 auto; overflow: hidden;
+    background: var(--mc-bg); display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .premiere-poster img { width: 100%; height: 100%; object-fit: cover; }
+  .premiere-info { min-width: 0; }
+  .premiere-title { font-size: 12.5px; font-weight: 700; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.2; }
+  .premiere-when { font-size: 11.5px; font-weight: 800; color: #FFA458; margin-top: 3px; }
+  .premiere-date { font-size: 10.5px; color: var(--text-secondary); margin-top: 1px; }
 
   /* ---------- Фільми: детальна картка ---------- */
   .movie-modal { max-width: 390px; padding: 0 0 24px; overflow-x: hidden; background: var(--bg-elevated); }
@@ -12978,6 +12991,26 @@ function movieSoonLabel(i){
   if (n === 0) return { text: '🎉 сьогодні', out: true, long: 'Виходить сьогодні!' };
   return { text: '✅ вийшов', out: true, long: 'Уже вийшов — можна дивитись' };
 }
+function premiereBannerHtml(list){
+  const up = list.items
+    .map(i => ({ i, n: movieDaysUntil(i.releaseDate) }))
+    .filter(x => !x.i.done && x.n !== null && x.n >= 0)
+    .sort((a, b) => a.n - b.n).slice(0, 8);
+  if (!up.length) return '';
+  const fmt = d => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d); return m ? m[3] + '.' + m[2] + '.' + m[1] : d; };
+  return `<div class="premiere-banner">
+    <div class="premiere-banner-head">⏳ Найближчі прем'єри</div>
+    <div class="premiere-row">${up.map(({ i, n }) => `
+      <div class="premiere-item" data-action="open-movie" data-id="${i.id}">
+        <div class="premiere-poster" style="--mc-bg:${movieGradientFor(i.id)}">${i.poster ? `<img src="${escapeHtml(i.poster)}" alt="">` : listPosterFor(i.id)}</div>
+        <div class="premiere-info">
+          <div class="premiere-title">${escapeHtml(i.text)}</div>
+          <div class="premiere-when">${n === 0 ? 'Сьогодні!' : n === 1 ? 'Завтра' : 'через ' + n + ' дн.'}</div>
+          <div class="premiere-date">${fmt(i.releaseDate)}${i.kind === 'series' ? ' · серіал' : ''}</div>
+        </div>
+      </div>`).join('')}</div>
+  </div>`;
+}
 function movieCardHtml(i){
   const soon = movieSoonLabel(i);
   const stars = (i.done && i.rating > 0)
@@ -12985,15 +13018,17 @@ function movieCardHtml(i){
   const metaParts = [i.kind === 'series' ? 'Серіал' : '', i.year, (i.genre || '').split(',')[0].trim()].filter(Boolean);
   return `
     <div class="movie-card${i.done ? ' done' : ''}" data-action="open-movie" data-id="${i.id}" style="--mc-bg:${movieGradientFor(i.id)}">
-      ${i.poster ? `<img class="movie-card-img" src="${escapeHtml(i.poster)}" alt="" loading="lazy">` : `<div class="movie-card-empty">${listPosterFor(i.id)}</div>`}
-      <div class="movie-card-badges">
-        ${soon ? `<div class="movie-card-soon${soon.out ? ' out' : ''}">${soon.text}</div>` : ''}
-        ${i.imdbRating ? `<div class="movie-card-imdb"><span class="imdb-tag">IMDb</span>${escapeHtml(i.imdbRating)}</div>` : ''}
+      <div class="movie-card-poster">
+        ${i.poster ? `<img class="movie-card-img" src="${escapeHtml(i.poster)}" alt="" loading="lazy">` : `<div class="movie-card-empty">${listPosterFor(i.id)}</div>`}
+        <div class="movie-card-badges">
+          ${soon ? `<div class="movie-card-soon${soon.out ? ' out' : ''}">${soon.text}</div>` : ''}
+          ${i.imdbRating ? `<div class="movie-card-imdb"><span class="imdb-tag">IMDb</span>${escapeHtml(i.imdbRating)}</div>` : ''}
+        </div>
+        <div class="movie-card-check${i.done ? ' checked' : ''}" data-action="toggle-item" data-id="${i.id}">
+          ${i.done ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' : ''}
+        </div>
       </div>
-      <div class="movie-card-check${i.done ? ' checked' : ''}" data-action="toggle-item" data-id="${i.id}">
-        ${i.done ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' : ''}
-      </div>
-      <div class="movie-card-shade">
+      <div class="movie-card-info">
         <div class="movie-card-title">${escapeHtml(i.text)}</div>
         ${metaParts.length ? `<div class="movie-card-meta">${escapeHtml(metaParts.join(' · '))}</div>` : ''}
         ${stars}
@@ -13358,6 +13393,8 @@ function renderListDetail(list){
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="15" rx="1.5"/><path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
       </div>`}
     </div>`;
+
+  if (isMoviesList) html = premiereBannerHtml(list) + html;
 
   if (totalCount > 0){
     html += `<div class="list-progress-track"><div class="list-progress-fill" style="width:${pct}%"></div></div>`;
