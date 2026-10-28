@@ -5466,10 +5466,22 @@
   .pn-ov { position: fixed; inset: 0; z-index: 9990; display: flex; flex-direction: column; align-items: center; font-family: 'Rubik', sans-serif; color: #fff; touch-action: manipulation; user-select: none; -webkit-user-select: none;
     opacity: 0; transition: opacity .3s ease; }
   .pn-ov-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; transition: opacity .6s ease;
-    background: radial-gradient(circle at 50% 30%, rgba(255,140,40,.25), transparent 60%), linear-gradient(180deg, #2a0f5c, #12062b); }
+    background: rgba(6,2,16,.30); }
   .pn-ov.reveal { pointer-events: none; }
   .pn-ov.reveal .pn-ov-bg { opacity: 0; }
   .pn-ov.reveal .pn-ov-x, .pn-ov.reveal .pn-ov-top { opacity: 0; transition: opacity .3s; }
+  .pn-ov-win { position: absolute; left: 10px; right: 10px; max-width: 460px; margin: 0 auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); height: min(44vh, 380px); z-index: 1;
+    display: flex; flex-direction: column; align-items: center; border-radius: 28px; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 25%, rgba(255,140,40,.32), transparent 58%), linear-gradient(180deg, #2f1169, #170834 70%, #0d0420);
+    border: 1.5px solid rgba(255,170,90,.6); box-shadow: 0 -8px 40px rgba(0,0,0,.5), 0 0 28px rgba(255,140,40,.35);
+    transform: translateY(46px); transition: transform .38s cubic-bezier(.2,1.2,.4,1), opacity .35s ease; }
+  .pn-ov.in .pn-ov-win { transform: none; }
+  .pn-ov-win .pn-ov-x { top: 10px; right: 10px; width: 32px; height: 32px; font-size: 14px; }
+  .pn-ov-win .pn-ov-top { margin-top: 14px; }
+  .pn-ov-win .pn-ov-hint { font-size: 19px; min-height: 24px; }
+  .pn-ov-win .pn-ov-stage { flex: 1; min-height: 0; padding: 6px 0 12px; }
+  .pn-ov-win .pn-ov-img { width: auto; height: 100%; max-width: 70%; object-fit: contain; }
+  .pn-ov.reveal .pn-ov-win { opacity: 0; transform: translateY(30px); }
   .pn-fly { position: absolute; width: 28px; height: auto; margin: -14px 0 0 -14px; pointer-events: none; -webkit-user-drag: none; will-change: transform; filter: drop-shadow(0 0 7px rgba(255,170,70,.95)); }
   .pn-ov.in { opacity: 1; }
   .pn-ov-x { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 14px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(255,255,255,.12); color: #fff; font-size: 16px; cursor: pointer; z-index: 3; }
@@ -7612,7 +7624,6 @@ function pinataWindowHtml(){
       <button class="pn-bigbtn" id="pinataSmashBtn" type="button">🔨 Розбити!</button></div>`;
   }
   // ph === 'on'
-  const pips = Array.from({ length: PINATA_DAYS }, (_, d) => `<div class="pn-pg${d === di ? ' cur' : ''}">${Array.from({ length: PINATA_PER_DAY }, (_, i) => `<i class="${i < pinataDoneIn(d) ? 'on' : ''}"></i>`).join('')}</div>`).join('');
   const vd = (pinataViewDay === null || pinataViewDay > di) ? di : pinataViewDay;
   const chips = Array.from({ length: PINATA_DAYS }, (_, d) => {
     const lock = d > di;
@@ -7636,7 +7647,6 @@ function pinataWindowHtml(){
   return open + hang('', heroImg('')) + `
     <div class="pn-h"><h2>Пінята</h2><p>День ${di + 1} з ${PINATA_DAYS} · щодня 5 таємних завдань</p></div>
     <div class="pn-score"><b>${n}</b>/${PINATA_TOTAL} · за всі — до ${PINATA_REWARD_FULL[1]} ${hwCandyImg('')}</div>
-    <div class="pn-pips">${pips}</div>
     <div class="pn-days">${chips}</div>
     <div class="pn-list">${cards}</div>
     <div class="pn-foot">Завдання закриваються самі, щойно ти їх виконаєш.<br>Розбити пінюту можна 31 жовтня о 21:00 · лишилось <b id="pinataTimer">${pinataLeftText(PINATA_SMASH_AT.getTime() - Date.now())}</b>${pinataTest() ? '<br>(тестовий режим)' : ''}</div></div>`;
@@ -7708,7 +7718,7 @@ function pinataFlyToCauldron(ov, sx, sy, reward, done){
     const hero = so && so.classList.contains('open') ? so.querySelector('#sproutHeroImg') : null;
     const fx = ov.querySelector('#pnFx');
     if (!hero || !fx || !reward){ finish(); return; }
-    try{ hero.scrollIntoView({ block: 'center' }); }catch(e){}
+    try{ const q = hero.getBoundingClientRect(); if (q.top < 0 || q.bottom > innerHeight) hero.scrollIntoView({ block: 'center' }); }catch(e){}
     const fill = so.querySelector('.sprout-progress-fill'), lab = so.querySelector('.sprout-progress-label');
     let chipVal = null;
     so.querySelectorAll('.sprout-stat-chip').forEach(c => { const l = c.querySelector('.sprout-stat-label'); if (l && l.textContent.trim() === 'Бали') chipVal = c.querySelector('.sprout-stat-value'); });
@@ -7766,7 +7776,7 @@ function pinataFlyToCauldron(ov, sx, sy, reward, done){
         }
         setTimeout(finish, 6000 + K * 70); // страховка
       }catch(e){ finish(); }
-    }, 480);
+    }, 250);
   }catch(e){ finish(); }
 }
 
@@ -7777,17 +7787,18 @@ function pinataOpenSmash(){
   const n = pinataDoneCount();
   const ov = document.createElement('div');
   ov.id = 'pinataSmash'; ov.className = 'pn-ov';
-  ov.innerHTML = `<div class="pn-ov-bg"></div><button class="pn-ov-x" type="button" aria-label="Закрити">✕</button>
+  ov.innerHTML = `<div class="pn-ov-bg"></div><div class="pn-ov-win"><button class="pn-ov-x" type="button" aria-label="Закрити">✕</button>
     <div class="pn-ov-top"><div class="pn-ov-hint" id="pnHint">Тапай, щоб бити! 🔨</div><div class="pn-ov-dots" id="pnDots">${'<i></i>'.repeat(PINATA_HITS)}</div></div>
-    <div class="pn-ov-stage" id="pnStage"><img class="pn-ov-img" id="pnImg" src="${PINATA_IMG}" alt="" draggable="false"></div>
+    <div class="pn-ov-stage" id="pnStage"><img class="pn-ov-img" id="pnImg" src="${PINATA_IMG}" alt="" draggable="false"></div></div>
     <div class="pn-ov-fx" id="pnFx"></div>`;
   document.body.appendChild(ov);
   void ov.offsetWidth; ov.classList.add('in');
+  { const pp0 = document.getElementById('pinataPanel'); if (pp0){ pp0.style.transition = 'opacity .3s ease'; pp0.style.opacity = '0'; pp0.style.pointerEvents = 'none'; } }
   const img = ov.querySelector('#pnImg'), fx = ov.querySelector('#pnFx'), hint = ov.querySelector('#pnHint');
   const dots = ov.querySelectorAll('#pnDots i');
   let hits = 0, broken = false;
   const close = () => { ov.classList.remove('in'); setTimeout(() => ov.remove(), 300); try{ pinataRefresh(); }catch(e){} };
-  ov.querySelector('.pn-ov-x').addEventListener('click', () => { if (!broken) close(); });
+  ov.querySelector('.pn-ov-x').addEventListener('click', () => { if (broken) return; const pp1 = document.getElementById('pinataPanel'); if (pp1){ pp1.style.opacity = ''; pp1.style.pointerEvents = ''; } close(); });
   const spawn = (x, y, count, big) => {
     for (let i = 0; i < count; i++){
       const p = document.createElement('img');
