@@ -7519,7 +7519,7 @@ function pinataCompleteTask(id){
 const pinataTmpRev = {}; // тестовий режим: відкриття завдань не зберігається
 function pinataRevStore(){ const st = pinataState(); return pinataTest() ? pinataTmpRev : (st ? (st.revealed || (st.revealed = {})) : pinataTmpRev); }
 let pinataJust = null; // ключ завдання, яке щойно відкрили (для анімації)
-function pinataDayKey(){ return todayDateKeyStr(); }
+function pinataDayKey(){ const n = new Date(); return dayKey(n.getFullYear(), n.getMonth(), n.getDate()); }
 /* ---- автозарахування: події трекера, потрібні для завдань із часом ---- */
 function pinataLogHabit(id){
   if (!hwOn()) return;
@@ -7559,6 +7559,10 @@ const PINATA_CHECK = {
 function pinataEval(){
   if (!hwOn() || pinataTest() || pinataPhase() !== 'on') return;
   const st = pinataState(); if (!st) return;
+  // Не оцінюємо, поки застосунок ще не перейшов на новий день (інакше береться вчорашній стан)
+  if (todayDateKeyStr() !== pinataDayKey() || quickTasksDateKey !== pinataDayKey() || lastActiveDateKey !== pinataDayKey()) return;
+  // Одноразове виправлення: скидаємо хибно зараховані завдання дня 2 (справді виконані закриються знову самі)
+  if (!st.fixDay2){ st.fixDay2 = true; Object.keys(st.done).forEach(k => { if (k.indexOf('1:') === 0) delete st.done[k]; }); saveState(); }
   const d = pinataDay();
   let n = 0;
   pinataPicks(d).forEach(t => {
