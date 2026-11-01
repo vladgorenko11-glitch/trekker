@@ -9602,8 +9602,8 @@ function scanHabits(dates, list){
     let dueCount = 0, doneCount = 0;
     list.forEach(h => {
       const st = habitDayStatus(h, d), rec = per.get(h.id);
-      if (st === 'frozen'){ frozen++; return; }
       if (st === 'skip') return;
+      if (st === 'frozen') frozen++; // заморожений день: заплановано, але НЕ виконано
       rec.due++; dueCount++; wd[d.getDay()].due++;
       if (st === 'done'){ rec.done++; doneCount++; wd[d.getDay()].done++; } else rec.miss++;
     });
@@ -9658,7 +9658,7 @@ function computeWowFacts(){
     let due = 0, done = 0, miss = 0;
     active.forEach(h => {
       const st = habitDayStatus(h, d);
-      if (st === 'done'){ due++; done++; } else if (st === 'miss'){ due++; miss++; }
+      if (st === 'done'){ due++; done++; } else if (st === 'miss' || st === 'frozen'){ due++; miss++; }
     });
     if (miss > 0) cur = 0;
     else if (due > 0 && done === due){ cur++; if (cur > perfectStreakRecord) perfectStreakRecord = cur; }
@@ -12707,7 +12707,7 @@ function renderHabitStatsDetail(){
       </div>
       <div class="habit-stat-box">
         <div class="habit-stat-box-value">${s.missed}</div>
-        <div class="habit-stat-box-label">Пропущено з запланованого</div>
+        <div class="habit-stat-box-label">Не виконано (з заморозками)</div>
       </div>
     </div>
     <div class="bw-card"><div class="lists-section-label">Звички за виконанням</div>${habitRowsHtml(s)}</div>
