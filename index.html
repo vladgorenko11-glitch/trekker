@@ -11128,7 +11128,8 @@ function stampBadgeTimes(list){
         if (!(o.at[b.id] > 0)) o.at[b.id] = 0; // дату не збережено — не вигадуємо
       }
       // бейдж івенту без дати: фіксуємо час один раз, щоб він не залипав першим серед «Останніх»
-      if (b.event && !(o.at[b.id] > 0)){ o.at[b.id] = Date.now(); dirty = true; }
+      if (b.id === 'halloween-2026'){ const fixed = new Date(2026, 9, 29, 12).getTime(); if (o.at[b.id] !== fixed){ o.at[b.id] = fixed; dirty = true; } }
+      else if (b.event && !(o.at[b.id] > 0)){ o.at[b.id] = Date.now(); dirty = true; }
     } else if (b.id in o.at){ delete o.at[b.id]; delete o.est[b.id]; dirty = true; }
   });
   if (dirty){ try{ localStorage.setItem(BADGE_AT_KEY, JSON.stringify(o)); }catch(e){} }
