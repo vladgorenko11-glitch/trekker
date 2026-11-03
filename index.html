@@ -1700,7 +1700,7 @@
   .sh-days { margin-top: 2px; font-size: 11px; font-weight: 600; color: rgba(225,255,235,0.85); }
 
   /* ---------- Швидкі завдання на день (без вогника, окремо від звичок) ---------- */
-  .quick-tasks { margin: 0 2px 0; }
+  .quick-tasks { margin: 0 2px -8px; }
   .quick-tasks-done { margin: 4px 2px 8px; }
   .quick-tasks-list { display: flex; flex-direction: column; }
   .quick-tasks-bar-spacer { height: 2px; }
@@ -1993,7 +1993,7 @@
   .archive-habit-restore svg { width: 15px; height: 15px; }
   .quick-task-add-row {
     display: flex; align-items: center; gap: 12px; cursor: pointer;
-    padding: 11px 2px;
+    padding: 11px 2px 3px;
     border-bottom: 1px solid var(--divider);
   }
   .quick-task-add-row.active { cursor: default; }
@@ -5278,7 +5278,7 @@
   .db-entry.done .db-entry-go { background: rgba(255,255,255,0.12); color: rgba(220,255,220,0.7); }
 
   /* ---------- Щаслива година: банер над звичками ---------- */
-  #happyHourBanner:empty { display: none; }
+  #happyHourBanner:empty, #premiereTodayBanner:empty { display: none; }
   .hh-banner {
     position: relative; overflow: hidden; display: flex; align-items: center; gap: 12px;
     padding: 11px 14px 15px; border-radius: var(--radius-md);
@@ -16301,17 +16301,93 @@ function quoteGradientForIndex(i){
 
 /* Малює квадратний віджет "цитата дня": емодзі + текст на кольоровому
    градієнті, унікальному для цієї конкретної цитати. */
+const QHEART = 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z';
+const QHEART_OFF = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="${QHEART}"/></svg>`;
+const QHEART_ON = `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="${QHEART}"/></svg>`;
 function renderDailyQuoteWidget(){
   const wrap = document.getElementById('activityQuoteWidget');
   if (!wrap) return;
   const idx = dailyQuoteIndex();
   const q = DAILY_QUOTES[idx];
   wrap.style.background = quoteGradientForIndex(idx);
+  const saved = !!(window.SavedQuotes && window.SavedQuotes.has(q.text));
   wrap.innerHTML = `
     <div class="activity-quote-label">Цитата дня</div>
+    <div class="activity-quote-mark${saved ? ' on' : ''}">${saved ? QHEART_ON : QHEART_OFF}</div>
     <div class="activity-quote-emoji"${q.glow?' style="filter:drop-shadow(0 0 5px rgba(255,255,255,.95)) drop-shadow(0 0 2px #fff)"':''}>${q.emoji}</div>
     <div class="activity-quote-text">${escapeHtml(q.text)}</div>
   `;
+  const SQ0 = () => window.SavedQuotes;
+  const say = t => { try { if (window.showSaveStatus) showSaveStatus(t); } catch(e){} };
+  const mark = wrap.querySelector('.activity-quote-mark');
+  let hideT = null;
+  const armHide = () => { clearTimeout(hideT); hideT = setTimeout(() => { if (mark && !mark.classList.contains('on')) mark.classList.remove('show'); }, 4000); };
+  // тап по банеру — лише показує серце (порожнє); зберігає тап по самому серцю
+  wrap.onclick = e => {
+    if (!mark || e.target.closest('.activity-quote-mark')) return;
+    if (mark.classList.contains('on')) return;
+    mark.classList.add('show'); armHide();
+  };
+  if (mark) mark.onclick = e => {
+    e.stopPropagation();
+    const SQ = SQ0(); if (!SQ) return;
+    if (SQ.has(q.text)) {
+      SQ.remove(q.text); mark.classList.remove('on'); mark.innerHTML = QHEART_OFF; mark.classList.add('show'); armHide(); say('Цитату прибрано');
+    } else if (SQ.count() >= SQ.max) {
+      say('Максимум ' + SQ.max + ' цитат — прибери одну в профілі'); armHide();
+    } else if (SQ.add({ text: q.text, emoji: q.emoji, idx })) {
+      clearTimeout(hideT); mark.innerHTML = QHEART_ON; mark.classList.add('on'); mark.classList.remove('pop'); void mark.offsetWidth; mark.classList.add('pop'); say('Цитату збережено');
+    }
+  };
+}
+
+/* Вікно цитати: повний текст + кнопка «Зберегти цитату» (збережені показуються в профілі). */
+function openQuoteSheet(q){
+  if (!q || !q.text) return;
+  const old = document.getElementById('quoteSheet'); if (old) old.remove();
+  const SQ = window.SavedQuotes;
+  const idx = (typeof q.idx === 'number') ? q.idx : -1;
+  let bg = 'linear-gradient(135deg,#6C5CE7,#3E9BFF)';
+  try { if (idx >= 0 && DAILY_QUOTES[idx] && DAILY_QUOTES[idx].text === q.text) bg = quoteGradientForIndex(idx); } catch(e){}
+  const ov = document.createElement('div');
+  ov.id = 'quoteSheet'; ov.className = 'qs-overlay';
+  ov.innerHTML = `
+    <div class="qs-sheet" role="dialog" aria-modal="true">
+      <div class="qs-card">
+        <div class="qs-emoji">${escapeHtml(q.emoji || '💬')}</div>
+        <div class="qs-text">${escapeHtml(q.text)}</div>
+      </div>
+      <button class="qs-btn" id="qsSave" type="button"></button>
+      <button class="qs-close" id="qsClose" type="button">Закрити</button>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('.qs-card').style.background = bg;
+  const btn = ov.querySelector('#qsSave');
+  const upd = () => {
+    const on = !!(SQ && SQ.has(q.text));
+    btn.className = 'qs-btn' + (on ? ' on' : '');
+    btn.textContent = on ? '✓ Збережено · прибрати' : '🔖 Зберегти цитату';
+  };
+  const say = t => { try { if (window.showSaveStatus) showSaveStatus(t); } catch(e){} };
+  btn.onclick = () => {
+    if (!SQ) return;
+    if (SQ.has(q.text)) { SQ.remove(q.text); say('Цитату прибрано'); }
+    else if (SQ.count() >= SQ.max) say('Максимум ' + SQ.max + ' цитат');
+    else if (SQ.add({ text: q.text, emoji: q.emoji, idx })) say('Цитату збережено — вона в профілі');
+    upd();
+    try { renderDailyQuoteWidget(); } catch(e){}
+  };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  const close = () => {
+    document.removeEventListener('keydown', onKey);
+    ov.classList.remove('open');
+    setTimeout(() => ov.remove(), 220);
+  };
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  ov.querySelector('#qsClose').onclick = close;
+  document.addEventListener('keydown', onKey);
+  upd();
+  requestAnimationFrame(() => ov.classList.add('open'));
 }
 
 /* ---------- Погода: геолокація браузера + Open-Meteo (без ключа API) ----------
@@ -20405,6 +20481,35 @@ setTimeout(() => checkEventReminder(), 1300);
 .pf-sec .pf-link{display:inline-flex;align-items:center;gap:2px;font:600 13px 'Inter',sans-serif;color:#8E80FF;cursor:pointer}
 .pf-sec .pf-link svg{width:14px;height:14px}
 .pf-badges-empty{padding:14px 0;font-size:13.5px;color:var(--text-tertiary)}
+.pf-hero-quote{display:flex;align-items:flex-start;gap:10px;margin-top:14px;padding:11px 14px;border-radius:18px;border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;box-shadow:inset 0 0 14px 1px rgba(255,255,255,.1);transition:transform .12s ease}
+.pf-hero-quote:active{transform:scale(.98)}
+.pf-hq-emoji{font-size:20px;line-height:1.15;flex:0 0 auto}
+.pf-hq-text{font:600 13.5px/1.4 'Rubik','Inter',sans-serif;text-shadow:0 1px 8px rgba(0,0,0,.45);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pf-quotes{display:flex;flex-direction:column;gap:7px;padding-bottom:8px}
+.pf-quote{position:relative;display:flex;align-items:flex-start;gap:9px;padding:8px 11px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;border-radius:14px;border:1px solid rgba(255,255,255,.16);color:#fff;box-shadow:inset 0 0 10px 1px rgba(255,255,255,.08)}
+.pf-quote-emoji{font-size:15px;line-height:1.25;flex:0 0 auto}
+.pf-quote-text{font:600 12px/1.35 'Rubik','Inter',sans-serif;text-shadow:0 1px 6px rgba(0,0,0,.45)}
+.activity-quote-widget{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.activity-quote-mark{position:absolute;top:0;right:0;z-index:3;padding:6px 9px 10px 12px;font-size:18px;line-height:1;color:rgba(255,255,255,.92);text-shadow:0 0 6px rgba(0,0,0,.35);cursor:pointer;pointer-events:none;opacity:0;transform:scale(.3) rotate(-35deg);transition:opacity .2s ease,transform .35s cubic-bezier(.3,1.6,.5,1),color .2s ease}
+.activity-quote-mark.show,.activity-quote-mark.on{opacity:1;transform:none;pointer-events:auto}
+.activity-quote-mark svg{display:block}
+.activity-quote-mark.on{color:#FF4D6D;text-shadow:0 0 10px rgba(255,77,109,.65)}
+.activity-quote-mark.pop{animation:qmPop .4s cubic-bezier(.3,1.6,.5,1)}
+@keyframes qmPop{0%{transform:scale(.6)}60%{transform:scale(1.35) rotate(12deg)}100%{transform:none}}
+.save-status{z-index:9999}
+.qs-overlay{position:fixed;inset:0;z-index:9990;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:0;transition:opacity .2s ease}
+.qs-overlay.open{opacity:1}
+.qs-sheet{width:100%;max-width:460px;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px;transform:translateY(30px);transition:transform .25s cubic-bezier(.2,.8,.3,1)}
+.qs-overlay.open .qs-sheet{transform:none}
+.qs-card{position:relative;border-radius:28px;padding:26px 22px;min-height:180px;display:flex;flex-direction:column;justify-content:center;gap:14px;color:#fff;border:1px solid rgba(255,255,255,.22);box-shadow:inset 0 0 22px 2px rgba(255,255,255,.12),0 14px 34px -14px rgba(0,0,0,.6);overflow:hidden}
+.qs-card::before{content:'\275D';position:absolute;top:-14px;left:10px;font:700 90px Georgia,serif;color:rgba(255,255,255,.16);pointer-events:none}
+.qs-emoji{position:relative;font-size:38px;line-height:1}
+.qs-text{position:relative;font:600 20px/1.4 'Rubik','Inter',sans-serif;text-shadow:0 1px 8px rgba(0,0,0,.45)}
+.qs-btn{border:0;border-radius:18px;padding:15px;font:700 16px 'Inter',sans-serif;color:#fff;cursor:pointer;background:linear-gradient(135deg,#6C5CE7,#3E9BFF)}
+.qs-btn.on{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:var(--text-primary,#fff)}
+.qs-btn:active{transform:scale(.98)}
+.qs-close{border:0;background:transparent;color:rgba(255,255,255,.7);font:600 14px 'Inter',sans-serif;padding:8px;cursor:pointer}
+
 .pf-card{margin-top:18px;border-radius:var(--radius-lg);background:var(--card);border:1px solid var(--card-border);overflow:hidden}
 .pf-row{display:flex;align-items:center;gap:12px;padding:14px 16px;font-size:14px;color:var(--text-primary)}
 .pf-row+.pf-row{border-top:1px solid var(--divider)}
@@ -20481,12 +20586,47 @@ setTimeout(() => checkEventReminder(), 1300);
     return set;
   }
   const titleHtml = (t, extra) => `<div class="pf-title t-${t.id}"${extra || ''} data-text="${esc(t.name)}"><span>${esc(t.name)}</span></div>`;
-  const DEF = { name:'', username:'', bio:'', city:'', birthday:'', avatar:'', banner:'', bannerGrad:0, createdAt:0, badgeAt:{}, title:'novachok', titles:['novachok'] };
+  const DEF = { name:'', username:'', bio:'', city:'', birthday:'', avatar:'', banner:'', bannerGrad:0, createdAt:0, badgeAt:{}, title:'novachok', titles:['novachok'], quotes:[] };
   let P = Object.assign({}, DEF);
   try { Object.assign(P, JSON.parse(localStorage.getItem(PKEY) || '{}')); } catch(e){}
   if (!P.createdAt){ P.createdAt = Date.now(); save(true); }
 
   const status = (t, err) => { if (window.showSaveStatus) showSaveStatus(t, err); };
+
+  // Збережені цитати (з «Цитати дня»): P.quotes = [{ text, emoji, idx, at }], найновіші першими
+  const quotesList = () => (Array.isArray(P.quotes) ? P.quotes : []);
+  const QUOTES_MAX = 5;
+  window.SavedQuotes = {
+    max: QUOTES_MAX,
+    count: () => quotesList().length,
+    has: text => quotesList().some(q => q.text === text),
+    add: q => {
+      if (!q || !q.text || window.SavedQuotes.has(q.text) || quotesList().length >= QUOTES_MAX) return false;
+      const prev = quotesList();
+      P.quotes = [{ text: String(q.text), emoji: q.emoji || '💬', idx: typeof q.idx === 'number' ? q.idx : -1, at: Date.now() }].concat(prev);
+      if (!save()) { P.quotes = prev; return false; }
+      try { render(); } catch(e){}
+      return true;
+    },
+    remove: text => {
+      P.quotes = quotesList().filter(q => q.text !== text);
+      save();
+      try { render(); } catch(e){}
+      return true;
+    }
+  };
+  try { if (typeof renderDailyQuoteWidget === 'function' && document.getElementById('activityQuoteWidget')) renderDailyQuoteWidget(); } catch(e){}
+  function quoteBg(q){
+    try { if (q.idx >= 0 && DAILY_QUOTES[q.idx] && DAILY_QUOTES[q.idx].text === q.text) return quoteGradientForIndex(q.idx); } catch(e){}
+    return GRADS[0];
+  }
+  function quotesSectionHtml(){
+    const ql = quotesList();
+    const body = ql.length
+      ? `<div class="pf-quotes">${ql.map((q, i) => `<div class="pf-quote" data-qi="${i}"><div class="pf-quote-emoji">${esc(q.emoji || '💬')}</div><div class="pf-quote-text">${esc(q.text)}</div></div>`).join('')}</div>`
+      : `<div class="pf-badges-empty">Торкнись «Цитати дня» в Центрі активності, щоб зберегти ту, що сподобалась (до ${QUOTES_MAX}).</div>`;
+    return `<div class="pf-sec">Збережені цитати<span>${ql.length}/${QUOTES_MAX}</span></div>${body}${ql.length ? '<div class="pf-badges-empty" style="padding:6px 2px 0;font-size:11.5px">Утримуй цитату, щоб прибрати її</div>' : ''}`;
+  }
   function save(quiet){
     try { localStorage.setItem(PKEY, JSON.stringify(P)); return true; }
     catch(e){ if (!quiet) status('Не вдалося зберегти (мало місця)', true); return false; }
@@ -20598,6 +20738,7 @@ setTimeout(() => checkEventReminder(), 1300);
         ${(() => { const b = birthdayInfo(); return b ? `<span>${b.isToday ? '🎉' : '🎂'} ${esc(b.text)}</span>` : ''; })()}
         <span>📅 У трекері з ${esc(since)}</span>
       </div>
+      ${quotesSectionHtml()}
       <div class="pf-sec">Останні бейджі<div class="pf-link" id="pfAllBadges">Усі<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div></div>
       ${rb.length ? `<div class="pf-badges" id="pfBadges">${rb.map(b => `<div class="badge-tile" data-bid="${esc(b.id)}">${badgeTileInnerHtml(b)}</div>`).join('')}<div class="pf-all" id="pfAllTile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>Усі</div></div>` : `<div class="pf-badges-empty">Поки що немає розблокованих бейджів.</div>`}
       <div class="pf-card">
@@ -20627,6 +20768,15 @@ setTimeout(() => checkEventReminder(), 1300);
       if (b && typeof openBadgeUnlockOverlay === 'function') openBadgeUnlockOverlay(b);
     });
     const tt = $('pfTitle'); if (tt) tt.onclick = openTitles;
+    el.querySelectorAll('.pf-quote').forEach((n, i) => { const q = quotesList()[i]; if (q) n.style.background = quoteBg(q); });
+    // видалення — лише через утримання картки (щоб не стерти випадково)
+    el.querySelectorAll('.pf-quote').forEach((n, i) => {
+      let t = null;
+      const stop = () => { clearTimeout(t); t = null; };
+      n.addEventListener('pointerdown', () => { stop(); t = setTimeout(() => { t = null; const q = quotesList()[i]; if (q && typeof openQuoteSheet === 'function') openQuoteSheet(q); }, 550); });
+      ['pointerup', 'pointerleave', 'pointercancel', 'pointermove'].forEach(ev => n.addEventListener(ev, stop));
+      n.addEventListener('contextmenu', e => e.preventDefault());
+    });
     const be = $('pfBioEmpty'); if (be) be.onclick = openEdit;
     const ua = $('pfUserAdd'); if (ua) ua.onclick = openEdit;
     const uc = $('pfUserChip');
