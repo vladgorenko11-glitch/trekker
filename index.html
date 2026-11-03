@@ -18316,6 +18316,77 @@ const SPROUT_QUEST_ICONS = {
   q8: { emoji: '🎁', cls: 'icon-bolt' },       // щоденний бонус     // заморозь вогник (мінус бали)
 };
 
+/* ---------- Лінія ростків: які рівні та форми ростка вже відкрито ---------- */
+function sproutDiscovered(){
+  const hist = (sprout.history || []).filter(h => h && !h.event);
+  const live = !hwOn();
+  const stageNow = live ? sproutStageIndex(sproutProgress()) : 0;
+  let lvl = Math.max(sprout.maxLevelEver || 0, live ? stageNow + 1 : 0);
+  if (hist.length) lvl = Math.max(lvl, SPROUT_MAX_STAGE + 1);
+  const clover = new Set(), forms = new Set();
+  hist.forEach(h => { clover.add(h.rare ? 'lucky' : 'shamrock'); if (h.form && SPROUT_FORMS[h.form]) forms.add(h.form); });
+  if (live){
+    if (stageNow >= 2) clover.add(sprout.cloverRare ? 'lucky' : 'shamrock');
+    if (sprout.finalForm && SPROUT_FORMS[sprout.finalForm]) forms.add(sprout.finalForm);
+  }
+  if (lvl >= 3 && clover.size === 0) clover.add(sprout.cloverRare ? 'lucky' : 'shamrock');
+  return { lvl, clover, forms, stageNow, live };
+}
+function openSproutTimeline(){
+  if (hwOn()) return;
+  const old = document.getElementById('sproutTimeline'); if (old) old.remove();
+  const D = sproutDiscovered();
+  const lvl = D.lvl;
+  const nowKind = sproutStageKind(D.stageNow);
+  const rows = [
+    { n: 1, items: [{ kind: 'seed', name: 'Насінина', open: lvl >= 1 }] },
+    { n: 2, items: [{ kind: 'sprout', name: 'Росток', open: lvl >= 2 }] },
+    { n: 3, items: [
+      { kind: 'shamrock', name: 'Конюшина', open: D.clover.has('shamrock') },
+      { kind: 'lucky', name: 'Рідкісна 🍀', open: D.clover.has('lucky') },
+    ] },
+    { n: 4, items: [{ kind: 'herb', name: 'Трава', open: lvl >= 4 }] },
+    { n: 5, items: Object.keys(SPROUT_FORMS).map(k => ({ kind: k, name: SPROUT_FORMS[k].title, open: D.forms.has(k) })) },
+  ];
+  let total = 0, got = 0;
+  rows.forEach(r => r.items.forEach(it => { total++; if (it.open) got++; }));
+  const ov = document.createElement('div');
+  ov.id = 'sproutTimeline'; ov.className = 'sl-overlay';
+  ov.innerHTML = `
+    <div class="sl-sheet" role="dialog" aria-modal="true">
+      <div class="sl-title">Лінія ростків</div>
+      <div class="sl-sub">Відкрито ${got} з ${total}</div>
+      <div class="sl-track">
+        ${rows.map((r, ri) => {
+          const done = r.items.some(it => it.open);
+          const isNow = r.items.some(it => it.kind === nowKind);
+          return `<div class="sl-row${done ? ' done' : ''}${isNow ? ' now' : ''}">
+            <div class="sl-dot">${done ? '✓' : r.n}</div>
+            <div class="sl-lvl">Рівень ${r.n}${isNow ? ' · зараз' : ''}</div>
+            <div class="sl-items">${r.items.map(it => `
+              <div class="sl-item${it.open ? ' open' : ' locked'}${it.kind === nowKind ? ' now' : ''}">
+                <img class="sl-img" src="${sproutImageByKind(it.kind)}" alt="" draggable="false">
+                <div class="sl-name">${it.open ? escapeHtml(it.name) : '???'}</div>
+              </div>`).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="qs-close" id="slClose" type="button">Закрити</button>
+    </div>`;
+  document.body.appendChild(ov);
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  const close = () => {
+    document.removeEventListener('keydown', onKey);
+    ov.classList.remove('open');
+    setTimeout(() => ov.remove(), 220);
+  };
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  ov.querySelector('#slClose').onclick = close;
+  document.addEventListener('keydown', onKey);
+  requestAnimationFrame(() => ov.classList.add('open'));
+}
+
 function openSproutInfo(){
   const ov = document.getElementById('sproutInfoOverlay');
   const hw = hwOn();
@@ -18396,7 +18467,7 @@ function renderSproutOverlay(){
         <div class="sprout-hero-heading">Плекай свій <span class="accent">${hw ? 'Котел' : 'Росток'}</span></div>
         <div class="sprout-hero-sub">${hw ? 'Продовжуй звички щодня, і твій котел набиратиме бали та кипітиме.' : 'Продовжуй звички щодня, і твій росток набиратиме бали та ростиме.'}</div>
         <div class="sprout-level-row">
-          <div class="sprout-level-chip">${sproutLevelChipText(stage)}</div>
+          <div class="sprout-level-chip"${hw ? '' : ' id="sproutLevelPill" role="button" tabindex="0" style="cursor:pointer"'}>${sproutLevelChipText(stage)}</div>
           ${sproutRareBadgeHtml(stage)}
           ${hw ? '' : sproutCanResetCycle() ? `<button class="sprout-reset-btn" id="sproutResetBtn">🔄 Оновити цикл</button>` : (needsChoice ? `<button class="sprout-reset-btn sprout-choose-btn" id="sproutChooseBtn">🌳 Обрати шлях</button>` : '')}
         </div>
@@ -18412,7 +18483,7 @@ function renderSproutOverlay(){
       ${hw && hwSpinPending() ? `<button class="hw-spin-btn" id="hwSpinCta" type="button">🎰 Крутити${hwSpinPending() > 1 ? ' · ' + hwSpinPending() : ''}</button>` : ''}
       <div class="sprout-next-level-label">${sproutNextLevelLabel(progress)}</div>
       <div class="sprout-stats-row">
-        <div class="sprout-stat-chip active${hw ? ' hw-tappable' : ''}"${hw ? ' id="hwSkinsChip" role="button" tabindex="0"' : ''}>
+        <div class="sprout-stat-chip active${hw ? ' hw-tappable' : ''}"${hw ? ' id="hwSkinsChip" role="button" tabindex="0"' : ' id="sproutLvlChip" role="button" tabindex="0" style="cursor:pointer"'}>
           <div class="sprout-stat-icon">${sproutStageEmoji(stage)}</div>
           <div class="sprout-stat-label">${hw ? 'Скіни' : 'Рівень'}</div>
           <div class="sprout-stat-value">${hw ? stage + 1 : stage + 1}</div>
@@ -18533,6 +18604,7 @@ function renderSproutOverlay(){
   const spinCta = document.getElementById('hwSpinCta');
   if (spinCta) spinCta.addEventListener('click', hwStartSpin);
   try{ pinataBind(); }catch(e){}
+  ['sproutLvlChip', 'sproutLevelPill'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('click', openSproutTimeline); });
   const skinsChip = document.getElementById('hwSkinsChip');
   if (skinsChip) skinsChip.addEventListener('click', () => { hwSkinsOwned(); hwOpenSkins(sprout.hwSkinList || [], !!sprout.cloverRare, true); });
   document.querySelectorAll('.sh-card.event[data-hi]').forEach(el => {
@@ -20509,6 +20581,34 @@ setTimeout(() => checkEventReminder(), 1300);
 .qs-btn.on{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:var(--text-primary,#fff)}
 .qs-btn:active{transform:scale(.98)}
 .qs-close{border:0;background:transparent;color:rgba(255,255,255,.7);font:600 14px 'Inter',sans-serif;padding:8px;cursor:pointer}
+
+.sl-overlay{position:fixed;inset:0;z-index:10040;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:0;transition:opacity .2s ease}
+.sl-overlay.open{opacity:1}
+.sl-sheet{width:100%;max-width:460px;max-height:88vh;overflow-y:auto;box-sizing:border-box;background:var(--bg,#0D0F14);border:1px solid rgba(255,255,255,.1);border-bottom:0;border-radius:28px 28px 0 0;padding:22px 20px calc(18px + env(safe-area-inset-bottom,0px));transform:translateY(40px);transition:transform .25s cubic-bezier(.2,.8,.3,1);display:flex;flex-direction:column}
+.sl-overlay.open .sl-sheet{transform:none}
+.sl-title{font:700 20px 'Rubik','Inter',sans-serif;color:var(--text-primary,#fff)}
+.sl-sub{margin-top:3px;font:500 13px 'Inter',sans-serif;color:var(--text-tertiary,rgba(255,255,255,.5))}
+.sl-track{position:relative;margin-top:18px;padding-left:36px}
+.sl-row{position:relative;padding-bottom:22px}
+.sl-row:last-child{padding-bottom:6px}
+.sl-row::before{content:'';position:absolute;left:-25px;top:26px;bottom:-4px;width:3px;border-radius:2px;background:rgba(255,255,255,.1)}
+.sl-row.done::before{background:linear-gradient(#8CE99A,#3FC66B)}
+.sl-row:last-child::before{display:none}
+.sl-dot{position:absolute;left:-36px;top:0;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 11px 'Inter',sans-serif;background:rgba(255,255,255,.12);color:rgba(255,255,255,.6)}
+.sl-row.done .sl-dot{background:#3FC66B;color:#04210f}
+.sl-row.now .sl-dot{box-shadow:0 0 0 4px rgba(63,198,107,.28)}
+.sl-lvl{margin-bottom:8px;font:700 11px 'Inter',sans-serif;letter-spacing:.04em;text-transform:uppercase;line-height:24px;color:var(--text-tertiary,rgba(255,255,255,.5))}
+.sl-row.now .sl-lvl{color:#8CE99A}
+.sl-items{display:flex;gap:10px}
+.sl-item{flex:0 1 112px;min-width:0;padding:10px 6px 9px;border-radius:18px;text-align:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.sl-item.open{background:linear-gradient(160deg,rgba(140,233,154,.22),rgba(140,233,154,.06));border-color:rgba(140,233,154,.4)}
+.sl-item.now{box-shadow:0 0 0 2px #8CE99A}
+.sl-img{display:block;width:62px;height:62px;margin:0 auto 6px;object-fit:contain;-webkit-user-drag:none}
+.sl-item.locked .sl-img{filter:brightness(0);opacity:.25}
+.sl-name{font:600 12px 'Inter',sans-serif;color:var(--text-primary,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sl-item.locked .sl-name{color:var(--text-tertiary,rgba(255,255,255,.45))}
+#sproutLvlChip,#sproutLevelPill{-webkit-tap-highlight-color:transparent}
+#sproutLvlChip:active,#sproutLevelPill:active{transform:scale(.96)}
 
 .pf-card{margin-top:18px;border-radius:var(--radius-lg);background:var(--card);border:1px solid var(--card-border);overflow:hidden}
 .pf-row{display:flex;align-items:center;gap:12px;padding:14px 16px;font-size:14px;color:var(--text-primary)}
