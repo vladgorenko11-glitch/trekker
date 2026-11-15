@@ -3297,6 +3297,16 @@
     transition: width .3s ease;
   }
   .countdown-tile-done { color: #6FE3C2; font-weight: 700; font-size: 12px; }
+  /* Відрахунок, що вже настав — сірий */
+  .countdown-tile.is-past {
+    --cg: #8A8F98;
+    filter: grayscale(1);
+    box-shadow: 0 20px 44px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .countdown-tile.is-past::before { opacity: 0.25; }
+  .countdown-tile.is-past .countdown-tile-title,
+  .countdown-tile.is-past .countdown-tile-unit-box { color: rgba(255,255,255,0.6); text-shadow: none; }
+  .countdown-tile.is-past .countdown-tile-done { color: #A8ADB5; }
   .countdown-color-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
   .countdown-color-row .settings-swatch-row { flex: 1; margin-bottom: 0; grid-template-columns: repeat(6, 1fr); }
   .countdown-color-row input[type="color"] {
@@ -11104,7 +11114,7 @@ function countdownTileHtml(c){
     ? `<span class="countdown-tile-done">✓ Настало</span>`
     : `<div class="countdown-tile-progress-track"><div class="countdown-tile-progress-fill" style="width:${p.elapsedPct.toFixed(1)}%;"></div></div>`;
   return `
-    <div class="countdown-tile" data-id="${c.id}" style="--countdown-glow: ${glow};">
+    <div class="countdown-tile${p.isPast ? ' is-past' : ''}" data-id="${c.id}" style="--countdown-glow: ${glow};">
       <div class="countdown-tile-top">
         <div class="countdown-tile-eyebrow"><span class="dot"></span><span>Відрахунок</span></div>
         <div class="countdown-tile-date">${targetDateStr}</div>
